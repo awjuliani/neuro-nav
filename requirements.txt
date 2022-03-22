@@ -1,0 +1,7 @@
+numpy
+gym
+matplotlib
+scipy
+networkx
+sklearn[examples]
+jupyterlab[examples]
