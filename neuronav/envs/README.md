@@ -1,8 +1,8 @@
-# Navigation Environments
+# Benchmark Environments
 
-A set of neuroscience inspired navigation and decision making tasks in environments with either graph or grid structures.
+A set of cognitive neuroscience inspired navigation and decision making tasks in environments with either graph or grid structures.
 
-Both of these environments support the default `gym` interface. You can learn more about gym [here](https://github.com/openai/gym).
+These environments support the default `gym` interface which is commonly used in open source reinforcement learning packages. You can learn more about gym [here](https://github.com/openai/gym).
 
 ## GridEnv
 
@@ -10,7 +10,11 @@ Both of these environments support the default `gym` interface. You can learn mo
 
 ### Topographies
 
-The `GridEnv` class can generate a variety of different maze layouts by setting the topography. Below is a list of the topographies which are supported. To add your own, edit [grid_topographies.py](./grid_topographies.py).
+The `GridEnv` class can generate a variety of different maze layouts by setting the topography. Below is a list of the topographies which are supported. Topographies can be set as an enum when initializing the environment. For example: 
+
+```env = GridEnv(topography=GridTopography.empty)```
+
+ To add your own topographies, edit [grid_topographies.py](./grid_topographies.py).
 
 | Topography | Image Small (11x11) | Image Large (17 x 17)
 | --- | --- | --- |
@@ -31,7 +35,13 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 
 ### Observation Types
 
-The `GridEnv` class also supports a variety of observation types for the agent. These vary in the amount of information provided to the agent, and in their format. To add your own, edit [grid_env.py](./grid_env.py).
+The `GridEnv` class also supports a variety of observation types for the agent. These vary in the amount of information provided to the agent, and in their format. 
+
+Observation types can be set as an enum when initializing the environment. For example: 
+
+```env = GridEnv(obs_type=GridObsType.index)```
+
+To add your own, edit [grid_env.py](./grid_env.py).
 
 | Observation | Type | Shape (Fixed Orientation) | Shape (Dynamic Orientation) | Description |
 | --- | --- | --- | --- | --- |
@@ -51,6 +61,10 @@ The `GridEnv` class also supports a variety of observation types for the agent. 
 
 ### Structures
 
+Graph structures can be set as an enum when initializing the environment. For example: 
+
+```env = GraphEnv(graph_structure=GraphStructure.neighborhood)```
+
 The graph structures can be added to by editing [graph_structures.py](./graph_structures.py)
 
 | Structure | Image |
@@ -64,7 +78,13 @@ The graph structures can be added to by editing [graph_structures.py](./graph_st
 
 ### Observation Types
 
-The `GraphEnv` class also supports a variety of observation types for the agent. These vary in the amount of information provided to the agent, and in their format. To add your own, edit [graph_env.py](./graph_env.py).
+The `GraphEnv` class also supports a variety of observation types for the agent. These vary in the amount of information provided to the agent, and in their format. 
+
+Observation types can be set as an enum when initializing the environment. For example: 
+
+```env = GraphEnv(obs_type=GraphObsType.index)```
+
+To add your own, edit [graph_env.py](./graph_env.py).
 
 | Observation | Type | Shape | Description |
 | --- | --- | --- | --- |
