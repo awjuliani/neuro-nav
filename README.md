@@ -8,7 +8,7 @@ Neuro-Nav is an open-source library for neurally plausible reinforcement learnin
 
 ## Requirements
 
-* Python 3
+* Python 3.7+
 * NumPy
 * Gym
 * PyPlot
