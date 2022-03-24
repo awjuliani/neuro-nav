@@ -154,9 +154,22 @@ class GridEnv(Env):
         return grid
 
     def render(self):
-        img = plt.imshow(self.grid())
-        img.set_cmap("hot")
+        plt.imshow(self.grid())
         plt.axis("off")
+        plt.hlines(
+            y=np.arange(0, self.grid_size) + 0.5,
+            xmin=np.full(self.grid_size, 0) - 0.5,
+            xmax=np.full(self.grid_size, self.grid_size) - 0.5,
+            color="dimgray",
+            linewidths=1.0,
+        )
+        plt.vlines(
+            x=np.arange(0, self.grid_size) + 0.5,
+            ymin=np.full(self.grid_size, 0) - 0.5,
+            ymax=np.full(self.grid_size, self.grid_size) - 0.5,
+            color="dimgray",
+            linewidth=1.0,
+        )
         plt.show()
 
     def move_agent(self, direction):
