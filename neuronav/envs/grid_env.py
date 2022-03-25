@@ -58,6 +58,7 @@ class GridEnv(Env):
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]])
         self.done = False
         self.observations = None
+        self.free_spots = self.make_free_spots()
         if isinstance(obs_type, str):
             obs_type = GridObsType(obs_type)
         self.obs_mode = obs_type
@@ -116,6 +117,7 @@ class GridEnv(Env):
         goal_pos=None,
         agent_pos=None,
         episode_length=100,
+        random_start=False,
     ):
         self.done = False
         self.episode_time = 0
@@ -124,8 +126,11 @@ class GridEnv(Env):
 
         if agent_pos != None:
             self.agent_pos = agent_pos
+        elif random_start:
+            self.agent_pos = self.get_free_spot()
         else:
             self.agent_pos = self.agent_start_pos
+
         if goal_pos != None:
             self.goal_pos = goal_pos
         else:
