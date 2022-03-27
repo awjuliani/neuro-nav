@@ -19,6 +19,7 @@ class GridObsType(enum.Enum):
     boundary = "boundary"
     visual = "visual"
     images = "images"
+    window = "window"
 
 
 class OrientationType(enum.Enum):
@@ -84,7 +85,7 @@ class GridEnv(Env):
             if self.orientation_type == OrientationType.fixed:
                 self.observation_space = spaces.Box(0, 1, shape=(2,))
             else:
-                self.observation_space = spaces.Box(0, 1, shape=(3,))
+                self.observation_space = spaces.Box(0, 1, shape=(2 + self.orient_size,))
         elif obs_type == GridObsType.index:
             self.observation_space = spaces.Box(
                 0, self.state_size, shape=(1,), dtype=np.int32
@@ -96,19 +97,19 @@ class GridEnv(Env):
                 self.observation_space = spaces.Box(
                     0,
                     1,
-                    shape=(self.ray_length * self.num_rays,),
-                    dtype=np.int32,
+                    shape=(self.num_rays,),
                 )
             else:
                 self.observation_space = spaces.Box(
                     0,
                     1,
-                    shape=(self.ray_length * self.num_rays + self.orient_size,),
-                    dtype=np.int32,
+                    shape=(self.num_rays + self.orient_size,),
                 )
         elif obs_type == GridObsType.images:
             self.observation_space = spaces.Box(0, 1, shape=(32, 32, 3))
             self.images, _, _, _ = utils.cifar10()
+        elif obs_type == GridObsType.window:
+            self.observation_space = spaces.Box(0, 1, shape=(5 * 5 * 3,))
         else:
             raise Exception("No valid ObservationType provided.")
 
@@ -152,7 +153,8 @@ class GridEnv(Env):
     def grid(self, render_objects=True):
         grid = np.zeros([self.grid_size, self.grid_size, 3])
         if render_objects:
-            grid[self.agent_pos[0], self.agent_pos[1], :] = 1
+            if self.orientation_type == OrientationType.fixed:
+                grid[self.agent_pos[0], self.agent_pos[1], :] = 1
             grid[self.goal_pos[0], self.goal_pos[1], 1] = 1
         for block in self.blocks:
             grid[block[0], block[1], :] = 0.5
@@ -160,6 +162,18 @@ class GridEnv(Env):
 
     def render(self):
         plt.imshow(self.grid())
+        if self.orientation_type == OrientationType.dynamic:
+            up = [[0.5, 0], [0, 1], [1, 1]]
+            right = [[0, 0], [1, 0.5], [0, 1]]
+            down = [[0, 0], [0.5, 1], [1, 0]]
+            left = [[0, 0.5], [1, 1], [1, 0]]
+            arrow_list = [up, right, down, left]
+            selection = arrow_list[self.orientation]
+            for i in range(3):
+                selection[i][1] += self.agent_pos[0] - 0.5
+                selection[i][0] += self.agent_pos[1] - 0.5
+            t1 = plt.Polygon(selection, color="white")
+            plt.gca().add_patch(t1)
         plt.axis("off")
         plt.hlines(
             y=np.arange(0, self.grid_size) + 0.5,
@@ -190,12 +204,18 @@ class GridEnv(Env):
 
     def get_observation(self, perspective):
         if self.obs_mode == GridObsType.onehot:
-            return utils.onehot(
+            one_hot = utils.onehot(
                 self.orientation * self.state_size
                 + perspective[0] * self.grid_size
                 + perspective[1],
                 self.state_size * self.orient_size,
             )
+            if self.orientation_type == OrientationType.fixed:
+                return one_hot
+            else:
+                return np.concatenate(
+                    [one_hot, utils.onehot(self.orientation, self.orient_size)]
+                )
         elif self.obs_mode == GridObsType.twohot:
             two_hot = utils.twohot(perspective, self.grid_size)
             if self.orientation_type == OrientationType.dynamic:
@@ -206,7 +226,9 @@ class GridEnv(Env):
         elif self.obs_mode == GridObsType.geometric:
             geo = np.array(perspective) / (self.grid_size - 1.0)
             if self.orientation_type == OrientationType.dynamic:
-                geo = np.concatenate([geo, self.orientation])
+                geo = np.concatenate(
+                    [geo, utils.onehot(self.orientation, self.orient_size)]
+                )
             return geo
         elif self.obs_mode == GridObsType.visual:
             return self.grid()
@@ -218,7 +240,7 @@ class GridEnv(Env):
             )
         elif self.obs_mode == GridObsType.boundary:
             bounds = self.get_boundaries(
-                perspective, True, self.num_rays, self.ray_length
+                perspective, False, self.num_rays, self.ray_length
             )
             if self.orientation_type == OrientationType.dynamic:
                 bounds = np.concatenate(
@@ -232,6 +254,18 @@ class GridEnv(Env):
                 + perspective[1]
             )
             return np.rot90(self.images[idx], k=3)
+        elif self.obs_mode == GridObsType.window:
+            space = np.ones([self.grid_size * 3, self.grid_size * 3, 3]) * 0.5
+            space[
+                self.grid_size : self.grid_size * 2,
+                self.grid_size : self.grid_size * 2,
+                :,
+            ] = self.grid()
+            x, y = self.agent_pos
+            x += self.grid_size
+            y += self.grid_size
+            sub = space[x - 2 : x + 3, y - 2 : y + 3, :]
+            return sub.reshape(-1)
 
     @property
     def observation(self):
