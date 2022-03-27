@@ -72,13 +72,13 @@ class GridEnv(Env):
         elif obs_type == GridObsType.twohot:
             if self.orientation_type == OrientationType.fixed:
                 self.observation_space = spaces.Box(
-                    0, 1, shape=(self.grid_size + self.grid_size,), dtype=np.int32
+                    0, 1, shape=(2 * self.grid_size,), dtype=np.int32
                 )
             else:
                 self.observation_space = spaces.Box(
                     0,
                     1,
-                    shape=(self.grid_size + self.grid_size + self.orient_size,),
+                    shape=(2 * self.grid_size + self.orient_size,),
                     dtype=np.int32,
                 )
         elif obs_type == GridObsType.geometric:
@@ -295,7 +295,7 @@ class GridEnv(Env):
                 distance = distance / self.grid_size
             distances.append(distance)
         distances = np.stack(distances)
-        return distances
+        return distances.reshape(-1)
 
     def simple_ray(self, direction, start):
         if self.orientation_type == OrientationType.dynamic:
