@@ -26,6 +26,35 @@ def four_rooms(grid_size):
     return blocks, agent_start, goal_start
 
 
+def four_rooms_split(grid_size):
+    agent_start = [grid_size - 2, grid_size - 2]
+    goal_start = [1, 1]
+    mid = int(grid_size // 2)
+    earl_mid = int(mid // 2)
+    if grid_size == 11:
+        late_mid = mid + earl_mid + 1
+    else:
+        late_mid = mid + earl_mid
+    blocks_a = [[mid, i] for i in range(grid_size)]
+    blocks_b = [[i, mid] for i in range(grid_size)]
+    blocks_c = [[mid - 1, i] for i in range(grid_size)]
+    blocks_d = [[i, mid - 1] for i in range(grid_size)]
+    blocks_e = [[mid + 1, i] for i in range(grid_size)]
+    blocks_f = [[i, mid + 1] for i in range(grid_size)]
+    blocks = blocks_a + blocks_b + blocks_c + blocks_d + blocks_e + blocks_f
+    bottlenecks = [
+        [earl_mid, mid - 1],
+        [earl_mid, mid],
+        [earl_mid, mid + 1],
+        [late_mid, mid - 1],
+        [late_mid, mid],
+        [late_mid, mid + 1],
+    ]
+    for bottleneck in bottlenecks:
+        blocks.remove(bottleneck)
+    return blocks, agent_start, goal_start
+
+
 def empty(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
     goal_start = [1, 1]
@@ -229,6 +258,7 @@ class GridTopography(enum.Enum):
     hairpin = "hairpin"
     detour = "detour"
     detour_block = "detour_block"
+    four_rooms_split = "four_rooms_split"
 
 
 topography_map = {
@@ -246,6 +276,7 @@ topography_map = {
     GridTopography.hairpin: hairpin,
     GridTopography.detour: detour,
     GridTopography.detour_block: detour_block,
+    GridTopography.four_rooms_split: four_rooms_split,
 }
 
 
