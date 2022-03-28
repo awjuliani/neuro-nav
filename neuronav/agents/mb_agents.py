@@ -113,7 +113,7 @@ class SRMB(BaseAgent):
         gamma=0.99,
         lr=1e-1,
         beta=1e4,
-        mix=0.5,
+        mix=0.1,
         poltype="softmax",
         weights="direct",
         epsilon=1e-1,
