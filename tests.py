@@ -33,17 +33,21 @@ def test_graph_structure():
 
 
 def test_grid_orient():
-    for orient in OrientationType:
-        env = GridEnv(orientation_type=orient)
-        env.reset()
+    for obs_type in GridObsType:
+        env = GridEnv(orientation_type=OrientationType.dynamic, obs_type=obs_type)
+        obs = env.reset()
         env.step(env.action_space.sample())
+        if obs_type != GridObsType.index:
+            assert obs.shape == env.observation_space.shape
 
 
 def test_grid_obs():
     for obs_type in GridObsType:
         env = GridEnv(obs_type=obs_type)
-        env.reset()
+        obs = env.reset()
         env.step(env.action_space.sample())
+        if obs_type != GridObsType.index:
+            assert obs.shape == env.observation_space.shape
 
 
 def test_grid_topo():
