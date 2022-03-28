@@ -16,22 +16,23 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 
  To add your own topographies, edit [grid_topographies.py](./grid_topographies.py).
 
-| Topography | Image Small (11x11) | Image Large (17 x 17)
+| Topography Name | Image Small (11x11) | Image Large (17 x 17)
 | --- | --- | --- |
-| empty | ![empty](/imgs/empty.png) | ![empty_large](/imgs/empty_large.png) |
-| four_rooms | ![four_rooms](/imgs/four_rooms.png) | ![four_rooms_large](/imgs/four_rooms_large.png) |
-| outer_ring | ![outer_ring](/imgs/outer_ring.png) | ![outer_ring_large](/imgs/outer_ring_large.png) |
-| two_rooms| ![two_rooms](/imgs/two_rooms.png) | ![two_rooms_large](/imgs/two_rooms_large.png) |
-| u_maze | ![u_maze](/imgs/u_maze.png) | ![u_maze_large](/imgs/u_maze_large.png) |
-| t_maze | ![t_maze](/imgs/t_maze.png) | ![t_maze_large](/imgs/t_maze_large.png) |
-| hallways | ![hallways](/imgs/hallways.png) | ![hallways_large](/imgs/hallways_large.png) |
-| ring | ![ring](/imgs/ring.png) | ![ring_large](/imgs/ring_large.png) |
-| s_maze | ![s_maze](/imgs/s_maze.png) | ![s_maze_large](/imgs/s_maze_large.png) |
-| circle | ![circle](/imgs/circle.png) | ![circle_large](/imgs/circle_large.png) |
-| hairpin | ![hairpin](/imgs/hairpin.png) | ![hairpin_large](/imgs/hairpin_large.png) |
-| i_maze | ![i_maze](/imgs/i_maze.png) | ![i_maze_large](/imgs/i_maze_large.png) |
-| detour | ![detour](/imgs/detour.png) | ![detour_large](/imgs/detour_large.png) |
-| detour_block | ![detour_block](/imgs/detour_block.png) | ![detour_block_large](/imgs/detour_block_large.png) |
+| empty | ![empty](/images/grid_small/empty.png) | ![empty](/images/grid_large/empty.png) |
+| four_rooms | ![four_rooms](/images/grid_small/four_rooms.png) | ![four_rooms](/images/grid_large/four_rooms.png) |
+| outer_ring | ![outer_ring](/images/grid_small/outer_ring.png) | ![outer_ring](/images/grid_large/outer_ring.png) |
+| two_rooms| ![two_rooms](/images/grid_small/two_rooms.png) | ![two_rooms](/images/grid_large/two_rooms.png) |
+| u_maze | ![u_maze](/images/grid_small/u_maze.png) | ![u_maze](/images/grid_large/u_maze.png) |
+| t_maze | ![t_maze](/images/grid_small/t_maze.png) | ![t_maze](/images/grid_large/t_maze.png) |
+| hallways | ![hallways](/images/grid_small/hallways.png) | ![hallways](/images/grid_large/hallways.png) |
+| ring | ![ring](/images/grid_small/ring.png) | ![ring](/images/grid_large/ring.png) |
+| s_maze | ![s_maze](/images/grid_small/s_maze.png) | ![s_maze](/images/grid_large/s_maze.png) |
+| circle | ![circle](/images/grid_small/circle.png) | ![circle](/images/grid_large/circle.png) |
+| hairpin | ![hairpin](/images/grid_small/hairpin.png) | ![hairpin](/images/grid_large/hairpin.png) |
+| i_maze | ![i_maze](/images/grid_small/i_maze.png) | ![i_maze](/images/grid_large/i_maze.png) |
+| detour | ![detour](/images/grid_small/detour.png) | ![detour](/images/grid_large/detour.png) |
+| detour_block | ![detour_block](/images/grid_small/detour_block.png) | ![detour_block](/images/grid_large/detour_block.png) |
+| two_rooms_split | ![two_rooms_split](/images/grid_small/two_rooms_split.png) | ![two_rooms_split](/images/grid_large/two_rooms_split.png) |
 
 ### Observation Types
 
@@ -70,12 +71,12 @@ The graph structures can be added to by editing [graph_structures.py](./graph_st
 
 | Structure | Image |
 | --- | --- |
-| two_step | ![two_step](/imgs/two_step.png) |
-| linear | ![linear](/imgs/linear.png) |
-| t_graph | ![t_graph](/imgs/t_graph.png) |
-| neighborhood | ![neighborhood](/imgs/neighborhood.png) |
-| ring | ![ring](/imgs/ring_graph.png) |
-| two_way_linear | ![two_way_linear](/imgs/two_way_linear.png) |
+| two_step | ![two_step](/images/graph/two_step.png) |
+| linear | ![linear](/images/graph/linear.png) |
+| t_graph | ![t_graph](/images/graph/t_graph.png) |
+| neighborhood | ![neighborhood](/images/graph/neighborhood.png) |
+| ring | ![ring](/images/graph/ring_graph.png) |
+| two_way_linear | ![two_way_linear](/images/graph/two_way_linear.png) |
 
 ### Observation Types
 
