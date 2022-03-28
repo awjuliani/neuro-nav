@@ -1,6 +1,6 @@
 # Neuro-Nav (Beta)
 
-![Example environments](/imgs/banner.png)
+![Example environments](/images/banner.png)
 
 Neuro-Nav is an open-source library for neurally plausible reinforcement learning (RL). It offers a set of standardized environments and RL algorithms drawn from canonical behavioral and neural studies in rodents and humans. 
 
@@ -8,7 +8,7 @@ Neuro-Nav is an open-source library for neurally plausible reinforcement learnin
 
 ## Requirements
 
-* Python 3
+* Python 3.7+
 * NumPy
 * Gym
 * PyPlot
