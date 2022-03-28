@@ -52,6 +52,7 @@ To add your own, edit [grid_env.py](./grid_env.py).
 | boundary | Function-Approx | `[n * 4]` | `[n * 4 + 4]` | A matrix corresponding to the one-hot encodings of the distances of the agent from the nearest wall in the four cardinal directions |
 | visual | Function-Approx | `[n, n, 3]` | `[n, n, 3` | A 3D tensor corresponding to the RGB image of the environment. |
 | images | Function-Approx | `[32, 32, 3]` | `[32, 32, 3` | A 3D tensor corresponding to a unique CIFAR10 image per state. |
+| window | Function-Approx | `[5, 5, 3]` | `[5, 5, 3]` | A 3D tensor corresponding to the 5x5 local window around the agent. |
 
 * Where `n` is the length of the grid.
 
