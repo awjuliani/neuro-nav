@@ -148,10 +148,12 @@ class TDSR(BaseAgent):
         M_init=None,
         weights="direct",
         epsilon=1e-1,
+        goal_biased_sr=True,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta)
         self.weights = weights
+        self.goal_biased_sr = goal_biased_sr
 
         if M_init is None:
             self.M = np.stack([np.identity(state_size) for i in range(action_size)])
@@ -214,7 +216,10 @@ class TDSR(BaseAgent):
                 I + self.gamma * utils.onehot(s_1, self.state_size) - self.M[s_a, s, :]
             )
         else:
-            m_error = I + self.gamma * self.M[s_a_1, s_1, :] - self.M[s_a, s, :]
+            if self.goal_biased_sr:
+                m_error = I + self.gamma * self.M[s_a_1, s_1, :] - self.M[s_a, s, :]
+            else:
+                m_error = I + self.gamma * self.M[:, s_1, :].mean(0) - self.M[s_a, s, :]
 
         if not prospective:
             # actually perform update to SR if not prospective

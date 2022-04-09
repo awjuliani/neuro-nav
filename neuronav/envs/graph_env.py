@@ -18,7 +18,7 @@ class GraphEnv(Env):
     """
 
     def __init__(
-        self, graph_structure=GraphStructure.two_step, obs_type=GraphObsType.index
+        self, graph_structure=GraphStructure.linear, obs_type=GraphObsType.index
     ):
         if isinstance(graph_structure, str):
             graph_structure = GraphStructure(graph_structure)
@@ -63,10 +63,15 @@ class GraphEnv(Env):
         else:
             return None
 
-    def reset(self, agent_pos=None, goal_pos=None):
+    def get_free_spot(self):
+        return np.random.randint(0, self.state_size)
+
+    def reset(self, agent_pos=None, goal_pos=None, random_start=False):
         self.running = True
         if agent_pos != None:
             self.agent_pos = agent_pos
+        elif random_start:
+            self.agent_pos = self.get_free_spot()
         else:
             self.agent_pos = self.agent_start_pos
         self.done = False
