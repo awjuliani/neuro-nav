@@ -2,9 +2,17 @@
 
 from setuptools import setup, find_packages
 
+required = [
+    'numpy',
+    'gym',
+    'matplotlib',
+    'scipy',
+    'networkx'
+]
 
-with open("requirements.txt") as f:
-    required = f.read().splitlines()
+extras_required = {
+    "examples": ['jupyterlab', 'sklearn']
+}
 
 setup(
     name="neuronav",
@@ -16,4 +24,5 @@ setup(
     url="https://github.com/awjuliani/neuro-nav",
     packages=find_packages(),
     install_requires=required,
+    extras_require=extras_required,
 )
