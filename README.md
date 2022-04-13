@@ -33,8 +33,8 @@ Contains artifical agents which implement Temporal Difference (TD) and Dyna vers
 
 See [neuronav/agents](./neuronav/agents) for more information.
 
-## Jupyter Notebooks
+## Experiment Notebooks
 
-We include a number of interactive jupyter notebooks demonstrating various feature of the library, as well as reproducing known results.
+Neuro-nav includes a number of interactive jupyter notebooks. These demonstrate features of the library, as well as serve to reproduce various experiments in the literature.
 
 See [notebooks](./notebooks) for more information.
