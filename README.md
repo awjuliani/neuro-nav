@@ -19,7 +19,9 @@ Neuro-Nav is an open-source library for neurally plausible reinforcement learnin
 
 ## Installation
 
-The `neuronav` package can be installed by running `pip install -e ./` from the root of this directory.
+The `neuronav` package can be installed locally by running `pip install -e .` from the root of this directory.
+
+If you would like to use the experiment notebooks as well as the core library, please run `pip install -e .[experiments_local]` from the root of this directory to install the additional dependencies.
 
 ## Benchmark Environments
 
