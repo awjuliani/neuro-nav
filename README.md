@@ -43,15 +43,15 @@ See [notebooks](./notebooks) for more information.
 
 ## Contributing
 
-Neuro-Nav is an open source project, and we encourage community contributions. 
-These can take various forms, such as feature requests, bug fixes, additional documentation, or even additional notebooks. 
-If there is a small contribution you would like to make, please feel free to open a pull request. 
-If there is a larger contribution you are considering, please open an issue, where it can be discussed, and potential support can be provided. 
-We are especially interested in novel algorithms and tasks relevant to the intersection of the neuroscience machine learning communities.
+Neuro-Nav is an open source project, and we actively encourage community contributions. 
+These can take various forms, such as new environments, tasks, algorithms, bug fixes, documentation, citations of relevant work, or additional experiment notebooks. 
+If there is a small contribution you would like to make, please feel free to open a pull request, and we can review it. 
+If there is a larger contribution you are considering, please open a github issue. This way, the contribution can be discussed, and potential support can be provided if needed. 
+If you have ideas for changes or features you would like to see in the library in the future, but don't have the resources to contribute yourself, please feel free to open a github issue describing the request.
 
 ## Citing
 
-If you use Neuro-Nav in your research, please cite the work as follows:
+If you use Neuro-Nav in your research or educational material, please cite the work as follows:
 
 ```
 @inproceedings{neuronav2022,
