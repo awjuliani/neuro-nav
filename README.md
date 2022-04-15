@@ -35,7 +35,7 @@ See [neuronav/agents](./neuronav/agents) for more information.
 
 ## Experiment Notebooks
 
-Neuro-nav includes a number of interactive jupyter notebooks. These demonstrate features of the library, as well as serve to reproduce various experiments in the literature.
+Neuro-nav includes a number of interactive jupyter notebooks, featuring different experimental environments, tasks, and RL agent algorithms. You can use these notebooks to replicate various experiments across the literature, or to simply learn about what's possible to do with the library.
 
 See [notebooks](./notebooks) for more information.
 
