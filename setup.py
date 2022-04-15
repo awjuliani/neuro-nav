@@ -11,12 +11,13 @@ required = [
 ]
 
 extras_required = {
-    "examples": ['jupyterlab', 'sklearn']
+    "experiments_local": ['jupyterlab', 'sklearn'],
+    "experiments_remote": ['sklearn']
 }
 
 setup(
     name="neuronav",
-    version="0.3.0",
+    version="0.3.1",
     description="Neuro-Nav",
     license="Apache License 2.0",
     author="Arthur Juliani",
