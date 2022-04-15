@@ -16,8 +16,8 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 
  To add your own topographies, edit [grid_topographies.py](./grid_topographies.py).
 
-| Topography Name | Image Small (11x11) | Image Large (17 x 17)
-| --- | --- | --- |
+| Topography Name | Image Small (11x11) | Image Large (17 x 17) | Reference |
+| --- | --- | --- | --- |
 | empty | ![empty](/images/grid_small/empty.png) | ![empty](/images/grid_large/empty.png) |
 | four_rooms | ![four_rooms](/images/grid_small/four_rooms.png) | ![four_rooms](/images/grid_large/four_rooms.png) |
 | outer_ring | ![outer_ring](/images/grid_small/outer_ring.png) | ![outer_ring](/images/grid_large/outer_ring.png) |
@@ -30,8 +30,8 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 | circle | ![circle](/images/grid_small/circle.png) | ![circle](/images/grid_large/circle.png) |
 | hairpin | ![hairpin](/images/grid_small/hairpin.png) | ![hairpin](/images/grid_large/hairpin.png) |
 | i_maze | ![i_maze](/images/grid_small/i_maze.png) | ![i_maze](/images/grid_large/i_maze.png) |
-| detour | ![detour](/images/grid_small/detour.png) | ![detour](/images/grid_large/detour.png) |
-| detour_block | ![detour_block](/images/grid_small/detour_block.png) | ![detour_block](/images/grid_large/detour_block.png) |
+| detour | ![detour](/images/grid_small/detour.png) | ![detour](/images/grid_large/detour.png) | [Russek et al., 2017](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005768) |
+| detour_block | ![detour_block](/images/grid_small/detour_block.png) | ![detour_block](/images/grid_large/detour_block.png) | [Russek et al., 2017](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005768) |
 | two_rooms_split | ![two_rooms_split](/images/grid_small/two_rooms_split.png) | ![two_rooms_split](/images/grid_large/two_rooms_split.png) |
 
 ### Observation Types
@@ -69,14 +69,18 @@ Graph structures can be set as an enum when initializing the environment. For ex
 
 The graph structures can be added to by editing [graph_structures.py](./graph_structures.py)
 
-| Structure | Image |
-| --- | --- |
+| Structure | Image | Reference |
+| --- | --- | --- |
 | two_step | ![two_step](/images/graph/two_step.png) |
 | linear | ![linear](/images/graph/linear.png) |
 | t_graph | ![t_graph](/images/graph/t_graph.png) |
-| neighborhood | ![neighborhood](/images/graph/neighborhood.png) |
+| neighborhood | ![neighborhood](/images/graph/neighborhood.png) | [Schapiro et al., 2016](https://pubmed.ncbi.nlm.nih.gov/26332666/) |
 | ring | ![ring](/images/graph/ring_graph.png) |
 | two_way_linear | ![two_way_linear](/images/graph/two_way_linear.png) |
+| human_a | ![human_a](/images/graph/human_a.png) | [Momennejad et al., 2017](https://www.nature.com/articles/s41562-017-0180-8) |
+| human_b | ![human_b](/images/graph/human_b.png) | [Momennejad et al., 2017](https://www.nature.com/articles/s41562-017-0180-8) |
+| t_loop | ![t_loop](/images/graph/t_loop.png) |
+
 
 ### Observation Types
 
