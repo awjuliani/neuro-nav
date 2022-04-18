@@ -2,17 +2,11 @@
 
 from setuptools import setup, find_packages
 
-required = [
-    'numpy',
-    'gym',
-    'matplotlib',
-    'scipy',
-    'networkx'
-]
+required = ["numpy", "gym", "matplotlib", "scipy", "networkx"]
 
 extras_required = {
-    "experiments_local": ['jupyterlab', 'sklearn'],
-    "experiments_remote": ['sklearn']
+    "experiments_local": ["jupyterlab", "sklearn"],
+    "experiments_remote": ["sklearn"],
 }
 
 setup(
