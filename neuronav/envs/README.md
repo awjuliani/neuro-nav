@@ -74,7 +74,7 @@ The graph structures can be added to by editing [graph_structures.py](./graph_st
 | two_step | ![two_step](/images/graph/two_step.png) |
 | linear | ![linear](/images/graph/linear.png) |
 | t_graph | ![t_graph](/images/graph/t_graph.png) |
-| neighborhood | ![neighborhood](/images/graph/neighborhood.png) | [Schapiro et al., 2016](https://pubmed.ncbi.nlm.nih.gov/26332666/) |
+| neighborhood | ![neighborhood](/images/graph/neighborhood.png) | [Schapiro et al., 2013](https://www.nature.com/articles/nn.3331) |
 | ring | ![ring](/images/graph/ring_graph.png) |
 | two_way_linear | ![two_way_linear](/images/graph/two_way_linear.png) |
 | human_a | ![human_a](/images/graph/human_a.png) | [Momennejad et al., 2017](https://www.nature.com/articles/s41562-017-0180-8) |
