@@ -89,7 +89,7 @@ class GraphEnv(Env):
             graph.add_node(idx)
             if idx == self.agent_pos:
                 color_map.append("cornflowerblue")
-            elif idx in self.rewarding_states:
+            elif self.reward_nodes[idx] > 0:
                 color_map.append("green")
             else:
                 color_map.append("silver")

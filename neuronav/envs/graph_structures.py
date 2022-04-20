@@ -5,7 +5,6 @@ class GraphStructure(enum.Enum):
     two_step = "two_step"
     ring = "ring"
     two_way_linear = "two_way_linear"
-    two_step_flip = "two_step_flip"
     linear = "linear"
     t_graph = "t_graph"
     neighborhood = "neighborhood"
@@ -41,12 +40,6 @@ def linear():
 def t_graph():
     rewarding_states = {5: 1}
     edges = [[1, 0], [2, 1], [3, 4], [5, 3], [6, 4], [], []]
-    return rewarding_states, edges
-
-
-def two_step_flip():
-    rewarding_states = {6: 1}
-    edges = [[2, 1], [3, 4], [5, 6], [], [], [], []]
     return rewarding_states, edges
 
 
@@ -110,7 +103,6 @@ structure_map = {
     GraphStructure.ring: ring,
     GraphStructure.linear: linear,
     GraphStructure.t_graph: t_graph,
-    GraphStructure.two_step_flip: two_step_flip,
     GraphStructure.neighborhood: neighborhood,
     GraphStructure.human_a: human_a,
     GraphStructure.human_b: human_b,

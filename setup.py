@@ -2,21 +2,16 @@
 
 from setuptools import setup, find_packages
 
-required = [
-    'numpy',
-    'gym',
-    'matplotlib',
-    'scipy',
-    'networkx'
-]
+required = ["numpy", "gym", "matplotlib", "scipy", "networkx"]
 
 extras_required = {
-    "examples": ['jupyterlab', 'sklearn']
+    "experiments_local": ["jupyterlab", "sklearn", "torch"],
+    "experiments_remote": ["sklearn", "torch"],
 }
 
 setup(
     name="neuronav",
-    version="0.3.0",
+    version="0.4.0",
     description="Neuro-Nav",
     license="Apache License 2.0",
     author="Arthur Juliani",

@@ -24,7 +24,7 @@ def onehot(value, max_value):
     if value >= max_value:
         value = max_value - 1
     vec[value] = 1
-    return vec
+    return vec.astype(np.float32)
 
 
 def twohot(value, max_value):
