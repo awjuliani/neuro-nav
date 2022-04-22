@@ -91,6 +91,8 @@ class GraphEnv(Env):
                 color_map.append("cornflowerblue")
             elif self.reward_nodes[idx] > 0:
                 color_map.append("green")
+            elif self.reward_nodes[idx] < 0:
+                color_map.append("red")
             else:
                 color_map.append("silver")
         for idx, edge in enumerate(self.edges):
@@ -114,6 +116,6 @@ class GraphEnv(Env):
         else:
             self.agent_pos = self.edges[self.agent_pos][action]
             reward = self.reward_nodes[self.agent_pos]
-            if reward == 1 or len(self.edges[self.agent_pos]) == 0:
+            if np.abs(reward) == 1 or len(self.edges[self.agent_pos]) == 0:
                 self.done = True
             return self.observation, reward, self.done, {}
