@@ -66,7 +66,7 @@ class GraphEnv(Env):
     def get_free_spot(self):
         return np.random.randint(0, self.state_size)
 
-    def reset(self, agent_pos=None, goal_pos=None, random_start=False):
+    def reset(self, agent_pos=None, reward_locs=None, random_start=False):
         self.running = True
         if agent_pos != None:
             self.agent_pos = agent_pos
@@ -75,8 +75,8 @@ class GraphEnv(Env):
         else:
             self.agent_pos = self.agent_start_pos
         self.done = False
-        if goal_pos != None:
-            self.reward_nodes = goal_pos
+        if reward_locs != None:
+            self.reward_nodes = reward_locs
         else:
             for state in self.rewarding_states:
                 self.reward_nodes[state] = self.rewarding_states[state]

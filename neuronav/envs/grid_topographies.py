@@ -5,7 +5,7 @@ import enum
 
 def four_rooms(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     mid = int(grid_size // 2)
     earl_mid = int(mid // 2) + 1
     if grid_size == 11:
@@ -23,12 +23,12 @@ def four_rooms(grid_size):
     ]
     for bottleneck in bottlenecks:
         blocks.remove(bottleneck)
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def four_rooms_split(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     mid = int(grid_size // 2)
     earl_mid = int(mid // 2)
     if grid_size == 11:
@@ -52,19 +52,19 @@ def four_rooms_split(grid_size):
     ]
     for bottleneck in bottlenecks:
         blocks.remove(bottleneck)
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def empty(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
     blocks = []
-    return blocks, agent_start, goal_start
+    reward_locs = {(1, 1): 1.0}
+    return blocks, agent_start, reward_locs
 
 
 def outer_ring(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     blocks = []
     extra_depth = 2
     for i in range(grid_size):
@@ -74,24 +74,24 @@ def outer_ring(grid_size):
                 and extra_depth < j < grid_size - 1 - extra_depth
             ):
                 blocks.append([i, j])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def u_maze(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [grid_size - 2, 1]
+    reward_locs = {(grid_size - 2, 1): 1.0}
     blocks = []
     extra_depth = 2
     for i in range(grid_size):
         for j in range(grid_size):
             if extra_depth < j < grid_size - 1 - extra_depth and i > extra_depth:
                 blocks.append([i, j])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def two_rooms(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     mid = int(grid_size // 2)
     blocks_b = [[mid, i] for i in range(grid_size)]
     blocks = blocks_b
@@ -103,23 +103,23 @@ def two_rooms(grid_size):
         blocks += blocks_c
         blocks.remove([mid - 1, mid])
         blocks.remove([mid + 1, mid])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def s_maze(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     mid_a = int(grid_size // 3)
     mid_b = int(grid_size // 3 + grid_size // 3) + 1
     blocks_a = [[i, mid_a] for i in range(grid_size // 2 + 1 + grid_size // 4)]
     blocks_b = [[i, mid_b] for i in range(grid_size // 4 + 1, grid_size - 1)]
     blocks = blocks_a + blocks_b
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def hairpin(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     mid_a = int(grid_size // 5)
     mid_b = 2 * int(grid_size // 5)
     mid_c = 3 * int(grid_size // 5)
@@ -129,24 +129,24 @@ def hairpin(grid_size):
     blocks_c = [[i, mid_c] for i in range(grid_size // 2 + 1 + grid_size // 4)]
     blocks_d = [[i, mid_d] for i in range(grid_size // 4 + 1, grid_size - 1)]
     blocks = blocks_a + blocks_b + blocks_c + blocks_d
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def circle(grid_size):
     agent_start = [grid_size - 2, grid_size // 2]
-    goal_start = [1, grid_size // 2]
+    reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
     mask = utils.create_circular_mask(grid_size, grid_size)
     for i in range(grid_size):
         for j in range(grid_size):
             if mask[i, j] == 0:
                 blocks.append([i, j])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def ring(grid_size):
     agent_start = [grid_size - 2, grid_size // 2]
-    goal_start = [1, grid_size // 2]
+    reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
     big_mask = utils.create_circular_mask(grid_size, grid_size)
     small_mask = utils.create_circular_mask(grid_size, grid_size, radius=grid_size // 4)
@@ -154,12 +154,12 @@ def ring(grid_size):
         for j in range(grid_size):
             if big_mask[i, j] == 0 or small_mask[i, j] != 0:
                 blocks.append([i, j])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def t_maze(grid_size):
     agent_start = [grid_size - 2, grid_size // 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     width = 3
     half_width = width // 2
     middle_pos = grid_size // 2
@@ -170,12 +170,12 @@ def t_maze(grid_size):
                 j < middle_pos - half_width or j > middle_pos + half_width
             ):
                 blocks.append([i, j])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def i_maze(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
     width = 3
     half_width = width // 2
     middle_pos = grid_size // 2
@@ -186,12 +186,12 @@ def i_maze(grid_size):
                 j < middle_pos - half_width or j > middle_pos + half_width
             ):
                 blocks.append([i, j])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def hallways(grid_size):
     agent_start = [grid_size - 2, grid_size - 2]
-    goal_start = [1, 1]
+    reward_locs = {(1, 1): 1.0}
 
     blocks = []
     extra_depth = 1
@@ -204,12 +204,12 @@ def hallways(grid_size):
             check_inner = i == grid_size // 2 or j == grid_size // 2
             if check_outer and not check_inner:
                 blocks.append([i, j])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def detour(grid_size):
     agent_start = [grid_size - 2, grid_size // 2]
-    goal_start = [1, grid_size // 2]
+    reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
     extra_depth = 1
     for i in range(grid_size):
@@ -222,12 +222,12 @@ def detour(grid_size):
     for i in range(grid_size):
         if [i, grid_size // 2] in blocks:
             blocks.remove([i, grid_size // 2])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def detour_block(grid_size):
     agent_start = [grid_size - 2, grid_size // 2]
-    goal_start = [1, grid_size // 2]
+    reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
     extra_depth = 1
     for i in range(grid_size):
@@ -240,7 +240,7 @@ def detour_block(grid_size):
     for i in range(grid_size):
         if [i, grid_size // 2] in blocks and i != grid_size // 2:
             blocks.remove([i, grid_size // 2])
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 class GridTopography(enum.Enum):
@@ -289,9 +289,9 @@ def generate_topography(topography=GridTopography.empty, grid_size=GridSize.smal
     grid_size = grid_size.value
     if type(topography) == str:
         topography = GridTopography(topography)
-    blocks, agent_start, goal_start = topography_map[topography](grid_size)
+    blocks, agent_start, reward_locs = topography_map[topography](grid_size)
     blocks = add_outer_blocks(blocks, grid_size)
-    return blocks, agent_start, goal_start
+    return blocks, agent_start, reward_locs
 
 
 def add_outer_blocks(blocks, grid_size):

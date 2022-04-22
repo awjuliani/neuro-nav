@@ -39,7 +39,7 @@ class GridEnv(Env):
         obs_type=GridObsType.index,
         orientation_type=OrientationType.fixed,
     ):
-        self.blocks, self.agent_start_pos, self.goal_start_pos = generate_topography(
+        self.blocks, self.agent_start_pos, self.topo_reward_locs = generate_topography(
             topography, grid_size
         )
         self.grid_size = grid_size.value
@@ -55,11 +55,9 @@ class GridEnv(Env):
         else:
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
-        self.goal_pos = []
         self.agent_pos = []
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]])
         self.done = False
-        self.observations = None
         self.free_spots = self.make_free_spots()
         if isinstance(obs_type, str):
             obs_type = GridObsType(obs_type)
@@ -132,7 +130,7 @@ class GridEnv(Env):
 
     def reset(
         self,
-        goal_pos=None,
+        reward_locs=None,
         agent_pos=None,
         episode_length=100,
         random_start=False,
@@ -149,10 +147,10 @@ class GridEnv(Env):
         else:
             self.agent_pos = self.agent_start_pos
 
-        if goal_pos != None:
-            self.goal_pos = goal_pos
+        if reward_locs != None:
+            self.reward_locs = reward_locs
         else:
-            self.goal_pos = self.goal_start_pos
+            self.reward_locs = self.topo_reward_locs
         return self.observation
 
     def get_free_spot(self):
@@ -171,7 +169,11 @@ class GridEnv(Env):
         grid = np.zeros([self.grid_size, self.grid_size, 3])
         if render_objects:
             grid[self.agent_pos[0], self.agent_pos[1], :] = 1
-            grid[self.goal_pos[0], self.goal_pos[1], 1] = 1
+            for loc, reward in self.reward_locs.items():
+                if reward > 0:
+                    grid[loc[0], loc[1], 1] = reward
+                else:
+                    grid[loc[0], loc[1], 0] = np.abs(reward)
         for block in self.blocks:
             grid[block[0], block[1], :] = 0.5
         return grid
@@ -286,10 +288,6 @@ class GridEnv(Env):
     def observation(self):
         return self.get_observation(self.agent_pos)
 
-    @property
-    def goal(self):
-        return self.get_observation(self.goal_pos)
-
     def get_boundaries(
         self,
         object_point,
@@ -374,7 +372,9 @@ class GridEnv(Env):
             self.move_agent(move_array)
         self.episode_time += 1
         reward = 0.0
-        if self.agent_pos == self.goal_pos:
-            self.done = True
-            reward = 1.0
+        eval_pos = tuple(self.agent_pos)
+        if eval_pos in self.reward_locs:
+            if np.abs(self.reward_locs[eval_pos]) == 1.0:
+                self.done = True
+            reward = self.reward_locs[eval_pos]
         return self.observation, reward, self.done, {}
