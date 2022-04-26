@@ -1,3 +1,4 @@
+from matplotlib.pyplot import grid
 from numpy.lib.index_tricks import s_
 import neuronav.utils as utils
 import enum
@@ -103,6 +104,18 @@ def two_rooms(grid_size):
         blocks += blocks_c
         blocks.remove([mid - 1, mid])
         blocks.remove([mid + 1, mid])
+    return blocks, agent_start, reward_locs
+
+
+def obstacle(grid_size):
+    agent_start = [grid_size - 2, grid_size - 2]
+    reward_locs = {(1, 1): 1.0}
+    mid = int(grid_size // 2)
+    if grid_size == 11:
+        blocks_b = [[mid, i] for i in range(2, grid_size - 2)]
+    else:
+        blocks_b = [[mid, i] for i in range(3, grid_size - 3)]
+    blocks = blocks_b
     return blocks, agent_start, reward_locs
 
 
@@ -259,6 +272,7 @@ class GridTopography(enum.Enum):
     detour = "detour"
     detour_block = "detour_block"
     four_rooms_split = "four_rooms_split"
+    obstacle = "obstacle"
 
 
 topography_map = {
@@ -277,6 +291,7 @@ topography_map = {
     GridTopography.detour: detour,
     GridTopography.detour_block: detour_block,
     GridTopography.four_rooms_split: four_rooms_split,
+    GridTopography.obstacle: obstacle,
 }
 
 
