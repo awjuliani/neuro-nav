@@ -10,6 +10,7 @@ def run_episode(
     obs = env.reset(
         agent_pos=start_pos, reward_locs=reward_locs, random_start=random_start
     )
+    agent.reset()
     steps = 0
     done = False
     while not done and steps < max_steps:

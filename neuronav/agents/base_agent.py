@@ -34,3 +34,6 @@ class BaseAgent:
 
     def _update(self, current_exp):
         return None
+
+    def reset(self):
+        return None
