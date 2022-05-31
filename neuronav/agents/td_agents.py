@@ -276,7 +276,7 @@ class QET(BaseAgent):
         poltype="softmax",
         Q_init=None,
         epsilon=1e-1,
-        lamb=0.9,
+        lamb=0.95,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta)
