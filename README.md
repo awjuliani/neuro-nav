@@ -63,6 +63,8 @@ If you use Neuro-Nav in your research or educational material, please cite the w
 }
 ```
 
+The research paper corresponding to the above citation can be found [here](https://arxiv.org/abs/2206.03312).
+
 ## License
 
 [Apache License 2.0](./LICENSE.md)
