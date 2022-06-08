@@ -259,3 +259,77 @@ class TDSR(BaseAgent):
     @property
     def Q(self):
         return self.M @ self.w
+
+
+class QET(BaseAgent):
+    """
+    Implementation of Q-learning with eligibility traces.
+    """
+
+    def __init__(
+        self,
+        state_size,
+        action_size,
+        lr=1e-1,
+        gamma=0.99,
+        beta=1e4,
+        poltype="softmax",
+        Q_init=None,
+        epsilon=1e-1,
+        lamb=0.95,
+        **kwargs
+    ):
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta)
+        self.lamb = lamb
+
+        if Q_init is None:
+            self.Q = np.zeros((action_size, state_size))
+        elif np.isscalar(Q_init):
+            self.Q = Q_init * npr.randn(action_size, state_size)
+        else:
+            self.Q = Q_init
+        self.et = np.zeros([action_size, state_size])
+
+    def sample_action(self, state):
+        Qs = self.Q[:, state]
+        if self.poltype == "softmax":
+            action = npr.choice(self.action_size, p=utils.softmax(self.beta * Qs))
+        else:
+            if npr.rand() < self.epsilon:
+                action = npr.choice(self.action_size)
+            else:
+                action = npr.choice(np.flatnonzero(np.isclose(Qs, Qs.max())))
+        return action
+
+    def update_et(self, current_exp):
+        s = current_exp[0]
+        s_a = current_exp[1]
+        s_1 = current_exp[2]
+        r = current_exp[3]
+
+        s_a_1 = np.argmax(self.Q[:, s_1])
+
+        self.et[s_a, s] += 1.0
+        td_error = r + self.gamma * self.Q[s_a_1, s_1] - self.Q[s_a, s]
+        self.Q += self.lr * td_error * self.et
+        self.et *= self.lamb * self.gamma
+        return td_error
+
+    def _update(self, current_exp, **kwargs):
+        q_error = self.update_et(current_exp)
+        td_error = {"q": np.linalg.norm(q_error)}
+        return td_error
+
+    def get_policy(self):
+        if self.poltype == "softmax":
+            policy = utils.softmax(self.beta * self.Q, axis=0)
+        else:
+            mask = self.Q == self.Q.max(0)
+            greedy = mask / mask.sum(0)
+            policy = (1 - self.epsilon) * greedy + (
+                1 / self.action_size
+            ) * self.epsilon * np.ones((self.action_size, self.state_size))
+        return policy
+
+    def reset(self):
+        self.et *= 0.0
