@@ -55,7 +55,6 @@ class MBV(BaseAgent):
         if self.weights == "direct":
             error = r - self.w[s_1]
             self.w[s_1] += self.lr * error
-        self.Q
         return np.linalg.norm(error)
 
     def update_t(self, current_exp, next_exp=None, prospective=False):
@@ -67,9 +66,20 @@ class MBV(BaseAgent):
 
         return 0.0
 
+    def update_q(self, iters=1):
+        for h in range(iters):
+            for i in range(self.state_size):
+                for j in range(self.action_size):
+                    if np.sum(self.T[j][i]) > 0:
+                        v_next = np.max(self.base_Q[:, np.argmax(self.T[j][i])])
+                    else:
+                        v_next = 0
+                    self.base_Q[j, i] = self.w[i] + self.gamma * v_next
+
     def _update(self, current_exp, **kwargs):
         self.update_t(current_exp, **kwargs)
         w_error = self.update_w(current_exp)
+        self.update_q()
         td_error = {"w": np.linalg.norm(w_error)}
         return td_error
 
@@ -93,15 +103,6 @@ class MBV(BaseAgent):
 
     @property
     def Q(self):
-        iters = 1
-        for h in range(iters):
-            for i in range(self.state_size):
-                for j in range(self.action_size):
-                    if np.sum(self.T[j][i]) > 0:
-                        v_next = np.max(self.base_Q[:, np.argmax(self.T[j][i])])
-                    else:
-                        v_next = 0
-                    self.base_Q[j, i] = self.w[i] + self.gamma * v_next
         return self.base_Q.copy()
 
 
