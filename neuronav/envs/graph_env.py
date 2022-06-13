@@ -120,7 +120,9 @@ class GraphEnv(Env):
         else:
             candidate_positions = self.edges[self.agent_pos][action]
             if type(candidate_positions) == tuple:
-                candidate_position = np.random.choice(candidate_positions[0], p=candidate_positions[1])
+                candidate_position = np.random.choice(
+                    candidate_positions[0], p=candidate_positions[1]
+                )
             else:
                 candidate_position = candidate_positions
             self.agent_pos = candidate_position

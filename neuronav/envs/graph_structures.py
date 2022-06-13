@@ -100,11 +100,31 @@ def t_loop():
 
 
 def variable_magnitude():
-    fmax = 10.
+    # Values taken from original author's code availabe here: https://osf.io/ux5rg/
+    fmax = 10.0
     sigma = 200
-    utility_func = lambda r: (fmax * np.sign(r) * np.abs(r)**(.5)) / (np.abs(r)**(.5) + sigma**(.5))
-    rewarding_states = {1: utility_func(0.1), 2: utility_func(0.3), 3: utility_func(1.2), 4: utility_func(2.5), 5: utility_func(5), 6: utility_func(10), 7: utility_func(20)}
-    edges = [[((1, 2, 3, 4, 5, 6, 7),(0.067,0.090,0.148,0.154,0.313,0.151,0.077))], [], [], [], [], [], [], []]
+    utility_func = lambda r: (fmax * np.sign(r) * np.abs(r) ** (0.5)) / (
+        np.abs(r) ** (0.5) + sigma ** (0.5)
+    )
+    rewarding_states = {
+        1: utility_func(0.1),
+        2: utility_func(0.3),
+        3: utility_func(1.2),
+        4: utility_func(2.5),
+        5: utility_func(5),
+        6: utility_func(10),
+        7: utility_func(20),
+    }
+    edges = [
+        [((1, 2, 3, 4, 5, 6, 7), (0.067, 0.090, 0.148, 0.154, 0.313, 0.151, 0.077))],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    ]
     return rewarding_states, edges
 
 
