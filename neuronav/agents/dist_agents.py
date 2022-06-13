@@ -70,9 +70,7 @@ class DistQ(BaseAgent):
 
         if not prospective:
             # actually perform update to Q if not prospective
-            self.Q[s_a, s] += self.lrs_pos * q_error * qep + self.lrs_neg * q_error * (
-                1 - qep
-            )
+            self.Q[s_a, s] += (self.lrs_pos * qep + self.lrs_neg * (1 - qep)) * q_error
         return q_error
 
     def _update(self, current_exp, **kwargs):

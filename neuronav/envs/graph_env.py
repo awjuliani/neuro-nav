@@ -98,7 +98,7 @@ class GraphEnv(Env):
         for idx, edge in enumerate(self.edges):
             for target in edge:
                 if type(target) == tuple:
-                    for subtarget in target:
+                    for subtarget in target[0]:
                         graph.add_edge(idx, subtarget)
                 else:
                     graph.add_edge(idx, target)
@@ -120,9 +120,7 @@ class GraphEnv(Env):
         else:
             candidate_positions = self.edges[self.agent_pos][action]
             if type(candidate_positions) == tuple:
-                candidate_position = candidate_positions[
-                    np.random.randint(0, len(candidate_positions))
-                ]
+                candidate_position = np.random.choice(candidate_positions[0], p=candidate_positions[1])
             else:
                 candidate_position = candidate_positions
             self.agent_pos = candidate_position
