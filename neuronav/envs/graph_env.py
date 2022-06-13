@@ -97,7 +97,11 @@ class GraphEnv(Env):
                 color_map.append("silver")
         for idx, edge in enumerate(self.edges):
             for target in edge:
-                graph.add_edge(idx, target)
+                if type(target) == tuple:
+                    for subtarget in target:
+                        graph.add_edge(idx, subtarget)
+                else:
+                    graph.add_edge(idx, target)
         nx.draw(
             graph,
             with_labels=True,
@@ -114,7 +118,14 @@ class GraphEnv(Env):
             print("Episode fininshed. Please reset the environment.")
             return None, None, None, None
         else:
-            self.agent_pos = self.edges[self.agent_pos][action]
+            candidate_positions = self.edges[self.agent_pos][action]
+            if type(candidate_positions) == tuple:
+                candidate_position = candidate_positions[
+                    np.random.randint(0, len(candidate_positions))
+                ]
+            else:
+                candidate_position = candidate_positions
+            self.agent_pos = candidate_position
             reward = self.reward_nodes[self.agent_pos]
             if np.abs(reward) == 1 or len(self.edges[self.agent_pos]) == 0:
                 self.done = True

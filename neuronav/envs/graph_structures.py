@@ -11,6 +11,7 @@ class GraphStructure(enum.Enum):
     human_a = "human_a"
     human_b = "human_b"
     t_loop = "t_loop"
+    variable_magnitude = "variable_magnitude"
 
 
 def two_step():
@@ -97,6 +98,12 @@ def t_loop():
     return rewarding_states, edges
 
 
+def variable_magnitude():
+    rewarding_states = {1: 0.1, 2: 0.3, 3: 1.2, 4: 2.5, 5: 5, 6: 10, 7: 20}
+    edges = [[(1, 2, 3, 4, 5, 6, 7)], [], [], [], [], [], [], []]
+    return rewarding_states, edges
+
+
 structure_map = {
     GraphStructure.two_step: two_step,
     GraphStructure.two_way_linear: two_way_linear,
@@ -107,4 +114,5 @@ structure_map = {
     GraphStructure.human_a: human_a,
     GraphStructure.human_b: human_b,
     GraphStructure.t_loop: t_loop,
+    GraphStructure.variable_magnitude: variable_magnitude,
 }
