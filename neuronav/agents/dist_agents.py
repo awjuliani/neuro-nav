@@ -21,6 +21,7 @@ class DistQ(BaseAgent):
         Q_init=None,
         epsilon=1e-1,
         dist_cells=16,
+        mirror=False,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta)
@@ -33,7 +34,10 @@ class DistQ(BaseAgent):
             self.Q = Q_init
         self.dist_cells = dist_cells
         self.lrs_pos = npr.uniform(0.001, 0.02, dist_cells)
-        self.lrs_neg = npr.uniform(0.001, 0.02, dist_cells)
+        if mirror:
+            self.lrs_neg = self.lrs_pos
+        else:
+            self.lrs_neg = npr.uniform(0.001, 0.02, dist_cells)
 
     def sample_action(self, state):
         Qs = self.Q[:, state]
