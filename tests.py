@@ -7,6 +7,7 @@ from neuronav.envs.grid_topographies import GridTopography
 from neuronav.agents.td_agents import QET, TDQ, TDAC, TDSR
 from neuronav.agents.dyna_agents import DynaQ, DynaAC, DynaSR
 from neuronav.agents.mb_agents import MBV, SRMB
+from neuronav.agents.dist_agents import DistQ
 
 
 def test_one_hot():
@@ -117,6 +118,13 @@ def test_qet():
     env = GraphEnv(obs_type=GraphObsType.index)
     obs = env.reset()
     agent = QET(env.state_size, env.action_space.n)
+    _ = agent.sample_action(obs)
+
+
+def test_distq():
+    env = GraphEnv(obs_type=GraphObsType.index)
+    obs = env.reset()
+    agent = DistQ(env.state_size, env.action_space.n)
     _ = agent.sample_action(obs)
 
 
