@@ -81,6 +81,7 @@ The graph structures can be added to by editing [graph_structures.py](./graph_st
 | human_a | ![human_a](/images/graph/human_a.png) | [Momennejad et al., 2017](https://www.nature.com/articles/s41562-017-0180-8) |
 | human_b | ![human_b](/images/graph/human_b.png) | [Momennejad et al., 2017](https://www.nature.com/articles/s41562-017-0180-8) |
 | t_loop | ![t_loop](/images/graph/t_loop.png) |
+| variable_magnitude | ![variable_magnitude](/images/graph/variable_magnitude.png) | [Dabney et al., 2019](https://www.nature.com/articles/s41586-019-1924-6) |
 
 
 ### Observation Types

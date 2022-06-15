@@ -7,7 +7,10 @@ import neuronav.utils as utils
 
 class DistQ(BaseAgent):
     """
-    Implementation of Temporal Difference Q-Learning Algorithm.
+    Implementation of the distributional Q-Learning algorithm
+    found in Dabney et al., 2019.
+    `mirror` determines whether same learning rates are used for
+    positive and negative td errors.
     """
 
     def __init__(
@@ -66,7 +69,6 @@ class DistQ(BaseAgent):
 
         r = current_exp[3]
 
-        # next_q = self.Q[s_a_1, s_1]
         next_q = self.Q[s_a_1, s_1, npr.randint(0, self.dist_cells)]
 
         q_error = r + self.gamma * next_q - self.Q[s_a, s]
