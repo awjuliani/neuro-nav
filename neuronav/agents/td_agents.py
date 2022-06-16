@@ -30,27 +30,30 @@ class TDQ(BaseAgent):
         else:
             self.Q = Q_init
 
+    def q_estimate(self, state):
+        return state @ self.Q.T
+
     def sample_action(self, state):
-        Qs = self.Q[:, state]
-        return self.base_sample_action(Qs)
+        state = self.prepare_state(state)
+        return self.base_sample_action(self.q_estimate(state))
 
     def update_q(self, current_exp, next_exp=None, prospective=False):
-        s = current_exp[0]
+        s = self.prepare_state(current_exp[0])
         s_a = current_exp[1]
-        s_1 = current_exp[2]
+        s_1 = self.prepare_state(current_exp[2])
         r = current_exp[3]
 
         # determines whether update is on-policy or off-policy
         if next_exp is None:
-            s_a_1 = np.argmax(self.Q[:, s_1])
+            s_a_1 = np.argmax(self.q_estimate(s_1))
         else:
             s_a_1 = next_exp[1]
 
-        q_error = r + self.gamma * self.Q[s_a_1, s_1] - self.Q[s_a, s]
+        q_error = r + self.gamma * self.q_estimate(s_1)[s_a_1] - self.q_estimate(s)[s_a]
 
         if not prospective:
             # actually perform update to Q if not prospective
-            self.Q[s_a, s] += self.lr * q_error
+            self.Q[s_a, :] += self.lr * q_error * s
         return q_error
 
     def _update(self, current_exp, **kwargs):
@@ -88,16 +91,14 @@ class TDAC(BaseAgent):
         return np.matmul(state, self.a_w)
 
     def sample_action(self, state):
-        if type(state) != np.array:
-            state = utils.onehot(state, self.state_size)
+        state = self.prepare_state(state)
         logits = self.actor(state)
         return self.base_sample_action(logits)
 
     def _update(self, current_exp):
         state, action, state_next, reward, done = current_exp
-        if type(state) != np.array:
-            state = utils.onehot(state, self.state_size)
-            state_next = utils.onehot(state_next, self.state_size)
+        state = self.prepare_state(state)
+        state_next = self.prepare_state(state_next)
         if not done:
             td_target = reward + self.gamma * self.critic(state_next)
             td_estimate = self.critic(state)
@@ -145,20 +146,30 @@ class TDSR(BaseAgent):
 
         self.w = np.zeros(state_size)
 
-    def q_estimates(self, state):
-        return self.M[:, state, :] @ self.w
+    def m_estimate(self, state):
+        return state @ self.M
+
+    def q_estimate(self, state):
+        ms = self.m_estimate(state)
+        return ms @ self.w
+
+    def w_estimate(self, state):
+        return state @ self.w
 
     def sample_action(self, state):
-        return self.base_sample_action(self.q_estimates(state))
+        state = self.prepare_state(state)
+        return self.base_sample_action(self.q_estimate(state))
 
     def update_w(self, current_exp):
         s, a, s_1, r, _ = current_exp
+        s = self.prepare_state(s)
+        s_1 = self.prepare_state(s_1)
         if self.weights == "direct":
-            error = r - self.w[s_1]
-            self.w[s_1] += self.lr * error
+            error = r - self.w_estimate(s_1)
+            self.w += self.lr * error * s_1
         elif self.weights == "td":
-            Vs = self.q_estimates(s).max()
-            Vs_1 = self.q_estimates(s_1).max()
+            Vs = self.q_estimate(s).max()
+            Vs_1 = self.q_estimate(s_1).max()
             delta = r + self.gamma * Vs_1 - Vs
             # epsilon and beta are hard-coded, need to improve this
             M = self.get_M_states(epsilon=1e-1, beta=5)
@@ -167,33 +178,40 @@ class TDSR(BaseAgent):
         return np.linalg.norm(error)
 
     def update_sr(self, current_exp, next_exp=None, prospective=False):
-        s = current_exp[0]
+        s = self.prepare_state(current_exp[0])
         s_a = current_exp[1]
-        s_1 = current_exp[2]
+        s_1 = self.prepare_state(current_exp[2])
 
         # determines whether update is on-policy or off-policy
         if next_exp is None:
-            s_a_1 = np.argmax(self.q_estimates(s_1))
+            s_a_1 = np.argmax(self.q_estimate(s_1))
         else:
             s_a_1 = next_exp[1]
 
         r = current_exp[3]
         d = current_exp[4]
-        I = utils.onehot(s, self.state_size)
 
         if d:
-            m_error = (
-                I + self.gamma * utils.onehot(s_1, self.state_size) - self.M[s_a, s, :]
-            )
+            m_error = s + self.gamma * s_1 - self.m_estimate(s)[s_a]
         else:
             if self.goal_biased_sr:
-                m_error = I + self.gamma * self.M[s_a_1, s_1, :] - self.M[s_a, s, :]
+                m_error = (
+                    s
+                    + self.gamma * self.m_estimate(s_1)[s_a_1]
+                    - self.m_estimate(s)[s_a]
+                )
             else:
-                m_error = I + self.gamma * self.M[:, s_1, :].mean(0) - self.M[s_a, s, :]
+                m_error = (
+                    s
+                    + self.gamma * self.m_estimate(s_1).mean(0)
+                    - self.m_estimate(s)[s_a]
+                )
 
         if not prospective:
             # actually perform update to SR if not prospective
-            self.M[s_a, s, :] += self.lr * m_error
+            self.M[s_a, :, :] += self.lr * (
+                np.expand_dims(s, 1) @ np.expand_dims(m_error, 0)
+            )
         return m_error
 
     def _update(self, current_exp, **kwargs):

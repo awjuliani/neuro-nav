@@ -75,5 +75,5 @@ class DistQ(BaseAgent):
         return td_error
 
     def get_policy(self):
-        Qs = self.Q[:, state, npr.randint(0, self.dist_cells)]
+        Qs = self.Q[:, :, npr.randint(0, self.dist_cells)]
         return self.base_get_policy(Qs)

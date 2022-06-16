@@ -34,12 +34,12 @@ class MBV(BaseAgent):
         self.w = np.zeros(state_size)
         self.base_Q = np.zeros([self.action_size, self.state_size])
 
-    def q_estimates(self, state):
+    def q_estimate(self, state):
         Q = self.Q
         return Q[:, state]
 
     def sample_action(self, state):
-        return self.base_sample_action(self.q_estimates(state))
+        return self.base_sample_action(self.q_estimate(state))
 
     def update_w(self, current_exp):
         s, a, s_1, r, _ = current_exp
@@ -119,8 +119,8 @@ class SRMB(BaseAgent):
         self.SR_agent._update(current_exp)
 
     def q_estimates(self, state):
-        mb_q = self.MB_agent.q_estimates(state)
-        sr_q = self.SR_agent.q_estimates(state)
+        mb_q = self.MB_agent.q_estimate(state)
+        sr_q = self.SR_agent.q_estimate(self.prepare_state(state))
         return mb_q * self.mix + sr_q * (1 - self.mix)
 
     def sample_action(self, state):
