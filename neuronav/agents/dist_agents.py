@@ -27,7 +27,7 @@ class DistQ(BaseAgent):
         mirror=False,
         **kwargs
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta)
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
 
         if Q_init is None:
             self.Q = np.zeros((action_size, state_size, dist_cells))
@@ -43,18 +43,8 @@ class DistQ(BaseAgent):
             self.lrs_neg = npr.uniform(0.001, 0.02, dist_cells)
 
     def sample_action(self, state):
-        Qs = self.Q[:, state]
-        if self.poltype == "softmax":
-            action = npr.choice(
-                self.action_size,
-                p=utils.softmax(self.beta * Qs[:, npr.randint(0, self.dist_cells)]),
-            )
-        else:
-            if npr.rand() < self.epsilon:
-                action = npr.choice(self.action_size)
-            else:
-                action = npr.choice(np.flatnonzero(np.isclose(Qs, Qs.max())))
-        return action
+        Qs = self.Q[:, state, npr.randint(0, self.dist_cells)]
+        return self.base_sample_action(Qs)
 
     def update_q(self, current_exp, next_exp=None, prospective=False):
         s = current_exp[0]
@@ -85,12 +75,5 @@ class DistQ(BaseAgent):
         return td_error
 
     def get_policy(self):
-        if self.poltype == "softmax":
-            policy = utils.softmax(self.beta * self.Q, axis=0)
-        else:
-            mask = self.Q == self.Q.max(0)
-            greedy = mask / mask.sum(0)
-            policy = (1 - self.epsilon) * greedy + (
-                1 / self.action_size
-            ) * self.epsilon * np.ones((self.action_size, self.state_size))
-        return policy
+        Qs = self.Q[:, state, npr.randint(0, self.dist_cells)]
+        return self.base_get_policy(Qs)

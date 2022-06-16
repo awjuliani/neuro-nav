@@ -21,7 +21,7 @@ class TDQ(BaseAgent):
         epsilon=1e-1,
         **kwargs
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta)
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
 
         if Q_init is None:
             self.Q = np.zeros((action_size, state_size))
@@ -32,27 +32,19 @@ class TDQ(BaseAgent):
 
     def sample_action(self, state):
         Qs = self.Q[:, state]
-        if self.poltype == "softmax":
-            action = npr.choice(self.action_size, p=utils.softmax(self.beta * Qs))
-        else:
-            if npr.rand() < self.epsilon:
-                action = npr.choice(self.action_size)
-            else:
-                action = npr.choice(np.flatnonzero(np.isclose(Qs, Qs.max())))
-        return action
+        return self.base_sample_action(Qs)
 
     def update_q(self, current_exp, next_exp=None, prospective=False):
         s = current_exp[0]
         s_a = current_exp[1]
         s_1 = current_exp[2]
+        r = current_exp[3]
 
         # determines whether update is on-policy or off-policy
         if next_exp is None:
             s_a_1 = np.argmax(self.Q[:, s_1])
         else:
             s_a_1 = next_exp[1]
-
-        r = current_exp[3]
 
         q_error = r + self.gamma * self.Q[s_a_1, s_1] - self.Q[s_a, s]
 
@@ -67,15 +59,7 @@ class TDQ(BaseAgent):
         return td_error
 
     def get_policy(self):
-        if self.poltype == "softmax":
-            policy = utils.softmax(self.beta * self.Q, axis=0)
-        else:
-            mask = self.Q == self.Q.max(0)
-            greedy = mask / mask.sum(0)
-            policy = (1 - self.epsilon) * greedy + (
-                1 / self.action_size
-            ) * self.epsilon * np.ones((self.action_size, self.state_size))
-        return policy
+        return self.base_get_policy(self.Q)
 
 
 class TDAC(BaseAgent):
@@ -93,7 +77,7 @@ class TDAC(BaseAgent):
         beta=1e4,
         epsilon=1e-1,
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta)
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.c_w = np.zeros([state_size])
         self.a_w = np.zeros([state_size, action_size])
 
@@ -107,15 +91,7 @@ class TDAC(BaseAgent):
         if type(state) != np.array:
             state = utils.onehot(state, self.state_size)
         logits = self.actor(state)
-        if self.poltype == "softmax":
-            probs = utils.softmax(logits * self.beta, axis=-1)
-            action = np.random.choice(np.arange(0, self.action_size), p=probs)
-        else:
-            if npr.rand() < self.epsilon:
-                action = npr.choice(self.action_size)
-            else:
-                action = npr.choice(np.flatnonzero(np.isclose(logits, logits.max())))
-        return action
+        return self.base_sample_action(logits)
 
     def _update(self, current_exp):
         state, action, state_next, reward, done = current_exp
@@ -130,6 +106,9 @@ class TDAC(BaseAgent):
             td_error = reward - self.critic(state)
         self.c_w += self.lr * td_error * state
         self.a_w[:, action] += self.lr * td_error * state
+
+    def get_policy(self):
+        return self.base_get_policy(self.a_w)
 
 
 class TDSR(BaseAgent):
@@ -151,7 +130,7 @@ class TDSR(BaseAgent):
         goal_biased_sr=True,
         **kwargs
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta)
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.weights = weights
         self.goal_biased_sr = goal_biased_sr
 
@@ -166,20 +145,11 @@ class TDSR(BaseAgent):
 
         self.w = np.zeros(state_size)
 
-    def Q_estimates(self, state):
+    def q_estimates(self, state):
         return self.M[:, state, :] @ self.w
 
     def sample_action(self, state):
-        if self.poltype == "softmax":
-            Qs = self.Q_estimates(state)
-            action = npr.choice(self.action_size, p=utils.softmax(self.beta * Qs))
-        else:
-            if npr.rand() < self.epsilon:
-                action = npr.choice(self.action_size)
-            else:
-                Qs = self.Q_estimates(state)
-                action = npr.choice(np.flatnonzero(np.isclose(Qs, Qs.max())))
-        return action
+        return self.base_sample_action(self.q_estimates(state))
 
     def update_w(self, current_exp):
         s, a, s_1, r, _ = current_exp
@@ -187,8 +157,8 @@ class TDSR(BaseAgent):
             error = r - self.w[s_1]
             self.w[s_1] += self.lr * error
         elif self.weights == "td":
-            Vs = self.Q_estimates(s).max()
-            Vs_1 = self.Q_estimates(s_1).max()
+            Vs = self.q_estimates(s).max()
+            Vs_1 = self.q_estimates(s_1).max()
             delta = r + self.gamma * Vs_1 - Vs
             # epsilon and beta are hard-coded, need to improve this
             M = self.get_M_states(epsilon=1e-1, beta=5)
@@ -203,7 +173,7 @@ class TDSR(BaseAgent):
 
         # determines whether update is on-policy or off-policy
         if next_exp is None:
-            s_a_1 = np.argmax(self.Q_estimates(s_1))
+            s_a_1 = np.argmax(self.q_estimates(s_1))
         else:
             s_a_1 = next_exp[1]
 
@@ -240,15 +210,7 @@ class TDSR(BaseAgent):
             M = self.M
 
         Q = M @ goal
-        if self.poltype == "softmax":
-            policy = utils.softmax(self.beta * Q, axis=0)
-        else:
-            mask = Q == Q.max(0)
-            greedy = mask / mask.sum(0)
-            policy = (1 - self.epsilon) * greedy + (
-                1 / self.action_size
-            ) * self.epsilon * np.ones((self.action_size, self.state_size))
-        return policy
+        return self.base_get_policy(Q)
 
     def get_M_states(self):
         # average M(a, s, s') according to policy to get M(s, s')
@@ -279,7 +241,7 @@ class QET(BaseAgent):
         lamb=0.95,
         **kwargs
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta)
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.lamb = lamb
 
         if Q_init is None:
@@ -292,14 +254,7 @@ class QET(BaseAgent):
 
     def sample_action(self, state):
         Qs = self.Q[:, state]
-        if self.poltype == "softmax":
-            action = npr.choice(self.action_size, p=utils.softmax(self.beta * Qs))
-        else:
-            if npr.rand() < self.epsilon:
-                action = npr.choice(self.action_size)
-            else:
-                action = npr.choice(np.flatnonzero(np.isclose(Qs, Qs.max())))
-        return action
+        return self.base_sample_action(Qs)
 
     def update_et(self, current_exp):
         s = current_exp[0]
@@ -321,15 +276,7 @@ class QET(BaseAgent):
         return td_error
 
     def get_policy(self):
-        if self.poltype == "softmax":
-            policy = utils.softmax(self.beta * self.Q, axis=0)
-        else:
-            mask = self.Q == self.Q.max(0)
-            greedy = mask / mask.sum(0)
-            policy = (1 - self.epsilon) * greedy + (
-                1 / self.action_size
-            ) * self.epsilon * np.ones((self.action_size, self.state_size))
-        return policy
+        return self.base_get_policy(self.Q)
 
     def reset(self):
         self.et *= 0.0
