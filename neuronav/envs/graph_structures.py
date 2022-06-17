@@ -1,4 +1,5 @@
 import enum
+import numpy as np
 
 
 class GraphStructure(enum.Enum):
@@ -11,6 +12,7 @@ class GraphStructure(enum.Enum):
     human_a = "human_a"
     human_b = "human_b"
     t_loop = "t_loop"
+    variable_magnitude = "variable_magnitude"
 
 
 def two_step():
@@ -97,6 +99,35 @@ def t_loop():
     return rewarding_states, edges
 
 
+def variable_magnitude():
+    # Values taken from original author's code availabe here: https://osf.io/ux5rg/
+    fmax = 10.0
+    sigma = 200
+    utility_func = lambda r: (fmax * np.sign(r) * np.abs(r) ** (0.5)) / (
+        np.abs(r) ** (0.5) + sigma ** (0.5)
+    )
+    rewarding_states = {
+        1: utility_func(0.1),
+        2: utility_func(0.3),
+        3: utility_func(1.2),
+        4: utility_func(2.5),
+        5: utility_func(5),
+        6: utility_func(10),
+        7: utility_func(20),
+    }
+    edges = [
+        [((1, 2, 3, 4, 5, 6, 7), (0.067, 0.090, 0.148, 0.154, 0.313, 0.151, 0.077))],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    ]
+    return rewarding_states, edges
+
+
 structure_map = {
     GraphStructure.two_step: two_step,
     GraphStructure.two_way_linear: two_way_linear,
@@ -107,4 +138,5 @@ structure_map = {
     GraphStructure.human_a: human_a,
     GraphStructure.human_b: human_b,
     GraphStructure.t_loop: t_loop,
+    GraphStructure.variable_magnitude: variable_magnitude,
 }

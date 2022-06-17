@@ -1,3 +1,8 @@
+import numpy as np
+import numpy.random as npr
+import neuronav.utils as utils
+
+
 class BaseAgent:
     """
     Parent class for Agents which concrete implementations inherit from.
@@ -22,18 +27,42 @@ class BaseAgent:
         self.num_updates = 0
         self.epsilon = epsilon
 
-    def sample_action(self):
-        return None
+    def base_sample_action(self, policy_logits):
+        if self.poltype == "softmax":
+            action = npr.choice(
+                self.action_size, p=utils.softmax(self.beta * policy_logits)
+            )
+        else:
+            if npr.rand() < self.epsilon:
+                action = npr.choice(self.action_size)
+            else:
+                action = npr.choice(
+                    np.flatnonzero(np.isclose(policy_logits, policy_logits.max()))
+                )
+        return action
 
     def update(self, current_exp):
         self.num_updates += 1
         self._update(current_exp)
 
-    def get_policy(self):
-        return None
+    def base_get_policy(self, policy_logits):
+        if self.poltype == "softmax":
+            policy = utils.softmax(self.beta * policy_logits, axis=0)
+        else:
+            mask = policy_logits == policy_logits.max(0)
+            greedy = mask / mask.sum(0)
+            policy = (1 - self.epsilon) * greedy + (
+                1 / self.action_size
+            ) * self.epsilon * np.ones((self.action_size, self.state_size))
+        return policy
 
     def _update(self, current_exp):
         return None
 
     def reset(self):
         return None
+
+    def linear_prepare_state(self, state):
+        if type(state) == int or type(state) == np.int_:
+            state = utils.onehot(state, self.state_size)
+        return state

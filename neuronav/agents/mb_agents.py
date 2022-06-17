@@ -23,7 +23,7 @@ class MBV(BaseAgent):
         epsilon=1e-1,
         **kwargs
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta)
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.weights = weights
         self.T = np.stack(
             [
@@ -34,28 +34,18 @@ class MBV(BaseAgent):
         self.w = np.zeros(state_size)
         self.base_Q = np.zeros([self.action_size, self.state_size])
 
-    def Q_estimates(self, state):
+    def q_estimate(self, state):
         Q = self.Q
         return Q[:, state]
 
     def sample_action(self, state):
-        if self.poltype == "softmax":
-            Qs = self.Q_estimates(state)
-            action = npr.choice(self.action_size, p=utils.softmax(self.beta * Qs))
-        else:
-            if npr.rand() < self.epsilon:
-                action = npr.choice(self.action_size)
-            else:
-                Qs = self.Q_estimates(state)
-                action = npr.choice(np.flatnonzero(np.isclose(Qs, Qs.max())))
-        return action
+        return self.base_sample_action(self.q_estimate(state))
 
     def update_w(self, current_exp):
         s, a, s_1, r, _ = current_exp
         if self.weights == "direct":
             error = r - self.w[s_1]
             self.w[s_1] += self.lr * error
-        self.Q
         return np.linalg.norm(error)
 
     def update_t(self, current_exp, next_exp=None, prospective=False):
@@ -67,33 +57,7 @@ class MBV(BaseAgent):
 
         return 0.0
 
-    def _update(self, current_exp, **kwargs):
-        self.update_t(current_exp, **kwargs)
-        w_error = self.update_w(current_exp)
-        td_error = {"w": np.linalg.norm(w_error)}
-        return td_error
-
-    def get_policy(self, M=None, goal=None):
-        if goal is None:
-            goal = self.w
-
-        if M is None:
-            M = self.M
-
-        Q = M @ goal
-        if self.poltype == "softmax":
-            policy = utils.softmax(Q, axis=0)
-        else:
-            mask = Q == Q.max(0)
-            greedy = mask / mask.sum(0)
-            policy = (1 - self.epsilon) * greedy + (
-                1 / self.action_size
-            ) * self.epsilon * np.ones((self.action_size, self.state_size))
-        return policy
-
-    @property
-    def Q(self):
-        iters = 1
+    def update_q(self, iters=1):
         for h in range(iters):
             for i in range(self.state_size):
                 for j in range(self.action_size):
@@ -102,6 +66,20 @@ class MBV(BaseAgent):
                     else:
                         v_next = 0
                     self.base_Q[j, i] = self.w[i] + self.gamma * v_next
+
+    def _update(self, current_exp, **kwargs):
+        self.update_t(current_exp, **kwargs)
+        w_error = self.update_w(current_exp)
+        self.update_q()
+        td_error = {"w": np.linalg.norm(w_error)}
+        return td_error
+
+    def get_policy(self):
+        Q = self.Q
+        return self.base_get_policy(Q)
+
+    @property
+    def Q(self):
         return self.base_Q.copy()
 
 
@@ -121,8 +99,12 @@ class SRMB(BaseAgent):
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.mix = mix
-        self.MB_agent = MBV(state_size, action_size, gamma, lr)
-        self.SR_agent = TDSR(state_size, action_size, gamma=gamma, lr=lr)
+        self.MB_agent = MBV(
+            state_size, action_size, gamma, lr, beta, poltype, weights, epsilon
+        )
+        self.SR_agent = TDSR(
+            state_size, action_size, lr, gamma, beta, poltype, None, weights, epsilon
+        )
 
     @property
     def Q(self):
@@ -136,19 +118,10 @@ class SRMB(BaseAgent):
         self.MB_agent._update(current_exp)
         self.SR_agent._update(current_exp)
 
-    def Q_estimates(self, state):
-        mb_q = self.MB_agent.Q_estimates(state)
-        sr_q = self.SR_agent.Q_estimates(state)
+    def q_estimates(self, state):
+        mb_q = self.MB_agent.q_estimate(state)
+        sr_q = self.SR_agent.q_estimate(state)
         return mb_q * self.mix + sr_q * (1 - self.mix)
 
     def sample_action(self, state):
-        if self.poltype == "softmax":
-            Qs = self.Q_estimates(state)
-            action = npr.choice(self.action_size, p=utils.softmax(self.beta * Qs))
-        else:
-            if npr.rand() < self.epsilon:
-                action = npr.choice(self.action_size)
-            else:
-                Qs = self.Q_estimates(state)
-                action = npr.choice(np.flatnonzero(np.isclose(Qs, Qs.max())))
-        return action
+        return self.base_sample_action(self.q_estimates(state))
