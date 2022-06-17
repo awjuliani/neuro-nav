@@ -62,7 +62,7 @@ class BaseAgent:
     def reset(self):
         return None
 
-    def prepare_state(self, state):
+    def linear_prepare_state(self, state):
         if type(state) == int or type(state) == np.int_:
             state = utils.onehot(state, self.state_size)
         return state

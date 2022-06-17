@@ -23,16 +23,15 @@ def run_episode(
 
 
 def onehot(value, max_value):
-    vec = np.zeros(max_value)
-    if value >= max_value:
-        value = max_value - 1
+    vec = np.zeros(max_value, dtype=np.int32)
+    value = np.clip(value, 0, max_value - 1)
     vec[value] = 1
-    return vec.astype(np.float32)
+    return vec
 
 
 def twohot(value, max_value):
-    vec_1 = np.zeros(max_value)
-    vec_2 = np.zeros(max_value)
+    vec_1 = np.zeros(max_value, dtype=np.float32)
+    vec_2 = np.zeros(max_value, dtype=np.float32)
     vec_1[value[0]] = 1
     vec_2[value[1]] = 1
     return np.concatenate([vec_1, vec_2])

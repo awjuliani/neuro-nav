@@ -120,7 +120,7 @@ class SRMB(BaseAgent):
 
     def q_estimates(self, state):
         mb_q = self.MB_agent.q_estimate(state)
-        sr_q = self.SR_agent.q_estimate(self.prepare_state(state))
+        sr_q = self.SR_agent.q_estimate(state)
         return mb_q * self.mix + sr_q * (1 - self.mix)
 
     def sample_action(self, state):
