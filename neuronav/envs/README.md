@@ -32,7 +32,7 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 | i_maze | ![i_maze](/images/grid_small/i_maze.png) | ![i_maze](/images/grid_large/i_maze.png) |
 | detour | ![detour](/images/grid_small/detour.png) | ![detour](/images/grid_large/detour.png) | [Russek et al., 2017](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005768) |
 | detour_block | ![detour_block](/images/grid_small/detour_block.png) | ![detour_block](/images/grid_large/detour_block.png) | [Russek et al., 2017](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005768) |
-| two_rooms_split | ![two_rooms_split](/images/grid_small/two_rooms_split.png) | ![two_rooms_split](/images/grid_large/two_rooms_split.png) |
+| four_rooms_split | ![four_rooms_split](/images/grid_small/four_rooms_split.png) | ![four_rooms_split](/images/grid_large/four_rooms_split.png) |
 | obstacle | ![obstacle](/images/grid_small/obstacle.png) | ![obstacle](/images/grid_large/obstacle.png) | [Stachenfeld et al., 2017](https://www.nature.com/articles/nn.4650) |
 
 ### Observation Types
