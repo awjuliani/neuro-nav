@@ -296,7 +296,7 @@ topography_map = {
 
 
 class GridSize(enum.Enum):
-    micro = 5
+    micro = 7
     small = 11
     large = 17
 
