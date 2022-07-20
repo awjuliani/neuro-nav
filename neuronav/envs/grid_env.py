@@ -55,7 +55,7 @@ class GridEnv(Env):
         else:
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
-        self.agent_pos = [0,0]
+        self.agent_pos = [0, 0]
         self.reward_locs = {}
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]])
         self.done = False
