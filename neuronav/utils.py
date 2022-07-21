@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import tarfile
 import os
 from urllib.request import urlretrieve
@@ -144,3 +145,19 @@ def cifar10(path=None):
         return onehot
 
     return train_images, _onehot(train_labels), test_images, _onehot(test_labels)
+
+
+def discount_features(r, gamma=0.99, value_next=None, reverse=False):
+    discounted_r = torch.zeros_like(r).type(torch.float32)
+    if value_next is None:
+        value_next = torch.zeros_like(r[0])
+    running_add = value_next
+    if reverse:
+        for t in range(0, len(r)):
+            running_add = running_add * gamma + r[t]
+            discounted_r[t] = running_add
+    else:
+        for t in reversed(range(0, len(r))):
+            running_add = running_add * gamma + r[t]
+            discounted_r[t] = running_add
+    return discounted_r
