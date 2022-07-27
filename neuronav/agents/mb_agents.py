@@ -15,12 +15,12 @@ class MBV(BaseAgent):
         self,
         state_size,
         action_size,
-        gamma=0.99,
         lr=1e-1,
-        beta=1e4,
+        gamma=0.99,
         poltype="softmax",
-        weights="direct",
+        beta=1e4,
         epsilon=1e-1,
+        weights="direct",
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)

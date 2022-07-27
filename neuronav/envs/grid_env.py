@@ -55,7 +55,7 @@ class GridEnv(Env):
         else:
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
-        self.agent_pos = [0,0]
+        self.agent_pos = [0, 0]
         self.reward_locs = {}
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]])
         self.done = False
@@ -135,11 +135,13 @@ class GridEnv(Env):
         agent_pos=None,
         episode_length=100,
         random_start=False,
+        terminate_on_reward=True,
     ):
         self.done = False
         self.episode_time = 0
         self.orientation = 0
         self.max_episode_time = episode_length
+        self.terminate_on_reward = terminate_on_reward
 
         if agent_pos != None:
             self.agent_pos = agent_pos
@@ -375,7 +377,7 @@ class GridEnv(Env):
         reward = 0.0
         eval_pos = tuple(self.agent_pos)
         if eval_pos in self.reward_locs:
-            if np.abs(self.reward_locs[eval_pos]) == 1.0:
-                self.done = True
             reward = self.reward_locs[eval_pos]
+            if self.terminate_on_reward:
+                self.done = True
         return self.observation, reward, self.done, {}

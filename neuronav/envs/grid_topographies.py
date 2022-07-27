@@ -1,5 +1,3 @@
-from matplotlib.pyplot import grid
-from numpy.lib.index_tricks import s_
 import neuronav.utils as utils
 import enum
 
