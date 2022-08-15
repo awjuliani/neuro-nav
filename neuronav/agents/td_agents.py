@@ -19,6 +19,7 @@ class TDQ(BaseAgent):
         poltype="softmax",
         Q_init=None,
         epsilon=1e-1,
+        w_value=1.0,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
@@ -29,6 +30,7 @@ class TDQ(BaseAgent):
             self.Q = Q_init * npr.randn(action_size, state_size)
         else:
             self.Q = Q_init
+        self.w_value = w_value
 
     def q_estimate(self, state):
         return state @ self.Q.T
@@ -43,13 +45,14 @@ class TDQ(BaseAgent):
         s_1 = self.linear_prepare_state(current_exp[2])
         r = current_exp[3]
 
-        # determines whether update is on-policy or off-policy
-        if next_exp is None:
-            s_a_1 = np.argmax(self.q_estimate(s_1))
-        else:
-            s_a_1 = next_exp[1]
+        s_a_1_optim = np.argmax(self.q_estimate(s_1))
+        s_a_1_pessim = np.argmin(self.q_estimate(s_1))
 
-        q_error = r + self.gamma * self.q_estimate(s_1)[s_a_1] - self.q_estimate(s)[s_a]
+        target = r + self.gamma * (
+            self.w_value * self.q_estimate(s_1)[s_a_1_optim]
+            + (1 - self.w_value) * self.q_estimate(s_1)[s_a_1_pessim]
+        )
+        q_error = target - self.q_estimate(s)[s_a]
 
         if not prospective:
             # actually perform update to Q if not prospective

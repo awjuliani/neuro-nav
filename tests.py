@@ -141,10 +141,10 @@ def test_distq():
 def test_graph_episode():
     graph_env = GraphEnv()
     graph_agent = TDQ(graph_env.state_size, graph_env.action_space.n)
-    _, _ = run_episode(graph_env, graph_agent, 100)
+    _, _, _ = run_episode(graph_env, graph_agent, 100)
 
 
 def test_grid_episode():
     grid_env = GridEnv()
     grid_agent = TDQ(grid_env.state_size, grid_env.action_space.n)
-    _, _ = run_episode(grid_env, grid_agent, 100)
+    _, _, _ = run_episode(grid_env, grid_agent, 100)

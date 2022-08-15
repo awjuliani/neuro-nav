@@ -12,6 +12,7 @@ def run_episode(
     )
     agent.reset()
     steps = 0
+    episode_return = 0
     done = False
     while not done and steps < max_steps:
         act = agent.sample_action(obs)
@@ -19,7 +20,8 @@ def run_episode(
         agent.update([obs, act, obs_new, reward, done])
         obs = obs_new
         steps += 1
-    return agent, steps
+        episode_return += reward
+    return agent, steps, episode_return
 
 
 def onehot(value, max_value):
