@@ -368,9 +368,9 @@ class GridEnv(Env):
                 self.move_agent(move_array)
         else:
             # 0 - Up
-            # 1 - Down
-            # 2 - Left
-            # 3 - Right
+            # 1 - Right
+            # 2 - Down
+            # 3 - Left
             move_array = self.direction_map[action]
             self.move_agent(move_array)
         self.episode_time += 1
