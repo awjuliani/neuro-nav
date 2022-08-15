@@ -21,6 +21,7 @@ class MBV(BaseAgent):
         beta=1e4,
         epsilon=1e-1,
         weights="direct",
+        w_value=1.0,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
@@ -33,6 +34,7 @@ class MBV(BaseAgent):
         )
         self.w = np.zeros(state_size)
         self.base_Q = np.zeros([self.action_size, self.state_size])
+        self.w_value = w_value
 
     def q_estimate(self, state):
         Q = self.Q
@@ -62,7 +64,11 @@ class MBV(BaseAgent):
             for i in range(self.state_size):
                 for j in range(self.action_size):
                     if np.sum(self.T[j][i]) > 0:
-                        v_next = np.max(self.base_Q[:, np.argmax(self.T[j][i])])
+                        v_next = self.w_value * np.max(
+                            self.base_Q[:, np.argmax(self.T[j][i])]
+                        ) + (1 - self.w_value) * np.min(
+                            self.base_Q[:, np.argmax(self.T[j][i])]
+                        )
                     else:
                         v_next = 0
                     self.base_Q[j, i] = self.w[i] + self.gamma * v_next

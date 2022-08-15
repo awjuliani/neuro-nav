@@ -99,7 +99,7 @@ def calc_revaluation(prefs_a, prefs_b):
     return scores
 
 
-def plot_values_and_policy(agent, env, start_pos):
+def plot_values_and_policy(agent, env, start_pos, plot_title=None):
     arrows = [
         [0, 0.5, 0, -0.5],
         [-0.5, 0, 0.5, 0],
@@ -133,4 +133,6 @@ def plot_values_and_policy(agent, env, start_pos):
                     alpha=use_alpha,
                 )
     plt.colorbar()
+    if plot_title != None:
+        plt.title(plot_title)
     plt.show()
