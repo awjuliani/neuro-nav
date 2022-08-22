@@ -5,7 +5,7 @@ from neuronav.agents.td_agents import TDAC, TDQ, TDSR
 
 class DynaModule:
     """
-    Class which contains logic to enable Dyna algorithms
+    Class which contains logic to enable Dyna algorithms.
     """
 
     def __init__(self, state_size, num_recall=1, recency="exponential", **kwargs):

@@ -6,7 +6,7 @@ from neuronav.agents.base_agent import BaseAgent
 
 class TDQ(BaseAgent):
     """
-    Implementation of Temporal Difference Q-Learning Algorithm.
+    Implementation of one-step temporal difference (TD) Q-Learning Algorithm.
     """
 
     def __init__(
@@ -70,7 +70,7 @@ class TDQ(BaseAgent):
 
 class TDAC(BaseAgent):
     """
-    Implementation of Temporal Difference Actor Critic Algorithm
+    Implementation of one-step temporal difference (TD) Actor Critic Algorithm
     """
 
     def __init__(
@@ -117,7 +117,7 @@ class TDAC(BaseAgent):
 
 class TDSR(BaseAgent):
     """
-    Implementation of Temporal Difference Successor Representation Algorithm
+    Implementation of one-step temporal difference (TD) Successor Representation Algorithm
     """
 
     def __init__(
@@ -227,7 +227,7 @@ class TDSR(BaseAgent):
 
 class QET(BaseAgent):
     """
-    Implementation of Q-learning with eligibility traces.
+    Implementation of one-step Q-learning with eligibility traces.
     """
 
     def __init__(

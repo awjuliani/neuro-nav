@@ -52,13 +52,12 @@ class MBV(BaseAgent):
         s = current_exp[0]
         s_a = current_exp[1]
         s_1 = current_exp[2]
-
         self.T[s_a, s] = utils.onehot(s_1, self.state_size)
 
-        return 0.0
+        return None
 
     def update_q(self, iters=1):
-        for h in range(iters):
+        for _ in range(iters):
             for i in range(self.state_size):
                 for j in range(self.action_size):
                     if np.sum(self.T[j][i]) > 0:
@@ -88,6 +87,10 @@ class MBV(BaseAgent):
 
 
 class SRMB(BaseAgent):
+    """
+    A hybrid Success / Model-based algorithm.
+    """
+
     def __init__(
         self,
         state_size,
