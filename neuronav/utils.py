@@ -5,7 +5,13 @@ from urllib.request import urlretrieve
 
 
 def run_episode(
-    env, agent, max_steps, start_pos=None, reward_locs=None, random_start=False
+    env,
+    agent,
+    max_steps,
+    start_pos=None,
+    reward_locs=None,
+    random_start=False,
+    update_agent=True,
 ):
     obs = env.reset(
         agent_pos=start_pos, reward_locs=reward_locs, random_start=random_start
@@ -17,7 +23,8 @@ def run_episode(
     while not done and steps < max_steps:
         act = agent.sample_action(obs)
         obs_new, reward, done, _ = env.step(act)
-        agent.update([obs, act, obs_new, reward, done])
+        if update_agent:
+            agent.update([obs, act, obs_new, reward, done])
         obs = obs_new
         steps += 1
         episode_return += reward

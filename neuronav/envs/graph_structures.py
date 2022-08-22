@@ -13,11 +13,18 @@ class GraphStructure(enum.Enum):
     human_b = "human_b"
     t_loop = "t_loop"
     variable_magnitude = "variable_magnitude"
+    three_arm_bandit = "three_arm_bandit"
 
 
 def two_step():
     rewarding_states = {5: 1}
     edges = [[1, 2], [3, 4], [5, 6], [], [], [], []]
+    return rewarding_states, edges
+
+
+def three_arm_bandit():
+    rewarding_states = {1: 1, 2: 0.5, 3:-0.5}
+    edges = [[1,2,3], [], [], []]
     return rewarding_states, edges
 
 
@@ -139,4 +146,5 @@ structure_map = {
     GraphStructure.human_b: human_b,
     GraphStructure.t_loop: t_loop,
     GraphStructure.variable_magnitude: variable_magnitude,
+    GraphStructure.three_arm_bandit: three_arm_bandit,
 }
