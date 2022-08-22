@@ -23,8 +23,8 @@ def two_step():
 
 
 def three_arm_bandit():
-    rewarding_states = {1: 1, 2: 0.5, 3:-0.5}
-    edges = [[1,2,3], [], [], []]
+    rewarding_states = {1: 1, 2: 0.5, 3: -0.5}
+    edges = [[1, 2, 3], [], [], []]
     return rewarding_states, edges
 
 
