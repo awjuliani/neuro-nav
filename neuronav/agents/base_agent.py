@@ -10,13 +10,13 @@ class BaseAgent:
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        poltype="softmax",
-        beta=1e4,
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         self.state_size = state_size
         self.action_size = action_size
@@ -36,9 +36,7 @@ class BaseAgent:
             if npr.rand() < self.epsilon:
                 action = npr.choice(self.action_size)
             else:
-                action = npr.choice(
-                    np.flatnonzero(np.isclose(policy_logits, policy_logits.max()))
-                )
+                action = np.argmax(policy_logits)
         return action
 
     def update(self, current_exp):

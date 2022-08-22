@@ -1,6 +1,4 @@
-from os import stat
 import numpy as np
-import numpy.random as npr
 import neuronav.utils as utils
 from neuronav.agents.base_agent import BaseAgent
 from neuronav.agents.td_agents import TDSR

@@ -1,8 +1,6 @@
-from curses.panel import new_panel
 import numpy as np
 import numpy.random as npr
 from neuronav.agents.base_agent import BaseAgent
-import neuronav.utils as utils
 
 
 class DistQ(BaseAgent):

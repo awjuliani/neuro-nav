@@ -48,9 +48,12 @@ class GraphEnv(Env):
                 action_size = len(edge)
         self.action_space = spaces.Discrete(action_size)
         self.state_size = len(self.edges)
+        self.populate_rewards(self.rewarding_states)
+
+    def populate_rewards(self, reward_locs):
         self.reward_nodes = [0 for _ in range(self.state_size)]
-        for state in self.rewarding_states:
-            self.reward_nodes[state] = self.rewarding_states[state]
+        for state in reward_locs:
+            self.reward_nodes[state] = reward_locs[state]
 
     @property
     def observation(self):
@@ -76,10 +79,9 @@ class GraphEnv(Env):
             self.agent_pos = self.agent_start_pos
         self.done = False
         if reward_locs != None:
-            self.reward_nodes = reward_locs
+            self.populate_rewards(reward_locs)
         else:
-            for state in self.rewarding_states:
-                self.reward_nodes[state] = self.rewarding_states[state]
+            self.populate_rewards(self.rewarding_states)
         return self.observation
 
     def render(self):
@@ -90,9 +92,9 @@ class GraphEnv(Env):
             if idx == self.agent_pos:
                 color_map.append("cornflowerblue")
             elif self.reward_nodes[idx] > 0:
-                color_map.append("green")
+                color_map.append([0, np.clip(self.reward_nodes[idx], 0, 1), 0])
             elif self.reward_nodes[idx] < 0:
-                color_map.append("red")
+                color_map.append([-np.clip(self.reward_nodes[idx], -1, 0), 0, 0])
             else:
                 color_map.append("silver")
         for idx, edge in enumerate(self.edges):

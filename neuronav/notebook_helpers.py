@@ -3,6 +3,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 from dataclasses import dataclass
 from neuronav.utils import softmax
@@ -106,8 +107,11 @@ def plot_values_and_policy(agent, env, start_pos, plot_title=None):
         [0, -0.5, 0, 0.5],
         [0.5, 0, -0.5, 0],
     ]
+
+    fig, ax = plt.subplots()
+
     V = agent.Q.mean(0)
-    plt.imshow(
+    im = ax.imshow(
         V.reshape(env.grid_size, env.grid_size), cmap="RdBu", vmin=-1.0, vmax=1.0
     )
     for i in range(env.grid_size):
@@ -117,11 +121,11 @@ def plot_values_and_policy(agent, env, start_pos, plot_title=None):
             use_arrow[0] += j
             use_arrow[1] += i
             if [i, j] not in env.blocks:
-                if (i, j) == start_pos:
+                if (i, j) == tuple(start_pos):
                     use_alpha = 1.0
                 else:
                     use_alpha = 0.5
-                plt.arrow(
+                ax.arrow(
                     use_arrow[0],
                     use_arrow[1],
                     use_arrow[2],
@@ -132,7 +136,12 @@ def plot_values_and_policy(agent, env, start_pos, plot_title=None):
                     ec="k",
                     alpha=use_alpha,
                 )
-    plt.colorbar()
+            else:
+                box = patches.Rectangle(
+                    (j - 0.33, i - 0.33), 0.66, 0.66, color="black", alpha=0.25
+                )
+                ax.add_patch(box)
+    plt.colorbar(im)
     if plot_title != None:
-        plt.title(plot_title)
-    plt.show()
+        ax.set_title(plot_title)
+    fig.show()
