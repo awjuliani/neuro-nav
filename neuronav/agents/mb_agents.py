@@ -11,15 +11,15 @@ class MBV(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        poltype="softmax",
-        beta=1e4,
-        epsilon=1e-1,
-        weights="direct",
-        w_value=1.0,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
+        weights: str = "direct",
+        w_value: float = 1.0,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
@@ -95,24 +95,24 @@ class SRMB(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        gamma=0.99,
-        lr=1e-1,
-        beta=1e4,
-        mix=0.1,
-        poltype="softmax",
-        weights="direct",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
+        mix: float = 0.1,
+        weights: str = "direct",
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.mix = mix
         self.MB_agent = MBV(
-            state_size, action_size, gamma, lr, beta, poltype, weights, epsilon
+            state_size, action_size, lr, gamma, poltype, beta, epsilon, weights
         )
         self.SR_agent = TDSR(
-            state_size, action_size, lr, gamma, beta, poltype, None, weights, epsilon
+            state_size, action_size, lr, gamma, poltype, beta, epsilon, None, weights
         )
 
     @property

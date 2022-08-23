@@ -1,17 +1,20 @@
+from typing import Dict
 import numpy as np
 import tarfile
 import os
 from urllib.request import urlretrieve
+from gym import Env
+from neuronav.agents.base_agent import BaseAgent
 
 
 def run_episode(
-    env,
-    agent,
-    max_steps,
+    env: Env,
+    agent: BaseAgent,
+    max_steps: int,
     start_pos=None,
-    reward_locs=None,
-    random_start=False,
-    update_agent=True,
+    reward_locs: Dict = None,
+    random_start: bool = False,
+    update_agent: bool = True,
 ):
     obs = env.reset(
         agent_pos=start_pos, reward_locs=reward_locs, random_start=random_start

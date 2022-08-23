@@ -1,3 +1,4 @@
+from typing import Dict
 import networkx as nx
 import neuronav.utils as utils
 import enum
@@ -18,7 +19,9 @@ class GraphEnv(Env):
     """
 
     def __init__(
-        self, graph_structure=GraphStructure.linear, obs_type=GraphObsType.index
+        self,
+        graph_structure: GraphStructure = GraphStructure.linear,
+        obs_type: GraphObsType = GraphObsType.index,
     ):
         if isinstance(graph_structure, str):
             graph_structure = GraphStructure(graph_structure)
@@ -39,7 +42,7 @@ class GraphEnv(Env):
             self.observation_space = spaces.Box(0, 1, shape=(32, 32, 3))
             self.images = utils.cifar10()
 
-    def generate_graph(self, structure):
+    def generate_graph(self, structure: GraphStructure):
         self.rewarding_states, self.edges = structure_map[structure]()
         self.agent_start_pos = 0
         action_size = 0
@@ -50,7 +53,7 @@ class GraphEnv(Env):
         self.state_size = len(self.edges)
         self.populate_rewards(self.rewarding_states)
 
-    def populate_rewards(self, reward_locs):
+    def populate_rewards(self, reward_locs: Dict):
         self.reward_nodes = [0 for _ in range(self.state_size)]
         for state in reward_locs:
             self.reward_nodes[state] = reward_locs[state]
@@ -69,7 +72,12 @@ class GraphEnv(Env):
     def get_free_spot(self):
         return np.random.randint(0, self.state_size)
 
-    def reset(self, agent_pos=None, reward_locs=None, random_start=False):
+    def reset(
+        self,
+        agent_pos: int = None,
+        reward_locs: Dict = None,
+        random_start: bool = False,
+    ):
         self.running = True
         if agent_pos != None:
             self.agent_pos = agent_pos
@@ -112,7 +120,7 @@ class GraphEnv(Env):
             pos=nx.spring_layout(graph, k=1, pos=nx.kamada_kawai_layout(graph)),
         )
 
-    def step(self, action):
+    def step(self, action: int):
         if self.running is False:
             print("Please call env.reset() before env.step().")
             return None, None, None, None

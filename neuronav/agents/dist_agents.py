@@ -13,16 +13,16 @@ class DistQ(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        beta: float = 1e4,
+        poltype: str = "softmax",
         Q_init=None,
-        epsilon=1e-1,
-        dist_cells=16,
-        mirror=False,
+        epsilon: float = 1e-1,
+        dist_cells: int = 16,
+        mirror: bool = False,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)

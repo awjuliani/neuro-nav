@@ -11,15 +11,15 @@ class TDQ(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
         Q_init=None,
-        epsilon=1e-1,
-        w_value=1.0,
+        w_value: float = 1.0,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
@@ -75,13 +75,13 @@ class TDAC(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        poltype="softmax",
-        beta=1e4,
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.c_w = np.zeros([state_size])
@@ -122,16 +122,16 @@ class TDSR(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
         M_init=None,
-        weights="direct",
-        epsilon=1e-1,
-        goal_biased_sr=True,
+        weights: str = "direct",
+        goal_biased_sr: bool = True,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
@@ -232,15 +232,15 @@ class QET(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
         Q_init=None,
-        epsilon=1e-1,
-        lamb=0.95,
+        lamb: float = 0.95,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)

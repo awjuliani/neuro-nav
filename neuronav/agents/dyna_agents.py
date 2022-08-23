@@ -67,13 +67,13 @@ class DynaQ(TDQ):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super(DynaQ, self).__init__(
             state_size,
@@ -98,13 +98,13 @@ class DynaAC(TDAC):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super(DynaAC, self).__init__(
             state_size,
@@ -129,13 +129,13 @@ class DynaSR(TDSR):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super(DynaSR, self).__init__(
             state_size,
