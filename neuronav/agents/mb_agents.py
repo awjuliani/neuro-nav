@@ -52,7 +52,9 @@ class MBV(BaseAgent):
         s = current_exp[0]
         s_a = current_exp[1]
         s_1 = current_exp[2]
-        self.T[s_a, s] = utils.onehot(s_1, self.state_size)
+        if not (self.T[s_a, s] == utils.onehot(s_1, self.state_size)).all():
+            self.T[s_a, s] = utils.onehot(s_1, self.state_size)
+            self.base_Q = np.zeros([self.action_size, self.state_size])
 
         return None
 
