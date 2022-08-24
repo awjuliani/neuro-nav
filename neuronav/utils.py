@@ -5,7 +5,6 @@ import os
 from urllib.request import urlretrieve
 from gym import Env
 from neuronav.agents.base_agent import BaseAgent
-from neuronav.envs.grid_env import GridEnv
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -71,7 +70,7 @@ def softmax(x, axis=-1):
 
 
 def plot_values_and_policy(
-    agent: BaseAgent, env: GridEnv, start_pos: list, plot_title: str = None
+    agent: BaseAgent, env, start_pos: list, plot_title: str = None
 ):
     arrows = [
         [0, 0.5, 0, -0.5],
@@ -116,7 +115,7 @@ def plot_values_and_policy(
     plt.colorbar(im)
     if plot_title != None:
         ax.set_title(plot_title)
-    fig.show()
+    plt.show()
 
 
 # Taken from https://mattpetersen.github.io/load-cifar10-with-numpy

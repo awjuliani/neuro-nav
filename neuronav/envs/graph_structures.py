@@ -17,7 +17,7 @@ class GraphStructure(enum.Enum):
 
 
 def two_step():
-    rewarding_states = {5: 1}
+    rewarding_states = {3: 1, 4: -1, 5: 0.5, 6: 0.5}
     edges = [[1, 2], [3, 4], [5, 6], [], [], [], []]
     return rewarding_states, edges
 
