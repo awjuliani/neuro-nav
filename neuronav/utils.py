@@ -5,6 +5,7 @@ import os
 from urllib.request import urlretrieve
 from gym import Env
 from neuronav.agents.base_agent import BaseAgent
+from neuronav.envs.grid_env import GridEnv
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -69,7 +70,9 @@ def softmax(x, axis=-1):
     return e_x / np.sum(e_x, axis=axis)
 
 
-def plot_values_and_policy(agent, env, start_pos, plot_title=None):
+def plot_values_and_policy(
+    agent: BaseAgent, env: GridEnv, start_pos: list, plot_title: str = None
+):
     arrows = [
         [0, 0.5, 0, -0.5],
         [-0.5, 0, 0.5, 0],
