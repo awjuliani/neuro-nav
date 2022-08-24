@@ -5,6 +5,8 @@ import os
 from urllib.request import urlretrieve
 from gym import Env
 from neuronav.agents.base_agent import BaseAgent
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
 def run_episode(
@@ -65,6 +67,53 @@ def create_circular_mask(h, w, center=None, radius=None):
 def softmax(x, axis=-1):
     e_x = np.exp(x - np.max(x))
     return e_x / np.sum(e_x, axis=axis)
+
+
+def plot_values_and_policy(agent, env, start_pos, plot_title=None):
+    arrows = [
+        [0, 0.5, 0, -0.5],
+        [-0.5, 0, 0.5, 0],
+        [0, -0.5, 0, 0.5],
+        [0.5, 0, -0.5, 0],
+    ]
+
+    fig, ax = plt.subplots()
+
+    V = agent.Q.mean(0)
+    im = ax.imshow(
+        V.reshape(env.grid_size, env.grid_size), cmap="RdBu", vmin=-1.0, vmax=1.0
+    )
+    for i in range(env.grid_size):
+        for j in range(env.grid_size):
+            use_dir = agent.Q.argmax(0).reshape(env.grid_size, env.grid_size)[i, j]
+            use_arrow = arrows[use_dir].copy()
+            use_arrow[0] += j
+            use_arrow[1] += i
+            if [i, j] not in env.blocks:
+                if (i, j) == tuple(start_pos):
+                    use_alpha = 1.0
+                else:
+                    use_alpha = 0.5
+                ax.arrow(
+                    use_arrow[0],
+                    use_arrow[1],
+                    use_arrow[2],
+                    use_arrow[3],
+                    head_width=0.33,
+                    head_length=0.33,
+                    fc="k",
+                    ec="k",
+                    alpha=use_alpha,
+                )
+            else:
+                box = patches.Rectangle(
+                    (j - 0.33, i - 0.33), 0.66, 0.66, color="black", alpha=0.25
+                )
+                ax.add_patch(box)
+    plt.colorbar(im)
+    if plot_title != None:
+        ax.set_title(plot_title)
+    fig.show()
 
 
 # Taken from https://mattpetersen.github.io/load-cifar10-with-numpy
