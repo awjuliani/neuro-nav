@@ -44,14 +44,18 @@ class TDQ(BaseAgent):
         s_a = current_exp[1]
         s_1 = self.linear_prepare_state(current_exp[2])
         r = current_exp[3]
+        d = current_exp[4]
 
         s_a_1_optim = np.argmax(self.q_estimate(s_1))
         s_a_1_pessim = np.argmin(self.q_estimate(s_1))
 
-        target = r + self.gamma * (
-            self.w_value * self.q_estimate(s_1)[s_a_1_optim]
-            + (1 - self.w_value) * self.q_estimate(s_1)[s_a_1_pessim]
-        )
+        if d:
+            target = r
+        else:
+            target = r + self.gamma * (
+                self.w_value * self.q_estimate(s_1)[s_a_1_optim]
+                + (1 - self.w_value) * self.q_estimate(s_1)[s_a_1_pessim]
+            )
         q_error = target - self.q_estimate(s)[s_a]
 
         if not prospective:

@@ -8,7 +8,7 @@ class DynaModule:
     Class which contains logic to enable Dyna algorithms.
     """
 
-    def __init__(self, state_size, num_recall=1, recency="exponential", **kwargs):
+    def __init__(self, state_size, num_recall=3, recency="exponential", **kwargs):
         self.num_recall = num_recall
         self.recency = recency
         self.model = {}
@@ -30,7 +30,6 @@ class DynaModule:
         else:
             successor = self.model[key][1]
         exp = key + successor
-
         return exp
 
     def update(self, base_agent, current_exp, **kwargs):

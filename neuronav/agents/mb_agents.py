@@ -24,12 +24,7 @@ class MBV(BaseAgent):
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.weights = weights
-        self.T = np.stack(
-            [
-                np.zeros([self.state_size, self.state_size])
-                for _ in range(self.action_size)
-            ]
-        )
+        self.T = np.zeros([action_size, state_size, state_size])
         self.w = np.zeros(state_size)
         self.base_Q = np.zeros([self.action_size, self.state_size])
         self.w_value = w_value
@@ -46,28 +41,30 @@ class MBV(BaseAgent):
         if self.weights == "direct":
             error = r - self.w[s_1]
             self.w[s_1] += self.lr * error
+            if error > 0:
+                self.update_q(10)
         return np.linalg.norm(error)
 
     def update_t(self, current_exp, next_exp=None, prospective=False):
         s = current_exp[0]
         s_a = current_exp[1]
         s_1 = current_exp[2]
-        if not (self.T[s_a, s] == utils.onehot(s_1, self.state_size)).all():
-            self.T[s_a, s] = utils.onehot(s_1, self.state_size)
+        next_onehot = utils.onehot(s_1, self.state_size)
+        if not (self.T[s_a, s] == next_onehot).all():
+            self.T[s_a, s] = next_onehot
             self.base_Q = np.zeros([self.action_size, self.state_size])
-
+            self.update_q(10)
         return None
 
     def update_q(self, iters=1):
         for _ in range(iters):
             for i in range(self.state_size):
                 for j in range(self.action_size):
-                    if np.sum(self.T[j][i]) > 0:
-                        v_next = self.w_value * np.max(
-                            self.base_Q[:, np.argmax(self.T[j][i])]
-                        ) + (1 - self.w_value) * np.min(
-                            self.base_Q[:, np.argmax(self.T[j][i])]
-                        )
+                    if np.sum(self.T[j, i]) > 0:
+                        next_state = np.argmax(self.T[j, i])
+                        v_next = self.w_value * np.max(self.base_Q[:, next_state]) + (
+                            1 - self.w_value
+                        ) * np.min(self.base_Q[:, next_state])
                     else:
                         v_next = 0
                     self.base_Q[j, i] = self.w[i] + self.gamma * v_next
