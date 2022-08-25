@@ -58,16 +58,15 @@ class MBV(BaseAgent):
 
     def update_q(self, iters=1):
         for _ in range(iters):
-            for i in range(self.state_size):
-                for j in range(self.action_size):
-                    if np.sum(self.T[j, i]) > 0:
-                        next_state = np.argmax(self.T[j, i])
-                        v_next = self.w_value * np.max(self.base_Q[:, next_state]) + (
+            for s in range(self.state_size):
+                for a in range(self.action_size):
+                    if np.sum(self.T[a, s]) > 0:
+                        s_1 = np.argmax(self.T[a, s])
+                        q_1 = self.base_Q[:, s_1]
+                        v_next = self.w_value * np.max(q_1) + (
                             1 - self.w_value
-                        ) * np.min(self.base_Q[:, next_state])
-                    else:
-                        v_next = 0
-                    self.base_Q[j, i] = self.w[i] + self.gamma * v_next
+                        ) * np.min(q_1)
+                        self.base_Q[a, s] = self.w[s_1] + self.gamma * v_next
 
     def _update(self, current_exp, **kwargs):
         self.update_t(current_exp, **kwargs)
