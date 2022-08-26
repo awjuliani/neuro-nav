@@ -2,7 +2,7 @@ import neuronav.utils as utils
 import enum
 
 
-def four_rooms(grid_size):
+def four_rooms(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     mid = int(grid_size // 2)
@@ -25,7 +25,7 @@ def four_rooms(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def four_rooms_split(grid_size):
+def four_rooms_split(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     mid = int(grid_size // 2)
@@ -54,14 +54,14 @@ def four_rooms_split(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def empty(grid_size):
+def empty(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     blocks = []
     reward_locs = {(1, 1): 1.0}
     return blocks, agent_start, reward_locs
 
 
-def outer_ring(grid_size):
+def outer_ring(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     blocks = []
@@ -76,7 +76,7 @@ def outer_ring(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def u_maze(grid_size):
+def u_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(grid_size - 2, 1): 1.0}
     blocks = []
@@ -88,7 +88,7 @@ def u_maze(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def two_rooms(grid_size):
+def two_rooms(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     mid = int(grid_size // 2)
@@ -105,7 +105,7 @@ def two_rooms(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def obstacle(grid_size):
+def obstacle(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     mid = int(grid_size // 2)
@@ -117,7 +117,7 @@ def obstacle(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def s_maze(grid_size):
+def s_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     mid_a = int(grid_size // 3)
@@ -128,7 +128,7 @@ def s_maze(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def hairpin(grid_size):
+def hairpin(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     mid_a = int(grid_size // 5)
@@ -143,7 +143,7 @@ def hairpin(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def circle(grid_size):
+def circle(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
     reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
@@ -155,7 +155,7 @@ def circle(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def ring(grid_size):
+def ring(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
     reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
@@ -168,7 +168,7 @@ def ring(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def t_maze(grid_size):
+def t_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
     reward_locs = {(1, 1): 1.0}
     width = 3
@@ -184,7 +184,7 @@ def t_maze(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def i_maze(grid_size):
+def i_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
     width = 3
@@ -200,7 +200,7 @@ def i_maze(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def hallways(grid_size):
+def hallways(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     reward_locs = {(1, 1): 1.0}
 
@@ -218,7 +218,7 @@ def hallways(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def detour(grid_size):
+def detour(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
     reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
@@ -236,7 +236,7 @@ def detour(grid_size):
     return blocks, agent_start, reward_locs
 
 
-def detour_block(grid_size):
+def detour_block(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
     reward_locs = {(1, grid_size // 2): 1.0}
     blocks = []
@@ -299,7 +299,10 @@ class GridSize(enum.Enum):
     large = 17
 
 
-def generate_topography(topography=GridTopography.empty, grid_size=GridSize.small):
+def generate_topography(
+    topography: GridTopography = GridTopography.empty,
+    grid_size: GridSize = GridSize.small,
+):
     grid_size = grid_size.value
     if type(topography) == str:
         topography = GridTopography(topography)
@@ -308,7 +311,7 @@ def generate_topography(topography=GridTopography.empty, grid_size=GridSize.smal
     return blocks, agent_start, reward_locs
 
 
-def add_outer_blocks(blocks, grid_size):
+def add_outer_blocks(blocks: list, grid_size: int):
     for i in range(grid_size):
         for j in range(grid_size):
             if i == 0 or i == grid_size - 1 or j == 0 or j == grid_size - 1:

@@ -1,3 +1,4 @@
+from ast import Dict
 from gym import Env, spaces
 import numpy as np
 import neuronav.utils as utils
@@ -29,15 +30,15 @@ class OrientationType(enum.Enum):
 
 class GridEnv(Env):
     """
-    Grid Environment
+    Grid Environment. A 2D maze-like OpenAI gym compatible RL environment.
     """
 
     def __init__(
         self,
-        topography=GridTopography.empty,
-        grid_size=GridSize.small,
-        obs_type=GridObsType.index,
-        orientation_type=OrientationType.fixed,
+        topography: GridTopography = GridTopography.empty,
+        grid_size: GridSize = GridSize.small,
+        obs_type: GridObsType = GridObsType.index,
+        orientation_type: OrientationType = OrientationType.fixed,
     ):
         self.blocks, self.agent_start_pos, self.topo_reward_locs = generate_topography(
             topography, grid_size
@@ -131,12 +132,15 @@ class GridEnv(Env):
 
     def reset(
         self,
-        reward_locs=None,
-        agent_pos=None,
-        episode_length=100,
-        random_start=False,
-        terminate_on_reward=True,
+        reward_locs: Dict = None,
+        agent_pos: list = None,
+        episode_length: int = 100,
+        random_start: bool = False,
+        terminate_on_reward: bool = True,
     ):
+        """
+        Resets the environment to its initial configuration.
+        """
         self.done = False
         self.episode_time = 0
         self.orientation = 0
@@ -168,7 +172,7 @@ class GridEnv(Env):
                     free_spots.append([i, j])
         return free_spots
 
-    def grid(self, render_objects=True):
+    def grid(self, render_objects: bool = True):
         grid = np.zeros([self.grid_size, self.grid_size, 3])
         if render_objects:
             grid[self.agent_pos[0], self.agent_pos[1], :] = 1
@@ -182,6 +186,9 @@ class GridEnv(Env):
         return grid
 
     def render(self):
+        """
+        Renders a top-down view of the environment to a pyplot image.
+        """
         grid = self.grid()
         if self.orientation_type == OrientationType.dynamic:
             grid[self.agent_pos[0], self.agent_pos[1], :] = 0
@@ -215,18 +222,21 @@ class GridEnv(Env):
         )
         plt.show()
 
-    def move_agent(self, direction):
+    def move_agent(self, direction: np.array):
         new_pos = self.agent_pos + direction
         if self.check_target(new_pos):
             self.agent_pos = list(new_pos)
 
-    def check_target(self, target):
+    def check_target(self, target: list):
         x_check = -1 < target[0] < self.grid_size
         y_check = -1 < target[1] < self.grid_size
         block_check = list(target) not in self.blocks
         return x_check and y_check and block_check
 
-    def get_observation(self, perspective):
+    def get_observation(self, perspective: list):
+        """
+        Returns an observation corresponding to the provided coordinates.
+        """
         if self.obs_mode == GridObsType.onehot:
             one_hot = utils.onehot(
                 self.orientation * self.grid_size * self.grid_size
@@ -245,9 +255,7 @@ class GridEnv(Env):
         elif self.obs_mode == GridObsType.geometric:
             geo = np.array(perspective) / (self.grid_size - 1.0)
             if self.orientation_type == OrientationType.dynamic:
-                geo = np.concatenate(
-                    [geo, utils.onehot(self.orientation, self.orient_size)]
-                )
+                geo = np.concatenate([geo, utils.onehot(self.orientation, self.orient_size)])
             return geo
         elif self.obs_mode == GridObsType.visual:
             return self.grid()
@@ -293,10 +301,10 @@ class GridEnv(Env):
 
     def get_boundaries(
         self,
-        object_point,
-        use_onehot=False,
-        num_rays=4,
-        ray_length=10,
+        object_point: list,
+        use_onehot: bool = False,
+        num_rays: int = 4,
+        ray_length: int = 10,
     ):
         distances = []
         if num_rays == 4:
@@ -313,7 +321,7 @@ class GridEnv(Env):
         distances = np.stack(distances)
         return distances.reshape(-1)
 
-    def simple_ray(self, direction, start):
+    def simple_ray(self, direction: int, start: list):
         if self.orientation_type == OrientationType.dynamic:
             direction += self.orientation * 2
             if direction > 7:
@@ -347,14 +355,17 @@ class GridEnv(Env):
 
         return count
 
-    def rotate(self, direction):
+    def rotate(self, direction: int):
         self.orientation += direction
         if self.orientation < 0:
             self.orientation = self.max_orient
         if self.orientation > self.max_orient:
             self.orientation = 0
 
-    def step(self, action):
+    def step(self, action: int):
+        """
+        Steps the environment forward given an action.
+        """
         if self.orientation_type == OrientationType.dynamic:
             # 0 - Counter-clockwise rotation
             # 1 - Clockwise rotation

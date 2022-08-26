@@ -5,10 +5,10 @@ from neuronav.agents.td_agents import TDAC, TDQ, TDSR
 
 class DynaModule:
     """
-    Class which contains logic to enable Dyna algorithms
+    Class which contains logic to enable Dyna algorithms.
     """
 
-    def __init__(self, state_size, num_recall=1, recency="exponential", **kwargs):
+    def __init__(self, state_size, num_recall=3, recency="exponential", **kwargs):
         self.num_recall = num_recall
         self.recency = recency
         self.model = {}
@@ -30,7 +30,6 @@ class DynaModule:
         else:
             successor = self.model[key][1]
         exp = key + successor
-
         return exp
 
     def update(self, base_agent, current_exp, **kwargs):
@@ -67,13 +66,13 @@ class DynaQ(TDQ):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super(DynaQ, self).__init__(
             state_size,
@@ -98,13 +97,13 @@ class DynaAC(TDAC):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super(DynaAC, self).__init__(
             state_size,
@@ -129,13 +128,13 @@ class DynaSR(TDSR):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super(DynaSR, self).__init__(
             state_size,

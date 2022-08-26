@@ -1,5 +1,5 @@
 import numpy as np
-from neuronav.utils import onehot, twohot, run_episode
+from neuronav.utils import onehot, twohot, run_episode, plot_values_and_policy
 from neuronav.envs.graph_env import GraphEnv, GraphObsType
 from neuronav.envs.grid_env import GridEnv, GridSize, GridObsType, OrientationType
 from neuronav.envs.graph_structures import GraphStructure
@@ -18,6 +18,12 @@ def test_one_hot():
 def test_two_hot():
     a = twohot([1, 1], 3)
     assert a.all() == np.array([0, 1, 0, 0, 1, 0]).all()
+
+
+def test_plot_value_policy():
+    env = GridEnv()
+    agent = TDQ(env.state_size, env.action_space.n)
+    plot_values_and_policy(agent, env, [9, 9], "Test Plot")
 
 
 def test_graph_obs():

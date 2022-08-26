@@ -1,6 +1,4 @@
-from os import stat
 import numpy as np
-import numpy.random as npr
 import neuronav.utils as utils
 from neuronav.agents.base_agent import BaseAgent
 from neuronav.agents.td_agents import TDSR
@@ -13,25 +11,20 @@ class MBV(BaseAgent):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        poltype="softmax",
-        beta=1e4,
-        epsilon=1e-1,
-        weights="direct",
-        w_value=1.0,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
+        weights: str = "direct",
+        w_value: float = 1.0,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.weights = weights
-        self.T = np.stack(
-            [
-                np.zeros([self.state_size, self.state_size])
-                for _ in range(self.action_size)
-            ]
-        )
+        self.T = np.zeros([action_size, state_size, state_size])
         self.w = np.zeros(state_size)
         self.base_Q = np.zeros([self.action_size, self.state_size])
         self.w_value = w_value
@@ -48,30 +41,32 @@ class MBV(BaseAgent):
         if self.weights == "direct":
             error = r - self.w[s_1]
             self.w[s_1] += self.lr * error
+            if error > 0:
+                self.update_q(10)
         return np.linalg.norm(error)
 
     def update_t(self, current_exp, next_exp=None, prospective=False):
         s = current_exp[0]
         s_a = current_exp[1]
         s_1 = current_exp[2]
-
-        self.T[s_a, s] = utils.onehot(s_1, self.state_size)
-
-        return 0.0
+        next_onehot = utils.onehot(s_1, self.state_size)
+        if not (self.T[s_a, s] == next_onehot).all():
+            self.T[s_a, s] = next_onehot
+            self.base_Q = np.zeros([self.action_size, self.state_size])
+            self.update_q(10)
+        return None
 
     def update_q(self, iters=1):
-        for h in range(iters):
-            for i in range(self.state_size):
-                for j in range(self.action_size):
-                    if np.sum(self.T[j][i]) > 0:
-                        v_next = self.w_value * np.max(
-                            self.base_Q[:, np.argmax(self.T[j][i])]
-                        ) + (1 - self.w_value) * np.min(
-                            self.base_Q[:, np.argmax(self.T[j][i])]
-                        )
-                    else:
-                        v_next = 0
-                    self.base_Q[j, i] = self.w[i] + self.gamma * v_next
+        for _ in range(iters):
+            for s in range(self.state_size):
+                for a in range(self.action_size):
+                    if np.sum(self.T[a, s]) > 0:
+                        s_1 = np.argmax(self.T[a, s])
+                        q_1 = self.base_Q[:, s_1]
+                        v_next = self.w_value * np.max(q_1) + (
+                            1 - self.w_value
+                        ) * np.min(q_1)
+                        self.base_Q[a, s] = self.w[s_1] + self.gamma * v_next
 
     def _update(self, current_exp, **kwargs):
         self.update_t(current_exp, **kwargs)
@@ -90,26 +85,30 @@ class MBV(BaseAgent):
 
 
 class SRMB(BaseAgent):
+    """
+    A hybrid Success / Model-based algorithm.
+    """
+
     def __init__(
         self,
-        state_size,
-        action_size,
-        gamma=0.99,
-        lr=1e-1,
-        beta=1e4,
-        mix=0.1,
-        poltype="softmax",
-        weights="direct",
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
+        mix: float = 0.1,
+        weights: str = "direct",
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.mix = mix
         self.MB_agent = MBV(
-            state_size, action_size, gamma, lr, beta, poltype, weights, epsilon
+            state_size, action_size, lr, gamma, poltype, beta, epsilon, weights
         )
         self.SR_agent = TDSR(
-            state_size, action_size, lr, gamma, beta, poltype, None, weights, epsilon
+            state_size, action_size, lr, gamma, poltype, beta, epsilon, None, weights
         )
 
     @property

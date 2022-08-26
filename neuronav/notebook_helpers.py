@@ -3,6 +3,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 from dataclasses import dataclass
 from neuronav.utils import softmax
@@ -97,42 +98,3 @@ def calc_revaluation(prefs_a, prefs_b):
         score = np.mean(np.abs(a - b)[0])
         scores.append(score)
     return scores
-
-
-def plot_values_and_policy(agent, env, start_pos, plot_title=None):
-    arrows = [
-        [0, 0.5, 0, -0.5],
-        [-0.5, 0, 0.5, 0],
-        [0, -0.5, 0, 0.5],
-        [0.5, 0, -0.5, 0],
-    ]
-    V = agent.Q.mean(0)
-    plt.imshow(
-        V.reshape(env.grid_size, env.grid_size), cmap="RdBu", vmin=-1.0, vmax=1.0
-    )
-    for i in range(env.grid_size):
-        for j in range(env.grid_size):
-            use_dir = agent.Q.argmax(0).reshape(env.grid_size, env.grid_size)[i, j]
-            use_arrow = arrows[use_dir].copy()
-            use_arrow[0] += j
-            use_arrow[1] += i
-            if [i, j] not in env.blocks:
-                if (i, j) == start_pos:
-                    use_alpha = 1.0
-                else:
-                    use_alpha = 0.5
-                plt.arrow(
-                    use_arrow[0],
-                    use_arrow[1],
-                    use_arrow[2],
-                    use_arrow[3],
-                    head_width=0.33,
-                    head_length=0.33,
-                    fc="k",
-                    ec="k",
-                    alpha=use_alpha,
-                )
-    plt.colorbar()
-    if plot_title != None:
-        plt.title(plot_title)
-    plt.show()

@@ -1,12 +1,28 @@
+from typing import Dict
 import numpy as np
 import tarfile
 import os
 from urllib.request import urlretrieve
+from gym import Env
+from neuronav.agents.base_agent import BaseAgent
+from neuronav.envs.grid_env import GridEnv
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
 def run_episode(
-    env, agent, max_steps, start_pos=None, reward_locs=None, random_start=False
+    env: Env,
+    agent: BaseAgent,
+    max_steps: int,
+    start_pos=None,
+    reward_locs: Dict = None,
+    random_start: bool = False,
+    update_agent: bool = True,
 ):
+    """
+    Performs a single episode of actions with the policy
+    of a given agent in a given environment.
+    """
     obs = env.reset(
         agent_pos=start_pos, reward_locs=reward_locs, random_start=random_start
     )
@@ -17,14 +33,18 @@ def run_episode(
     while not done and steps < max_steps:
         act = agent.sample_action(obs)
         obs_new, reward, done, _ = env.step(act)
-        agent.update([obs, act, obs_new, reward, done])
+        if update_agent:
+            agent.update([obs, act, obs_new, reward, done])
         obs = obs_new
         steps += 1
         episode_return += reward
     return agent, steps, episode_return
 
 
-def onehot(value, max_value):
+def onehot(value: int, max_value: int):
+    """
+    Creates a onehot encoding of an integer number.
+    """
     vec = np.zeros(max_value, dtype=np.int32)
     value = np.clip(value, 0, max_value - 1)
     vec[value] = 1
@@ -32,6 +52,9 @@ def onehot(value, max_value):
 
 
 def twohot(value, max_value):
+    """
+    Creates a two-hot encoding of a given pair of integers.
+    """
     vec_1 = np.zeros(max_value, dtype=np.float32)
     vec_2 = np.zeros(max_value, dtype=np.float32)
     vec_1[value[0]] = 1
@@ -53,8 +76,64 @@ def create_circular_mask(h, w, center=None, radius=None):
 
 
 def softmax(x, axis=-1):
+    """
+    Computes the softmax function on a given vector.
+    """
     e_x = np.exp(x - np.max(x))
     return e_x / np.sum(e_x, axis=axis)
+
+
+def plot_values_and_policy(
+    agent: BaseAgent, env: GridEnv, start_pos: list, plot_title: str = None
+):
+    """
+    Plots the V(s) and argmax policy for a given agent in a given environment.
+    Agent must have an `agent.Q` function.
+    """
+    arrows = [
+        [0, 0.5, 0, -0.5],
+        [-0.5, 0, 0.5, 0],
+        [0, -0.5, 0, 0.5],
+        [0.5, 0, -0.5, 0],
+    ]
+
+    fig, ax = plt.subplots()
+
+    V = agent.Q.mean(0)
+    im = ax.imshow(
+        V.reshape(env.grid_size, env.grid_size), cmap="RdBu", vmin=-1.0, vmax=1.0
+    )
+    for i in range(env.grid_size):
+        for j in range(env.grid_size):
+            use_dir = agent.Q.argmax(0).reshape(env.grid_size, env.grid_size)[i, j]
+            use_arrow = arrows[use_dir].copy()
+            use_arrow[0] += j
+            use_arrow[1] += i
+            if [i, j] not in env.blocks:
+                if (i, j) == tuple(start_pos):
+                    use_alpha = 1.0
+                else:
+                    use_alpha = 0.5
+                ax.arrow(
+                    use_arrow[0],
+                    use_arrow[1],
+                    use_arrow[2],
+                    use_arrow[3],
+                    head_width=0.33,
+                    head_length=0.33,
+                    fc="k",
+                    ec="k",
+                    alpha=use_alpha,
+                )
+            else:
+                box = patches.Rectangle(
+                    (j - 0.33, i - 0.33), 0.66, 0.66, color="black", alpha=0.25
+                )
+                ax.add_patch(box)
+    plt.colorbar(im)
+    if plot_title != None:
+        ax.set_title(plot_title)
+    plt.show()
 
 
 # Taken from https://mattpetersen.github.io/load-cifar10-with-numpy

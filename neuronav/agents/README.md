@@ -8,6 +8,8 @@ The algorithms included here are either tabular or linear. Tabular algorithms wo
 
 *(In order to support more rich observation spaces, future releases will include additional linear and non-linear policy and value functions.)*
 
+## Included algorithms
+
 | Algorithm | Function(s) | Update Rule(s) | Reference | Description | Expressivity | Code Link |
 | --- | --- | --- | --- | --- | --- | --- |
 | TD-Q | Q(s, a) | one-step temporal difference | [Watkins & Dayan, 1992](https://link.springer.com/article/10.1007/BF00992698) | A basic q-learning algorithm | Linear | [Code](./td_agents.py) |
@@ -20,3 +22,13 @@ The algorithms included here are either tabular or linear. Tabular algorithms wo
 | SRMB | Q(s, a), T(s' \| s, a), ψ(s, a), ω(s) | value-iteration, one-step temporal difference | [Momennejad et al., 2017](https://www.nature.com/articles/s41562-017-0180-8) | A hybrid of value iteration and temporal-difference successor algorithms | Tabular | [Code](./mb_agents.py) |
 | QET | Q(s, a), e(s, a) | eligibility trace | [Sutton & Barto, 2018](http://incompleteideas.net/book/the-book-2nd.html) | A q-learning algorithm using online eligibility traces | Tabular | [Code](./td_agents.py) |
 | DistQ | Q(s, a, c) | one-step temporal difference | [Dabney et al., 2020](https://www.nature.com/articles/s41586-019-1924-6) | A distributional q-learning algorithm which uses separate learning rates for optimistic and pessimistic units. | Tabular | [Code](./dist_agents.py) |
+
+## Algorithm hyperparameters
+
+Below is a list of the common hyperparameters shared between all algorithms and agent types. Typical value ranges provided are meant as rough guidelines for generally appropriate learning behavior. Depending on the nature of the specific algorithm or task, other values may be more desirable.
+
+* `lr` - Learning rate of algorithm. Typical value range: `0` - `0.1`.
+* `gamma` - Discount factor for bootstrapping. Typical value range: `0.5` - `0.99`.
+* `poltype` - Policy type. Can be either `softmax` to sample actions proportional to action value estimates, or `egreedy` to sample either the most valuable action or random action stochastically.
+* `beta` - The temperate parameter used with the `softmax` poltype. Typical value range: `1` - `1000`.
+* `epsilon` - The probablility of randomly acting using with the `egreedy` poltype. Typical value range: `0.1` - `0.5`.

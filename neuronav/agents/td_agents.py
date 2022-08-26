@@ -6,20 +6,20 @@ from neuronav.agents.base_agent import BaseAgent
 
 class TDQ(BaseAgent):
     """
-    Implementation of Temporal Difference Q-Learning Algorithm.
+    Implementation of one-step temporal difference (TD) Q-Learning Algorithm.
     """
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
         Q_init=None,
-        epsilon=1e-1,
-        w_value=1.0,
+        w_value: float = 1.0,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
@@ -44,14 +44,18 @@ class TDQ(BaseAgent):
         s_a = current_exp[1]
         s_1 = self.linear_prepare_state(current_exp[2])
         r = current_exp[3]
+        d = current_exp[4]
 
         s_a_1_optim = np.argmax(self.q_estimate(s_1))
         s_a_1_pessim = np.argmin(self.q_estimate(s_1))
 
-        target = r + self.gamma * (
-            self.w_value * self.q_estimate(s_1)[s_a_1_optim]
-            + (1 - self.w_value) * self.q_estimate(s_1)[s_a_1_pessim]
-        )
+        if d:
+            target = r
+        else:
+            target = r + self.gamma * (
+                self.w_value * self.q_estimate(s_1)[s_a_1_optim]
+                + (1 - self.w_value) * self.q_estimate(s_1)[s_a_1_pessim]
+            )
         q_error = target - self.q_estimate(s)[s_a]
 
         if not prospective:
@@ -70,18 +74,18 @@ class TDQ(BaseAgent):
 
 class TDAC(BaseAgent):
     """
-    Implementation of Temporal Difference Actor Critic Algorithm
+    Implementation of one-step temporal difference (TD) Actor Critic Algorithm
     """
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        poltype="softmax",
-        beta=1e4,
-        epsilon=1e-1,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
         self.c_w = np.zeros([state_size])
@@ -117,21 +121,21 @@ class TDAC(BaseAgent):
 
 class TDSR(BaseAgent):
     """
-    Implementation of Temporal Difference Successor Representation Algorithm
+    Implementation of one-step temporal difference (TD) Successor Representation Algorithm
     """
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
         M_init=None,
-        weights="direct",
-        epsilon=1e-1,
-        goal_biased_sr=True,
+        weights: str = "direct",
+        goal_biased_sr: bool = True,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
@@ -227,20 +231,20 @@ class TDSR(BaseAgent):
 
 class QET(BaseAgent):
     """
-    Implementation of Q-learning with eligibility traces.
+    Implementation of one-step Q-learning with eligibility traces.
     """
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        lr=1e-1,
-        gamma=0.99,
-        beta=1e4,
-        poltype="softmax",
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
         Q_init=None,
-        epsilon=1e-1,
-        lamb=0.95,
+        lamb: float = 0.95,
         **kwargs
     ):
         super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
