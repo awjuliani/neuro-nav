@@ -1,7 +1,7 @@
 from ast import Dict
 from gym import Env, spaces
 import numpy as np
-from neuronav.utils import onehot, twohot, cifar10
+import neuronav.utils as utils
 import random
 import enum
 from neuronav.envs.grid_topographies import (
@@ -116,7 +116,7 @@ class GridEnv(Env):
                 )
         elif obs_type == GridObsType.images:
             self.observation_space = spaces.Box(0, 1, shape=(32, 32, 3))
-            self.images, _, _, _ = cifar10()
+            self.images, _, _, _ = utils.cifar10()
         elif obs_type == GridObsType.window:
             self.observation_space = spaces.Box(
                 0,
@@ -238,7 +238,7 @@ class GridEnv(Env):
         Returns an observation corresponding to the provided coordinates.
         """
         if self.obs_mode == GridObsType.onehot:
-            one_hot = onehot(
+            one_hot = utils.onehot(
                 self.orientation * self.grid_size * self.grid_size
                 + perspective[0] * self.grid_size
                 + perspective[1],
@@ -246,16 +246,16 @@ class GridEnv(Env):
             )
             return one_hot
         elif self.obs_mode == GridObsType.twohot:
-            two_hot = twohot(perspective, self.grid_size)
+            two_hot = utils.twohot(perspective, self.grid_size)
             if self.orientation_type == OrientationType.dynamic:
                 two_hot = np.concatenate(
-                    [two_hot, onehot(self.orientation, self.orient_size)]
+                    [two_hot, utils.onehot(self.orientation, self.orient_size)]
                 )
             return two_hot
         elif self.obs_mode == GridObsType.geometric:
             geo = np.array(perspective) / (self.grid_size - 1.0)
             if self.orientation_type == OrientationType.dynamic:
-                geo = np.concatenate([geo, onehot(self.orientation, self.orient_size)])
+                geo = np.concatenate([geo, utils.onehot(self.orientation, self.orient_size)])
             return geo
         elif self.obs_mode == GridObsType.visual:
             return self.grid()
@@ -272,7 +272,7 @@ class GridEnv(Env):
             )
             if self.orientation_type == OrientationType.dynamic:
                 bounds = np.concatenate(
-                    [bounds, onehot(self.orientation, self.orient_size)]
+                    [bounds, utils.onehot(self.orientation, self.orient_size)]
                 )
             return bounds
         elif self.obs_mode == GridObsType.images:
@@ -314,7 +314,7 @@ class GridEnv(Env):
         for num in nums:
             distance = self.simple_ray(num, object_point)
             if use_onehot:
-                distance = onehot(distance, ray_length)
+                distance = utils.onehot(distance, ray_length)
             else:
                 distance = distance / self.grid_size
             distances.append(distance)

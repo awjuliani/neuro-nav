@@ -5,6 +5,7 @@ import os
 from urllib.request import urlretrieve
 from gym import Env
 from neuronav.agents.base_agent import BaseAgent
+from neuronav.envs.grid_env import GridEnv
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -83,7 +84,7 @@ def softmax(x, axis=-1):
 
 
 def plot_values_and_policy(
-    agent: BaseAgent, env, start_pos: list, plot_title: str = None
+    agent: BaseAgent, env: GridEnv, start_pos: list, plot_title: str = None
 ):
     """
     Plots the V(s) and argmax policy for a given agent in a given environment.
