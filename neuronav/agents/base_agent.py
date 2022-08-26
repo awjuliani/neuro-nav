@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.random as npr
-import neuronav.utils as utils
+from neuronav.utils import softmax, onehot
 
 
 class BaseAgent:
@@ -30,7 +30,7 @@ class BaseAgent:
     def base_sample_action(self, policy_logits):
         if self.poltype == "softmax":
             action = npr.choice(
-                self.action_size, p=utils.softmax(self.beta * policy_logits)
+                self.action_size, p=softmax(self.beta * policy_logits)
             )
         else:
             if npr.rand() < self.epsilon:
@@ -45,7 +45,7 @@ class BaseAgent:
 
     def base_get_policy(self, policy_logits):
         if self.poltype == "softmax":
-            policy = utils.softmax(self.beta * policy_logits, axis=0)
+            policy = softmax(self.beta * policy_logits, axis=0)
         else:
             mask = policy_logits == policy_logits.max(0)
             greedy = mask / mask.sum(0)
@@ -62,5 +62,5 @@ class BaseAgent:
 
     def linear_prepare_state(self, state):
         if type(state) == int or type(state) == np.int_:
-            state = utils.onehot(state, self.state_size)
+            state = onehot(state, self.state_size)
         return state

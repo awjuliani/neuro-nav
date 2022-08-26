@@ -30,7 +30,7 @@ class OrientationType(enum.Enum):
 
 class GridEnv(Env):
     """
-    Grid Environment
+    Grid Environment. A 2D maze-like OpenAI gym compatible RL environment.
     """
 
     def __init__(
@@ -138,6 +138,9 @@ class GridEnv(Env):
         random_start: bool = False,
         terminate_on_reward: bool = True,
     ):
+        """
+        Resets the environment to its initial configuration.
+        """
         self.done = False
         self.episode_time = 0
         self.orientation = 0
@@ -183,6 +186,9 @@ class GridEnv(Env):
         return grid
 
     def render(self):
+        """
+        Renders a top-down view of the environment to a pyplot image.
+        """
         grid = self.grid()
         if self.orientation_type == OrientationType.dynamic:
             grid[self.agent_pos[0], self.agent_pos[1], :] = 0
@@ -228,6 +234,9 @@ class GridEnv(Env):
         return x_check and y_check and block_check
 
     def get_observation(self, perspective: list):
+        """
+        Returns an observation corresponding to the provided coordinates.
+        """
         if self.obs_mode == GridObsType.onehot:
             one_hot = onehot(
                 self.orientation * self.grid_size * self.grid_size
@@ -354,6 +363,9 @@ class GridEnv(Env):
             self.orientation = 0
 
     def step(self, action: int):
+        """
+        Steps the environment forward given an action.
+        """
         if self.orientation_type == OrientationType.dynamic:
             # 0 - Counter-clockwise rotation
             # 1 - Clockwise rotation

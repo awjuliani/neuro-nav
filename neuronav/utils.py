@@ -18,6 +18,10 @@ def run_episode(
     random_start: bool = False,
     update_agent: bool = True,
 ):
+    """
+    Performs a single episode of actions with the policy
+    of a given agent in a given environment.
+    """
     obs = env.reset(
         agent_pos=start_pos, reward_locs=reward_locs, random_start=random_start
     )
@@ -36,7 +40,10 @@ def run_episode(
     return agent, steps, episode_return
 
 
-def onehot(value, max_value):
+def onehot(value: int, max_value: int):
+    """
+    Creates a onehot encoding of an integer number.
+    """
     vec = np.zeros(max_value, dtype=np.int32)
     value = np.clip(value, 0, max_value - 1)
     vec[value] = 1
@@ -44,6 +51,9 @@ def onehot(value, max_value):
 
 
 def twohot(value, max_value):
+    """
+    Creates a two-hot encoding of a given pair of integers.
+    """
     vec_1 = np.zeros(max_value, dtype=np.float32)
     vec_2 = np.zeros(max_value, dtype=np.float32)
     vec_1[value[0]] = 1
@@ -65,6 +75,9 @@ def create_circular_mask(h, w, center=None, radius=None):
 
 
 def softmax(x, axis=-1):
+    """
+    Computes the softmax function on a given vector.
+    """
     e_x = np.exp(x - np.max(x))
     return e_x / np.sum(e_x, axis=axis)
 
@@ -72,6 +85,10 @@ def softmax(x, axis=-1):
 def plot_values_and_policy(
     agent: BaseAgent, env, start_pos: list, plot_title: str = None
 ):
+    """
+    Plots the V(s) and argmax policy for a given agent in a given environment.
+    Agent must have an `agent.Q` function.
+    """
     arrows = [
         [0, 0.5, 0, -0.5],
         [-0.5, 0, 0.5, 0],

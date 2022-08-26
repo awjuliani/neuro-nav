@@ -60,6 +60,9 @@ class GraphEnv(Env):
 
     @property
     def observation(self):
+        """
+        Returns an observation corresponding to the current state.
+        """
         if self.obs_mode == GraphObsType.onehot:
             return utils.onehot(self.agent_pos, self.state_size)
         elif self.obs_mode == GraphObsType.index:
@@ -78,6 +81,9 @@ class GraphEnv(Env):
         reward_locs: Dict = None,
         random_start: bool = False,
     ):
+        """
+        Resets the environment to initial configuration.
+        """
         self.running = True
         if agent_pos != None:
             self.agent_pos = agent_pos
@@ -93,6 +99,9 @@ class GraphEnv(Env):
         return self.observation
 
     def render(self):
+        """
+        Renders the graph environment to a pyplot figure.
+        """
         graph = nx.DiGraph()
         color_map = []
         for idx, edge in enumerate(self.edges):
@@ -121,6 +130,9 @@ class GraphEnv(Env):
         )
 
     def step(self, action: int):
+        """
+        Takes a step in the environment given an action.
+        """
         if self.running is False:
             print("Please call env.reset() before env.step().")
             return None, None, None, None
