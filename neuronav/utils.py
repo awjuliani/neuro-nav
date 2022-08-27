@@ -81,9 +81,7 @@ def softmax(x, axis=-1):
     return e_x / np.sum(e_x, axis=axis)
 
 
-def plot_values_and_policy(
-    agent, env, start_pos: list, plot_title: str = None
-):
+def plot_values_and_policy(agent, env, start_pos: list, plot_title: str = None):
     """
     Plots the V(s) and argmax policy for a given agent in a given environment.
     Agent must have an `agent.Q` function.
