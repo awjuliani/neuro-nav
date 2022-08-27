@@ -255,7 +255,9 @@ class GridEnv(Env):
         elif self.obs_mode == GridObsType.geometric:
             geo = np.array(perspective) / (self.grid_size - 1.0)
             if self.orientation_type == OrientationType.dynamic:
-                geo = np.concatenate([geo, utils.onehot(self.orientation, self.orient_size)])
+                geo = np.concatenate(
+                    [geo, utils.onehot(self.orientation, self.orient_size)]
+                )
             return geo
         elif self.obs_mode == GridObsType.visual:
             return self.grid()
