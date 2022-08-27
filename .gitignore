@@ -3,3 +3,4 @@
 *__pycache__
 /neuronav.egg-info
 .DS_Store
+/.vscode
