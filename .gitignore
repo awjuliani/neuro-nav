@@ -4,3 +4,4 @@
 /neuronav.egg-info
 .DS_Store
 /.vscode
+.ipynb_checkpoints
