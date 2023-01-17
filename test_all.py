@@ -41,7 +41,7 @@ def test_graph_structure():
 
 def test_grid_orient():
     for obs_type in GridObsType:
-        env = GridEnv(orientation_type=OrientationType.dynamic, obs_type=obs_type)
+        env = GridEnv(orientation_type=OrientationType.variable, obs_type=obs_type)
         obs = env.reset()
         env.step(env.action_space.sample())
         if obs_type != GridObsType.index:
