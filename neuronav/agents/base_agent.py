@@ -41,7 +41,8 @@ class BaseAgent:
 
     def update(self, current_exp):
         self.num_updates += 1
-        self._update(current_exp)
+        error = self._update(current_exp)
+        return error
 
     def base_get_policy(self, policy_logits):
         if self.poltype == "softmax":
@@ -59,8 +60,3 @@ class BaseAgent:
 
     def reset(self):
         return None
-
-    def linear_prepare_state(self, state):
-        if type(state) == int or type(state) == np.int_:
-            state = utils.onehot(state, self.state_size)
-        return state

@@ -40,7 +40,7 @@ def plot_grid_experiment_results(results, num_eps):
 def plot_graph_experiment_results(
     agent_names, result_dict, result_name, save_fig=False
 ):
-    fig, axs = plt.subplots(1, 4, figsize=(20, 2), dpi=(350))
+    fig, axs = plt.subplots(1, len(agent_names), figsize=(20, 2), dpi=(350))
     num_conditions = len(result_dict.keys())
     for i in range(len(agent_names)):
         means = [np.mean(result, axis=0)[i] for result in result_dict.values()]

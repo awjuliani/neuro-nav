@@ -4,7 +4,51 @@ import neuronav.utils as utils
 from neuronav.agents.base_agent import BaseAgent
 
 
-class TDQ(BaseAgent):
+class QAgent(BaseAgent):
+    def __init__(
+        self,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
+        bootstrap: str = "max-min",
+        w_value: float = 1.0,
+    ):
+        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
+        self.bootstrap = bootstrap
+        self.w_value = w_value
+
+    def q_estimate(self, state):
+        return None
+
+    def q_error(self, s, a, s_1, r, d):
+        if self.bootstrap == "max-min":
+            s_a_1_optim = np.argmax(self.q_estimate(s_1))
+            s_a_1_pessim = np.argmin(self.q_estimate(s_1))
+            q_bootstrap = (
+                self.w_value * self.q_estimate(s_1)[s_a_1_optim]
+                + (1 - self.w_value) * self.q_estimate(s_1)[s_a_1_pessim]
+            )
+        elif self.bootstrap == "softmax":
+            q_bootstrap = np.sum(
+                self.q_estimate(s_1) * utils.softmax(self.q_estimate(s_1) * self.beta)
+            )
+        elif self.bootstrap == "mean":
+            q_bootstrap = self.q_estimate(s_1).mean(0)
+        else:
+            raise Exception("No Valid bootstrap type provided")
+        if d:
+            target = r
+        else:
+            target = r + self.gamma * q_bootstrap
+        q_error = target - self.q_estimate(s)[a]
+        return q_error
+
+
+class TDQ(QAgent):
     """
     Implementation of one-step temporal difference (TD) Q-Learning Algorithm.
     """
@@ -19,10 +63,20 @@ class TDQ(BaseAgent):
         beta: float = 1e4,
         epsilon: float = 1e-1,
         Q_init=None,
+        bootstrap: str = "softmax",
         w_value: float = 1.0,
-        **kwargs
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
+        super().__init__(
+            state_size,
+            action_size,
+            lr,
+            gamma,
+            poltype,
+            beta,
+            epsilon,
+            bootstrap,
+            w_value,
+        )
 
         if Q_init is None:
             self.Q = np.zeros((action_size, state_size))
@@ -30,43 +84,33 @@ class TDQ(BaseAgent):
             self.Q = Q_init * npr.randn(action_size, state_size)
         else:
             self.Q = Q_init
-        self.w_value = w_value
 
     def q_estimate(self, state):
-        return state @ self.Q.T
+        return self.Q[:, state]
+
+    def v_estimate(self, state):
+        q = self.q_estimate(state)
+        return np.sum(q * utils.softmax(q * self.beta))
 
     def sample_action(self, state):
-        state = self.linear_prepare_state(state)
         return self.base_sample_action(self.q_estimate(state))
 
-    def update_q(self, current_exp, next_exp=None, prospective=False):
-        s = self.linear_prepare_state(current_exp[0])
+    def update_q(self, current_exp, prospective=False):
+        s = current_exp[0]
         s_a = current_exp[1]
-        s_1 = self.linear_prepare_state(current_exp[2])
+        s_1 = current_exp[2]
         r = current_exp[3]
         d = current_exp[4]
-
-        s_a_1_optim = np.argmax(self.q_estimate(s_1))
-        s_a_1_pessim = np.argmin(self.q_estimate(s_1))
-
-        if d:
-            target = r
-        else:
-            target = r + self.gamma * (
-                self.w_value * self.q_estimate(s_1)[s_a_1_optim]
-                + (1 - self.w_value) * self.q_estimate(s_1)[s_a_1_pessim]
-            )
-        q_error = target - self.q_estimate(s)[s_a]
+        q_error = self.q_error(s, s_a, s_1, r, d)
 
         if not prospective:
             # actually perform update to Q if not prospective
-            self.Q[s_a, :] += self.lr * q_error * s
+            self.Q[s_a, s] += self.lr * q_error
         return q_error
 
     def _update(self, current_exp, **kwargs):
         q_error = self.update_q(current_exp, **kwargs)
-        td_error = {"q": np.linalg.norm(q_error)}
-        return td_error
+        return q_error
 
     def get_policy(self):
         return self.base_get_policy(self.Q)
@@ -91,35 +135,41 @@ class TDAC(BaseAgent):
         self.c_w = np.zeros([state_size])
         self.a_w = np.zeros([state_size, action_size])
 
+    @property
+    def Q(self):
+        return self.a_w.swapaxes(0, 1).copy()
+
     def critic(self, state):
-        return np.matmul(state, self.c_w)
+        return self.c_w[state]
 
     def actor(self, state):
-        return np.matmul(state, self.a_w)
+        return self.a_w[state]
 
     def sample_action(self, state):
-        state = self.linear_prepare_state(state)
         logits = self.actor(state)
         return self.base_sample_action(logits)
 
-    def _update(self, current_exp):
-        state, action, state_next, reward, done = current_exp
-        state = self.linear_prepare_state(state)
-        state_next = self.linear_prepare_state(state_next)
-        if not done:
-            td_target = reward + self.gamma * self.critic(state_next)
-            td_estimate = self.critic(state)
+    def v_error(self, s, a, s_1, r, d):
+        if not d:
+            td_target = r + self.gamma * self.critic(s_1)
+            td_estimate = self.critic(s)
             td_error = td_target - td_estimate
         else:
-            td_error = reward - self.critic(state)
-        self.c_w += self.lr * td_error * state
-        self.a_w[:, action] += self.lr * td_error * state
+            td_error = r - self.critic(s)
+        return td_error
+
+    def _update(self, current_exp):
+        state, action, state_next, reward, done = current_exp
+        td_error = self.v_error(state, action, state_next, reward, done)
+        self.c_w[state] += self.lr * td_error
+        self.a_w[state, action] += self.lr * td_error
+        return td_error
 
     def get_policy(self):
         return self.base_get_policy(self.a_w)
 
 
-class TDSR(BaseAgent):
+class TDSR(QAgent):
     """
     Implementation of one-step temporal difference (TD) Successor Representation Algorithm
     """
@@ -136,9 +186,20 @@ class TDSR(BaseAgent):
         M_init=None,
         weights: str = "direct",
         goal_biased_sr: bool = True,
-        **kwargs
+        bootstrap: str = "max-min",
+        w_value: float = 1.0,
     ):
-        super().__init__(state_size, action_size, lr, gamma, poltype, beta, epsilon)
+        super().__init__(
+            state_size,
+            action_size,
+            lr,
+            gamma,
+            poltype,
+            beta,
+            epsilon,
+            bootstrap,
+            w_value,
+        )
         self.weights = weights
         self.goal_biased_sr = goal_biased_sr
 
@@ -205,8 +266,8 @@ class TDSR(BaseAgent):
         s, a, s_1, r, d = current_exp
         m_error = self.update_sr(s, a, s_1, d, **kwargs)
         w_error = self.update_w(s, s_1, r)
-        td_error = {"m": np.linalg.norm(m_error), "w": np.linalg.norm(w_error)}
-        return td_error
+        q_error = self.q_error(s, a, s_1, r, d)
+        return q_error
 
     def get_policy(self, M=None, goal=None):
         if goal is None:

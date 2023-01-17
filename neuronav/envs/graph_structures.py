@@ -17,43 +17,43 @@ class GraphStructure(enum.Enum):
 
 
 def two_step():
-    rewarding_states = {3: 1, 4: -1, 5: 0.5, 6: 0.5}
+    reward_locs = {3: 1, 4: -1, 5: 0.5, 6: 0.5}
     edges = [[1, 2], [3, 4], [5, 6], [], [], [], []]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def three_arm_bandit():
-    rewarding_states = {1: 1, 2: 0.5, 3: -0.5}
+    reward_locs = {1: 1, 2: 0.5, 3: -0.5}
     edges = [[1, 2, 3], [], [], []]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def two_way_linear():
-    rewarding_states = {4: 1}
+    reward_locs = {4: 1}
     edges = [[0, 1], [0, 2], [1, 3], [2, 4], [3, 4]]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def ring():
-    rewarding_states = {4: 1}
+    reward_locs = {4: 1}
     edges = [[1, 5], [0, 2], [1, 3], [2, 4], [3, 5], [4, 0]]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def linear():
-    rewarding_states = {5: 1}
+    reward_locs = {5: 1}
     edges = [[1], [2], [3], [4], [5], []]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def t_graph():
-    rewarding_states = {5: 1}
+    reward_locs = {5: 1}
     edges = [[1, 0], [2, 1], [3, 4], [5, 3], [6, 4], [], []]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def neighborhood():
-    rewarding_states = {14: 1}
+    reward_locs = {14: 1}
     edges = [
         [1, 2, 3, 4],
         [0, 2, 3, 4],
@@ -71,23 +71,23 @@ def neighborhood():
         [11, 10, 12, 14],
         [10, 12, 11, 13],
     ]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def human_a():
-    rewarding_states = {4: 10, 5: 1}
+    reward_locs = {4: 10, 5: 1}
     edges = [[2], [3], [4], [5], [], []]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def human_b():
-    rewarding_states = {3: 15, 5: 30}
+    reward_locs = {3: 15, 5: 30}
     edges = [[1, 2], [3, 4], [4, 5], [3, 3], [4, 4], [5, 5]]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def t_loop():
-    rewarding_states = {12: 1, 11: 1}
+    reward_locs = {12: 1, 11: 1}
     edges = [
         [1, 0],
         [2, 1],
@@ -103,7 +103,7 @@ def t_loop():
         [0, 11],
         [0, 12],
     ]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 def variable_magnitude():
@@ -113,7 +113,7 @@ def variable_magnitude():
     utility_func = lambda r: (fmax * np.sign(r) * np.abs(r) ** (0.5)) / (
         np.abs(r) ** (0.5) + sigma ** (0.5)
     )
-    rewarding_states = {
+    reward_locs = {
         1: utility_func(0.1),
         2: utility_func(0.3),
         3: utility_func(1.2),
@@ -132,7 +132,7 @@ def variable_magnitude():
         [],
         [],
     ]
-    return rewarding_states, edges
+    return reward_locs, edges
 
 
 structure_map = {

@@ -6,6 +6,7 @@ from urllib.request import urlretrieve
 from gym import Env
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.cm as cm
 
 
 def run_episode(
@@ -16,27 +17,39 @@ def run_episode(
     reward_locs: Dict = None,
     random_start: bool = False,
     update_agent: bool = True,
+    time_penalty: float = 0.0,
+    collect_states: bool = False,
 ):
     """
     Performs a single episode of actions with the policy
     of a given agent in a given environment.
     """
     obs = env.reset(
-        agent_pos=start_pos, reward_locs=reward_locs, random_start=random_start
+        agent_pos=start_pos,
+        reward_locs=reward_locs,
+        random_start=random_start,
+        time_penalty=time_penalty,
     )
     agent.reset()
     steps = 0
     episode_return = 0
     done = False
+    if collect_states:
+        states = []
     while not done and steps < max_steps:
         act = agent.sample_action(obs)
         obs_new, reward, done, _ = env.step(act)
         if update_agent:
-            agent.update([obs, act, obs_new, reward, done])
+            _ = agent.update([obs, act, obs_new, reward, done])
+        if collect_states:
+            states.append(obs)
         obs = obs_new
         steps += 1
         episode_return += reward
-    return agent, steps, episode_return
+    if collect_states:
+        return agent, steps, episode_return, states
+    else:
+        return agent, steps, episode_return
 
 
 def onehot(value: int, max_value: int):
@@ -81,7 +94,16 @@ def softmax(x, axis=-1):
     return e_x / np.sum(e_x, axis=axis)
 
 
-def plot_values_and_policy(agent, env, start_pos: list, plot_title: str = None):
+def plot_values_and_policy(
+    agent,
+    env,
+    start_pos: list,
+    plot_title: str = None,
+    rollout: bool = True,
+    reward_locs: dict = None,
+    subplot=None,
+    plot_sr=None,
+):
     """
     Plots the V(s) and argmax policy for a given agent in a given environment.
     Agent must have an `agent.Q` function.
@@ -91,45 +113,105 @@ def plot_values_and_policy(agent, env, start_pos: list, plot_title: str = None):
         [-0.5, 0, 0.5, 0],
         [0, -0.5, 0, 0.5],
         [0.5, 0, -0.5, 0],
+        [0, 0, 0, 0],
     ]
 
-    fig, ax = plt.subplots()
+    states = []
+    if rollout:
+        _, _, _, states = run_episode(
+            env,
+            agent,
+            100,
+            start_pos,
+            collect_states=True,
+            update_agent=False,
+            reward_locs=reward_locs,
+        )
 
-    V = agent.Q.mean(0)
-    im = ax.imshow(
-        V.reshape(env.grid_size, env.grid_size), cmap="RdBu", vmin=-1.0, vmax=1.0
-    )
+    if reward_locs is None:
+        reward_locs = env.topo_reward_locs
+
+    if subplot is None:
+        _, ax = plt.subplots()
+    else:
+        ax = subplot
+    cmap = cm.get_cmap("RdBu")
+    blue = cmap(1.0)
+    red = cmap(0.0)
+
+    if agent is not None:
+        V = agent.Q.mean(0)
+    else:
+        V = np.zeros([env.grid_size, env.grid_size])
+    if plot_sr is None:
+        im = ax.imshow(
+            V.reshape(env.grid_size, env.grid_size), cmap="RdBu", vmin=-1.0, vmax=1.0
+        )
+    else:
+        im = ax.imshow(plot_sr, cmap="PiYG", vmin=-1.0, vmax=1.0)
     for i in range(env.grid_size):
         for j in range(env.grid_size):
-            use_dir = agent.Q.argmax(0).reshape(env.grid_size, env.grid_size)[i, j]
-            use_arrow = arrows[use_dir].copy()
-            use_arrow[0] += j
-            use_arrow[1] += i
-            if [i, j] not in env.blocks:
-                if (i, j) == tuple(start_pos):
+            if rollout:
+                if env.get_observation([i, j]) in states:
                     use_alpha = 1.0
                 else:
-                    use_alpha = 0.5
-                ax.arrow(
-                    use_arrow[0],
-                    use_arrow[1],
-                    use_arrow[2],
-                    use_arrow[3],
-                    head_width=0.33,
-                    head_length=0.33,
-                    fc="k",
-                    ec="k",
-                    alpha=use_alpha,
-                )
+                    use_alpha = 0.25
+            else:
+                use_alpha = 0.5
+            if agent is not None:
+                use_dir = agent.Q.argmax(0).reshape(env.grid_size, env.grid_size)[i, j]
+                use_arrow = arrows[use_dir].copy()
+                use_arrow[0] += j
+                use_arrow[1] += i
+            if [i, j] not in env.blocks:
+                if [i, j] == list(start_pos):
+                    ax.text(
+                        j,
+                        i + 0.25,
+                        "S",
+                        fontdict={"fontsize": 16, "weight": "bold", "ha": "center"},
+                    )
+                elif (i, j) in reward_locs.keys():
+                    reward_val = reward_locs[(i, j)]
+                    if reward_val > 0:
+                        use_color = cmap(0.75)
+                    else:
+                        use_color = cmap(0.25)
+                    box = patches.Rectangle(
+                        (j - 0.5, i - 0.5), 1.0, 1.0, color=use_color, alpha=0.5
+                    )
+                    ax.add_patch(box)
+                    ax.text(
+                        j,
+                        i + 0.15,
+                        str(reward_val),
+                        fontdict={"fontsize": 11, "ha": "center"},
+                    )
+                else:
+                    if agent is not None and plot_sr is None:
+                        ax.arrow(
+                            use_arrow[0],
+                            use_arrow[1],
+                            use_arrow[2],
+                            use_arrow[3],
+                            head_width=0.33,
+                            head_length=0.33,
+                            fc="k",
+                            ec="k",
+                            alpha=use_alpha,
+                        )
             else:
                 box = patches.Rectangle(
                     (j - 0.33, i - 0.33), 0.66, 0.66, color="black", alpha=0.25
                 )
                 ax.add_patch(box)
-    plt.colorbar(im)
+    if agent is not None:
+        cbar = plt.colorbar(im, ax=ax)
+        cbar.set_label("Value Estimates", rotation=270, labelpad=20, fontsize=14)
     if plot_title != None:
         ax.set_title(plot_title)
-    plt.show()
+    plt.tick_params(axis="both", labelsize=0, length=0)
+    return ax
 
 
 # Taken from https://mattpetersen.github.io/load-cifar10-with-numpy

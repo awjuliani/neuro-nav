@@ -73,6 +73,7 @@ class DynaQ(TDQ):
         poltype: str = "softmax",
         beta: float = 1e4,
         epsilon: float = 1e-1,
+        w_value: float = 1.0,
     ):
         super(DynaQ, self).__init__(
             state_size,
@@ -82,11 +83,12 @@ class DynaQ(TDQ):
             poltype=poltype,
             beta=beta,
             epsilon=epsilon,
+            w_value=w_value,
         )
         self.dyna = DynaModule(state_size)
 
     def update(self, current_exp):
-        super().update(current_exp)
+        _ = super().update(current_exp)
         self = self.dyna.update(self, current_exp)
 
 
@@ -117,7 +119,7 @@ class DynaAC(TDAC):
         self.dyna = DynaModule(state_size)
 
     def update(self, current_exp):
-        super().update(current_exp)
+        _ = super().update(current_exp)
         self = self.dyna.update(self, current_exp)
 
 
@@ -148,5 +150,5 @@ class DynaSR(TDSR):
         self.dyna = DynaModule(state_size)
 
     def update(self, current_exp):
-        super().update(current_exp)
+        _ = super().update(current_exp)
         self = self.dyna.update(self, current_exp)

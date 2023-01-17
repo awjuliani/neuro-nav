@@ -58,7 +58,7 @@ class GridEnv(Env):
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
         self.reward_locs = {}
-        self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]])
+        self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
         self.free_spots = self.make_free_spots()
         if isinstance(obs_type, str):
@@ -137,6 +137,7 @@ class GridEnv(Env):
         episode_length: int = 100,
         random_start: bool = False,
         terminate_on_reward: bool = True,
+        time_penalty: float = 0.0,
     ):
         """
         Resets the environment to its initial configuration.
@@ -144,6 +145,7 @@ class GridEnv(Env):
         self.done = False
         self.episode_time = 0
         self.orientation = 0
+        self.time_penalty = time_penalty
         self.max_episode_time = episode_length
         self.terminate_on_reward = terminate_on_reward
 
@@ -178,9 +180,9 @@ class GridEnv(Env):
             grid[self.agent_pos[0], self.agent_pos[1], :] = 1
             for loc, reward in self.reward_locs.items():
                 if reward > 0:
-                    grid[loc[0], loc[1], 1] = reward
+                    grid[loc[0], loc[1], 1] = np.clip(np.sqrt(reward), 0, 1)
                 else:
-                    grid[loc[0], loc[1], 0] = np.abs(reward)
+                    grid[loc[0], loc[1], 0] = np.clip(np.sqrt(np.abs(reward)), 0, 1)
         for block in self.blocks:
             grid[block[0], block[1], :] = 0.5
         return grid
@@ -384,13 +386,17 @@ class GridEnv(Env):
             # 1 - Right
             # 2 - Down
             # 3 - Left
+            # 4 - Stay
             move_array = self.direction_map[action]
             self.move_agent(move_array)
         self.episode_time += 1
-        reward = 0.0
+        if action == 4:
+            reward = 0
+        else:
+            reward = self.time_penalty
         eval_pos = tuple(self.agent_pos)
         if eval_pos in self.reward_locs:
-            reward = self.reward_locs[eval_pos]
+            reward += self.reward_locs[eval_pos]
             if self.terminate_on_reward:
                 self.done = True
         return self.observation, reward, self.done, {}

@@ -51,12 +51,7 @@ class GraphEnv(Env):
                 action_size = len(edge)
         self.action_space = spaces.Discrete(action_size)
         self.state_size = len(self.edges)
-        self.populate_rewards(self.rewarding_states)
-
-    def populate_rewards(self, reward_locs: Dict):
-        self.reward_nodes = [0 for _ in range(self.state_size)]
-        for state in reward_locs:
-            self.reward_nodes[state] = reward_locs[state]
+        self.reward_locs = self.rewarding_states
 
     @property
     def observation(self):
@@ -80,11 +75,13 @@ class GraphEnv(Env):
         agent_pos: int = None,
         reward_locs: Dict = None,
         random_start: bool = False,
+        time_penalty: float = 0.0,
     ):
         """
         Resets the environment to initial configuration.
         """
         self.running = True
+        self.time_penalty = time_penalty
         if agent_pos != None:
             self.agent_pos = agent_pos
         elif random_start:
@@ -93,9 +90,9 @@ class GraphEnv(Env):
             self.agent_pos = self.agent_start_pos
         self.done = False
         if reward_locs != None:
-            self.populate_rewards(reward_locs)
+            self.reward_locs = reward_locs
         else:
-            self.populate_rewards(self.rewarding_states)
+            self.reward_locs = self.rewarding_states
         return self.observation
 
     def render(self):
@@ -108,10 +105,13 @@ class GraphEnv(Env):
             graph.add_node(idx)
             if idx == self.agent_pos:
                 color_map.append("cornflowerblue")
-            elif self.reward_nodes[idx] > 0:
-                color_map.append([0, np.clip(self.reward_nodes[idx], 0, 1), 0])
-            elif self.reward_nodes[idx] < 0:
-                color_map.append([-np.clip(self.reward_nodes[idx], -1, 0), 0, 0])
+            elif idx in self.reward_locs:
+                if self.reward_locs[idx] > 0:
+                    color_map.append([0, np.clip(self.reward_locs[idx], 0, 1), 0])
+                elif self.reward_locs[idx] < 0:
+                    color_map.append([-np.clip(self.reward_locs[idx], -1, 0), 0, 0])
+                else:
+                    color_map.append("silver")
             else:
                 color_map.append("silver")
         for idx, edge in enumerate(self.edges):
@@ -126,7 +126,8 @@ class GraphEnv(Env):
             with_labels=True,
             node_color=color_map,
             node_size=750,
-            pos=nx.spring_layout(graph, k=1, pos=nx.kamada_kawai_layout(graph)),
+            font_color="white",
+            pos=nx.spring_layout(graph, k=3, pos=nx.kamada_kawai_layout(graph)),
         )
 
     def step(self, action: int):
@@ -148,7 +149,10 @@ class GraphEnv(Env):
             else:
                 candidate_position = candidate_positions
             self.agent_pos = candidate_position
-            reward = self.reward_nodes[self.agent_pos]
-            if np.abs(reward) == 1 or len(self.edges[self.agent_pos]) == 0:
+            reward = 0
+            if self.agent_pos in self.reward_locs:
+                reward += self.reward_locs[self.agent_pos]
+            reward -= self.time_penalty
+            if len(self.edges[self.agent_pos]) == 0:
                 self.done = True
             return self.observation, reward, self.done, {}

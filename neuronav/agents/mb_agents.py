@@ -98,7 +98,7 @@ class SRMB(BaseAgent):
         poltype: str = "softmax",
         beta: float = 1e4,
         epsilon: float = 1e-1,
-        mix: float = 0.1,
+        mix: float = 0.5,
         weights: str = "direct",
         **kwargs
     ):
