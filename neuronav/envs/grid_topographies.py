@@ -254,6 +254,58 @@ def detour_block(grid_size: int):
     return blocks, agent_start, reward_locs
 
 
+def two_step(grid_size):
+    agent_start = [grid_size - 2, grid_size // 2]
+    reward_locs = {(1, 1): 0.5, (1, 3): -1.0, (1, 9): 0.25, (1, 7): 0.25}
+    blocks = []
+    blocks.extend([[i, 2] for i in range(1, grid_size - 1)])
+    blocks.extend([[i, 8] for i in range(1, grid_size - 1)])
+    blocks.extend([[i, 4] for i in range(1, grid_size - 1)])
+    blocks.extend([[i, 6] for i in range(1, grid_size - 1)])
+
+    blocks.extend([[i, 1] for i in range(4, grid_size - 1)])
+    blocks.extend([[i, 7] for i in range(4, grid_size - 1)])
+    blocks.extend([[i, 3] for i in range(4, grid_size - 1)])
+    blocks.extend([[i, 9] for i in range(4, grid_size - 1)])
+    blocks.extend([[i, 5] for i in range(1, 6)])
+    if grid_size > 11:
+        blocks.extend([[i, 10] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 11] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 12] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 13] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 14] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 15] for i in range(1, grid_size - 1)])
+    if grid_size > 7:
+        blocks.remove([4, 2])
+        blocks.remove([4, 8])
+        blocks.remove([6, 4])
+        blocks.remove([6, 6])
+        blocks.remove([6, 3])
+        blocks.remove([6, 7])
+        blocks.remove([6, 2])
+        blocks.remove([6, 8])
+        blocks.remove([5, 2])
+        blocks.remove([5, 8])
+        blocks.remove([3, 2])
+        blocks.remove([3, 8])
+    return blocks, agent_start, reward_locs
+
+
+def narrow(grid_size):
+    agent_start = [grid_size - 2, grid_size // 2]
+    reward_locs = {(1, 5): 1.0, (5, 5): -1.0}
+    blocks = []
+    add_blocks = [[i, 1] for i in range(1, grid_size - 1)]
+    blocks.extend(add_blocks)
+    add_blocks = [[i, 2] for i in range(1, grid_size - 1)]
+    blocks.extend(add_blocks)
+    add_blocks = [[i, 8] for i in range(1, grid_size - 1)]
+    blocks.extend(add_blocks)
+    add_blocks = [[i, 9] for i in range(1, grid_size - 1)]
+    blocks.extend(add_blocks)
+    return blocks, agent_start, reward_locs
+
+
 class GridTopography(enum.Enum):
     empty = "empty"
     four_rooms = "four_rooms"
@@ -271,6 +323,8 @@ class GridTopography(enum.Enum):
     detour_block = "detour_block"
     four_rooms_split = "four_rooms_split"
     obstacle = "obstacle"
+    two_step = "two_step"
+    narrow = "narrow"
 
 
 topography_map = {
@@ -290,6 +344,8 @@ topography_map = {
     GridTopography.detour_block: detour_block,
     GridTopography.four_rooms_split: four_rooms_split,
     GridTopography.obstacle: obstacle,
+    GridTopography.two_step: two_step,
+    GridTopography.narrow: narrow,
 }
 
 

@@ -10,6 +10,7 @@ from neuronav.envs.grid_topographies import (
     GridSize,
 )
 import matplotlib.pyplot as plt
+from PIL import Image
 
 
 class GridObsType(enum.Enum):
@@ -25,7 +26,7 @@ class GridObsType(enum.Enum):
 
 class OrientationType(enum.Enum):
     fixed = "fixed"
-    dynamic = "dynamic"
+    variable = "variable"
 
 
 class GridEnv(Env):
@@ -47,7 +48,7 @@ class GridEnv(Env):
         self.state_size = self.grid_size * self.grid_size
         self.orientation_type = orientation_type
         self.max_orient = 3
-        if self.orientation_type == OrientationType.dynamic:
+        if self.orientation_type == OrientationType.variable:
             self.action_space = spaces.Discrete(3)
             self.orient_size = 4
         elif self.orientation_type == OrientationType.fixed:
@@ -58,7 +59,7 @@ class GridEnv(Env):
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
         self.reward_locs = {}
-        self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1]])
+        self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
         self.free_spots = self.make_free_spots()
         if isinstance(obs_type, str):
@@ -69,8 +70,8 @@ class GridEnv(Env):
                 0,
                 1,
                 shape=(
-                    self.grid_size,
-                    self.grid_size,
+                    100,
+                    100,
                     3,
                 ),
             )
@@ -137,6 +138,7 @@ class GridEnv(Env):
         episode_length: int = 100,
         random_start: bool = False,
         terminate_on_reward: bool = True,
+        time_penalty: float = 0.0,
     ):
         """
         Resets the environment to its initial configuration.
@@ -144,6 +146,7 @@ class GridEnv(Env):
         self.done = False
         self.episode_time = 0
         self.orientation = 0
+        self.time_penalty = time_penalty
         self.max_episode_time = episode_length
         self.terminate_on_reward = terminate_on_reward
 
@@ -178,22 +181,26 @@ class GridEnv(Env):
             grid[self.agent_pos[0], self.agent_pos[1], :] = 1
             for loc, reward in self.reward_locs.items():
                 if reward > 0:
-                    grid[loc[0], loc[1], 1] = reward
+                    grid[loc[0], loc[1], 1] = np.clip(np.sqrt(reward), 0, 1)
                 else:
-                    grid[loc[0], loc[1], 0] = np.abs(reward)
+                    grid[loc[0], loc[1], 0] = np.clip(np.sqrt(np.abs(reward)), 0, 1)
         for block in self.blocks:
             grid[block[0], block[1], :] = 0.5
         return grid
 
-    def render(self):
+    def get_visual(self, fixed_dpi: bool = False):
         """
         Renders a top-down view of the environment to a pyplot image.
         """
         grid = self.grid()
-        if self.orientation_type == OrientationType.dynamic:
+        if self.orientation_type == OrientationType.variable:
             grid[self.agent_pos[0], self.agent_pos[1], :] = 0
+        if fixed_dpi:
+            fig = plt.figure(figsize=(3, 3), dpi=50)
+        else:
+            fig = plt.figure(figsize=(3, 3))
         plt.imshow(grid)
-        if self.orientation_type == OrientationType.dynamic:
+        if self.orientation_type == OrientationType.variable:
             up = [[0.5, 0], [0, 1], [1, 1]]
             right = [[0, 0], [1, 0.5], [0, 1]]
             down = [[0, 0], [0.5, 1], [1, 0]]
@@ -220,7 +227,26 @@ class GridEnv(Env):
             color="dimgray",
             linewidth=1.0,
         )
-        plt.show()
+        fig.tight_layout()
+        fig.canvas.draw()
+        return fig
+
+    def render(self):
+        fig = self.get_visual(False)
+        fig.show()
+
+    def make_visual_obs(self):
+        """
+        Returns a visual observation of the environment.
+        """
+        fig = self.get_visual(True)
+        image = np.array(fig.canvas.renderer.buffer_rgba())
+        plt.close(fig)
+        image = image[:, :, :3]
+        image = Image.fromarray(image)
+        image = image.resize((100, 100))
+        image = np.array(image) / 255.0
+        return image
 
     def move_agent(self, direction: np.array):
         new_pos = self.agent_pos + direction
@@ -247,20 +273,20 @@ class GridEnv(Env):
             return one_hot
         elif self.obs_mode == GridObsType.twohot:
             two_hot = utils.twohot(perspective, self.grid_size)
-            if self.orientation_type == OrientationType.dynamic:
+            if self.orientation_type == OrientationType.variable:
                 two_hot = np.concatenate(
                     [two_hot, utils.onehot(self.orientation, self.orient_size)]
                 )
             return two_hot
         elif self.obs_mode == GridObsType.geometric:
             geo = np.array(perspective) / (self.grid_size - 1.0)
-            if self.orientation_type == OrientationType.dynamic:
+            if self.orientation_type == OrientationType.variable:
                 geo = np.concatenate(
                     [geo, utils.onehot(self.orientation, self.orient_size)]
                 )
             return geo
         elif self.obs_mode == GridObsType.visual:
-            return self.grid()
+            return self.make_visual_obs()
         elif self.obs_mode == GridObsType.index:
             idx = (
                 self.orientation * self.grid_size * self.grid_size
@@ -272,7 +298,7 @@ class GridEnv(Env):
             bounds = self.get_boundaries(
                 perspective, False, self.num_rays, self.ray_length
             )
-            if self.orientation_type == OrientationType.dynamic:
+            if self.orientation_type == OrientationType.variable:
                 bounds = np.concatenate(
                     [bounds, utils.onehot(self.orientation, self.orient_size)]
                 )
@@ -324,7 +350,7 @@ class GridEnv(Env):
         return distances.reshape(-1)
 
     def simple_ray(self, direction: int, start: list):
-        if self.orientation_type == OrientationType.dynamic:
+        if self.orientation_type == OrientationType.variable:
             direction += self.orientation * 2
             if direction > 7:
                 direction -= 8
@@ -368,7 +394,7 @@ class GridEnv(Env):
         """
         Steps the environment forward given an action.
         """
-        if self.orientation_type == OrientationType.dynamic:
+        if self.orientation_type == OrientationType.variable:
             # 0 - Counter-clockwise rotation
             # 1 - Clockwise rotation
             # 2 - Forward movement
@@ -384,13 +410,17 @@ class GridEnv(Env):
             # 1 - Right
             # 2 - Down
             # 3 - Left
+            # 4 - Stay
             move_array = self.direction_map[action]
             self.move_agent(move_array)
         self.episode_time += 1
-        reward = 0.0
+        if action == 4:
+            reward = 0
+        else:
+            reward = self.time_penalty
         eval_pos = tuple(self.agent_pos)
         if eval_pos in self.reward_locs:
-            reward = self.reward_locs[eval_pos]
+            reward += self.reward_locs[eval_pos]
             if self.terminate_on_reward:
                 self.done = True
         return self.observation, reward, self.done, {}
