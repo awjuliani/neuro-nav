@@ -10,7 +10,7 @@ from neuronav.envs.grid_topographies import (
     GridSize,
 )
 import matplotlib.pyplot as plt
-from PIL import Image
+import cv2 as cv
 
 
 class GridObsType(enum.Enum):
@@ -70,8 +70,8 @@ class GridEnv(Env):
                 0,
                 1,
                 shape=(
-                    100,
-                    100,
+                    110,
+                    110,
                     3,
                 ),
             )
@@ -146,6 +146,7 @@ class GridEnv(Env):
         self.done = False
         self.episode_time = 0
         self.orientation = 0
+        self.looking = 0
         self.time_penalty = time_penalty
         self.max_episode_time = episode_length
         self.terminate_on_reward = terminate_on_reward
@@ -188,65 +189,104 @@ class GridEnv(Env):
             grid[block[0], block[1], :] = 0.5
         return grid
 
-    def get_visual(self, fixed_dpi: bool = False):
-        """
-        Renders a top-down view of the environment to a pyplot image.
-        """
-        grid = self.grid()
-        if self.orientation_type == OrientationType.variable:
-            grid[self.agent_pos[0], self.agent_pos[1], :] = 0
-        if fixed_dpi:
-            fig = plt.figure(figsize=(3, 3), dpi=50)
-        else:
-            fig = plt.figure(figsize=(3, 3))
-        plt.imshow(grid)
-        if self.orientation_type == OrientationType.variable:
-            up = [[0.5, 0], [0, 1], [1, 1]]
-            right = [[0, 0], [1, 0.5], [0, 1]]
-            down = [[0, 0], [0.5, 1], [1, 0]]
-            left = [[0, 0.5], [1, 1], [1, 0]]
-            arrow_list = [up, right, down, left]
-            selection = arrow_list[self.orientation]
-            for i in range(3):
-                selection[i][1] += self.agent_pos[0] - 0.5
-                selection[i][0] += self.agent_pos[1] - 0.5
-            t1 = plt.Polygon(selection, color="white")
-            plt.gca().add_patch(t1)
-        plt.axis("off")
-        plt.hlines(
-            y=np.arange(0, self.grid_size) + 0.5,
-            xmin=np.full(self.grid_size, 0) - 0.5,
-            xmax=np.full(self.grid_size, self.grid_size) - 0.5,
-            color="dimgray",
-            linewidths=1.0,
-        )
-        plt.vlines(
-            x=np.arange(0, self.grid_size) + 0.5,
-            ymin=np.full(self.grid_size, 0) - 0.5,
-            ymax=np.full(self.grid_size, self.grid_size) - 0.5,
-            color="dimgray",
-            linewidth=1.0,
-        )
-        fig.tight_layout()
-        fig.canvas.draw()
-        return fig
-
     def render(self):
-        fig = self.get_visual(False)
-        fig.show()
+        image = self.make_visual_obs()
+        plt.imshow(image)
+        plt.axis("off")
+        plt.show()
 
-    def make_visual_obs(self):
-        """
-        Returns a visual observation of the environment.
-        """
-        fig = self.get_visual(True)
-        image = np.array(fig.canvas.renderer.buffer_rgba())
-        plt.close(fig)
-        image = image[:, :, :3]
-        image = Image.fromarray(image)
-        image = image.resize((100, 100))
-        image = np.array(image) / 255.0
-        return image
+    def get_square_edges(self, x, y, unit_size, block_size):
+        # swap x and y because of the way cv2 draws images
+        x, y = y, x
+        block_border = block_size // 10
+        true_start = unit_size - block_size + 1
+        block_end = block_size - block_border * 2 + 1
+        return (
+            (x * unit_size + true_start, y * unit_size + true_start),
+            (x * unit_size + block_end, y * unit_size + block_end),
+        )
+
+    def make_visual_obs(self, resize=False):
+        block_size = 20
+        img_size = block_size * self.grid_size
+        img = np.ones((img_size, img_size, 3), np.uint8) * 225
+        block_border = block_size // 10
+
+        # draw thin lines to separate each position
+        for i in range(self.grid_size):
+            cv.line(
+                img, (0, i * block_size), (img_size, i * block_size), (210, 210, 210), 1
+            )
+            cv.line(
+                img, (i * block_size, 0), (i * block_size, img_size), (210, 210, 210), 1
+            )
+        # draw the blocks
+        for x, y in self.blocks:
+            start, end = self.get_square_edges(x, y, block_size, block_size - 2)
+            cv.rectangle(img, start, end, (150, 150, 150), -1)
+            cv.rectangle(img, start, end, (100, 100, 100), block_border - 1)
+        # draw the agent as an isosoceles triangle
+        agent_pos = self.agent_pos
+        agent_dir = self.looking
+        agent_color = (0, 0, 0)
+        agent_size = block_size // 2
+        agent_offset = block_size // 4
+        # swap x and y because of the way cv2 draws images
+        agent_pos = (agent_pos[1], agent_pos[0])
+        x_offset = agent_pos[0] * block_size + agent_offset
+        y_offset = agent_pos[1] * block_size + agent_offset
+        if agent_dir == 2:
+            # facing down
+            pts = np.array(
+                [
+                    (x_offset, y_offset),
+                    (x_offset + agent_size, y_offset),
+                    (x_offset + agent_size // 2, y_offset + agent_size),
+                ]
+            )
+        elif agent_dir == 3:
+            # facing left
+            pts = np.array(
+                [
+                    (x_offset + agent_size, y_offset),
+                    (x_offset + agent_size, y_offset + agent_size),
+                    (x_offset, y_offset + agent_size // 2),
+                ]
+            )
+        elif agent_dir == 0:
+            # facing up
+            pts = np.array(
+                [
+                    (x_offset, y_offset + agent_size),
+                    (x_offset + agent_size, y_offset + agent_size),
+                    (x_offset + agent_size // 2, y_offset),
+                ]
+            )
+        elif agent_dir == 1:
+            # facing right
+            pts = np.array(
+                [
+                    (x_offset, y_offset),
+                    (x_offset, y_offset + agent_size),
+                    (x_offset + agent_size, y_offset + agent_size // 2),
+                ]
+            )
+        cv.fillConvexPoly(img, pts, agent_color)
+        for pos, reward in self.reward_locs.items():
+            if reward > 0:
+                fill_color = (100, 100, 255)
+                border_color = (50, 50, 200)
+            else:
+                fill_color = (255, 100, 100)
+                border_color = (200, 50, 50)
+            start, end = self.get_square_edges(
+                pos[0], pos[1], block_size, block_size - 4
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+            cv.rectangle(img, start, end, border_color, block_border - 1)
+        if resize:
+            img = cv.resize(img, (110, 110))
+        return img
 
     def move_agent(self, direction: np.array):
         new_pos = self.agent_pos + direction
@@ -286,7 +326,7 @@ class GridEnv(Env):
                 )
             return geo
         elif self.obs_mode == GridObsType.visual:
-            return self.make_visual_obs()
+            return self.make_visual_obs(True)
         elif self.obs_mode == GridObsType.index:
             idx = (
                 self.orientation * self.grid_size * self.grid_size
@@ -405,6 +445,7 @@ class GridEnv(Env):
             if action == 2:
                 move_array = self.direction_map[self.orientation]
                 self.move_agent(move_array)
+            self.looking = self.orientation
         else:
             # 0 - Up
             # 1 - Right
@@ -412,6 +453,7 @@ class GridEnv(Env):
             # 3 - Left
             # 4 - Stay
             move_array = self.direction_map[action]
+            self.looking = action
             self.move_agent(move_array)
         self.episode_time += 1
         if action == 4:

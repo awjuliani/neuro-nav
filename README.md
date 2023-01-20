@@ -14,6 +14,7 @@ Neuro-Nav is an open-source library for neurally plausible reinforcement learnin
 * PyPlot
 * Scipy
 * NetworkX
+* OpenCV
 * Sklearn (optional)
 * Jupyter (optional)
 * PyTorch (optional)
