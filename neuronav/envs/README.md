@@ -34,7 +34,8 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 | detour_block | ![detour_block](/images/grid_small/detour_block.png) | ![detour_block](/images/grid_large/detour_block.png) | [Russek et al., 2017](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005768) |
 | four_rooms_split | ![four_rooms_split](/images/grid_small/four_rooms_split.png) | ![four_rooms_split](/images/grid_large/four_rooms_split.png) |
 | obstacle | ![obstacle](/images/grid_small/obstacle.png) | ![obstacle](/images/grid_large/obstacle.png) | [Stachenfeld et al., 2017](https://www.nature.com/articles/nn.4650) |
-| two_step | ![two_step](/images/grid_small/two_step.png) | ![two_step](/images/grid_large/two_step.png) | N/A |
+| two_step | ![two_step](/images/grid_small/two_step.png) | ![two_step](/images/grid_large/two_step.png) | |
+| narrow | ![narrow](/images/grid_small/narrow.png) | ![narrow](/images/grid_large/narrow.png) | [Zorowitz et al., 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8143038/) |
 
 ### Observation Types
 
@@ -53,9 +54,9 @@ To add your own, edit [grid_env.py](./grid_env.py).
 | twohot | Function-Approx | `[n + n]` | `[n + n + 4]` | Two concatenated one-hot encodings of the agent's x and y coordinates in the environment. |
 | geometric | Function-Approx | `[2]` | `[3]` | Two real-valued numbers between 0 and 1 representing the x and y coordinates of the agent in the environment. |
 | boundary | Function-Approx | `[n * 4]` | `[n * 4 + 4]` | A matrix corresponding to the one-hot encodings of the distances of the agent from the nearest wall in the four cardinal directions |
-| visual | Function-Approx | `[n, n, 3]` | `[n, n, 3` | A 3D tensor corresponding to the RGB image of the environment. |
+| visual | Function-Approx | `[110, 110, 3]` | `[110, 110, 3` | A 3D tensor corresponding to the RGB image of the environment. |
 | images | Function-Approx | `[32, 32, 3]` | `[32, 32, 3` | A 3D tensor corresponding to a unique CIFAR10 image per state. |
-| window | Function-Approx | `[5, 5, 3]` | `[5, 5, 3]` | A 3D tensor corresponding to the 5x5 local window around the agent. |
+| window | Function-Approx | `[64, 64, 3]` | `[64, 64, 3]` | A 3D tensor corresponding to the 5x5 local window around the agent. |
 
 * Where `n` is the length of the grid.
 

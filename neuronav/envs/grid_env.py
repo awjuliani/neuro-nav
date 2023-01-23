@@ -123,8 +123,8 @@ class GridEnv(Env):
                 0,
                 1,
                 shape=(
-                    5,
-                    5,
+                    64,
+                    64,
                     3,
                 ),
             )
@@ -213,7 +213,7 @@ class GridEnv(Env):
         block_border = block_size // 10
 
         # draw thin lines to separate each position
-        for i in range(self.grid_size):
+        for i in range(self.grid_size + 1):
             cv.line(
                 img, (0, i * block_size), (img_size, i * block_size), (210, 210, 210), 1
             )
@@ -225,6 +225,19 @@ class GridEnv(Env):
             start, end = self.get_square_edges(x, y, block_size, block_size - 2)
             cv.rectangle(img, start, end, (150, 150, 150), -1)
             cv.rectangle(img, start, end, (100, 100, 100), block_border - 1)
+        # draw the reward locations
+        for pos, reward in self.reward_locs.items():
+            if reward > 0:
+                fill_color = (100, 100, 255)
+                border_color = (50, 50, 200)
+            else:
+                fill_color = (255, 100, 100)
+                border_color = (200, 50, 50)
+            start, end = self.get_square_edges(
+                pos[0], pos[1], block_size, block_size - 4
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+            cv.rectangle(img, start, end, border_color, block_border - 1)
         # draw the agent as an isosoceles triangle
         agent_pos = self.agent_pos
         agent_dir = self.looking
@@ -272,21 +285,24 @@ class GridEnv(Env):
                 ]
             )
         cv.fillConvexPoly(img, pts, agent_color)
-        for pos, reward in self.reward_locs.items():
-            if reward > 0:
-                fill_color = (100, 100, 255)
-                border_color = (50, 50, 200)
-            else:
-                fill_color = (255, 100, 100)
-                border_color = (200, 50, 50)
-            start, end = self.get_square_edges(
-                pos[0], pos[1], block_size, block_size - 4
-            )
-            cv.rectangle(img, start, end, fill_color, -1)
-            cv.rectangle(img, start, end, border_color, block_border - 1)
         if resize:
             img = cv.resize(img, (110, 110))
         return img
+
+    def make_window(self, w_size=2, block_size=20, resize=True):
+        base_image = self.make_visual_obs()
+        template_size = block_size * (self.grid_size + 2)
+        template = np.ones((template_size, template_size, 3), dtype=np.int8) * 150
+        template[block_size:-block_size, block_size:-block_size, :] = base_image
+        x, y = self.agent_pos
+        start_x = block_size * (x - w_size + 1)
+        end_x = block_size * (x + w_size + 2)
+        start_y = block_size * (y - w_size + 1)
+        end_y = block_size * (y + w_size + 2)
+        window = template[start_x:end_x, start_y:end_y]
+        if resize:
+            window = cv.resize(window, (64, 64))
+        return window
 
     def move_agent(self, direction: np.array):
         new_pos = self.agent_pos + direction
@@ -351,17 +367,7 @@ class GridEnv(Env):
             )
             return np.rot90(self.images[idx], k=3)
         elif self.obs_mode == GridObsType.window:
-            space = np.ones([self.grid_size * 3, self.grid_size * 3, 3]) * 0.5
-            space[
-                self.grid_size : self.grid_size * 2,
-                self.grid_size : self.grid_size * 2,
-                :,
-            ] = self.grid()
-            x, y = self.agent_pos
-            x += self.grid_size
-            y += self.grid_size
-            sub = space[x - 2 : x + 3, y - 2 : y + 3, :]
-            return sub
+            return self.make_window()
 
     @property
     def observation(self):
