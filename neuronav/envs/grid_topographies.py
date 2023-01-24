@@ -275,6 +275,7 @@ def two_step(grid_size):
         blocks.extend([[i, 13] for i in range(1, grid_size - 1)])
         blocks.extend([[i, 14] for i in range(1, grid_size - 1)])
         blocks.extend([[i, 15] for i in range(1, grid_size - 1)])
+        agent_start[1] -= 3
     if grid_size > 7:
         blocks.remove([4, 2])
         blocks.remove([4, 8])
@@ -303,6 +304,14 @@ def narrow(grid_size):
     blocks.extend(add_blocks)
     add_blocks = [[i, 9] for i in range(1, grid_size - 1)]
     blocks.extend(add_blocks)
+    if grid_size > 11:
+        blocks.extend([[i, 10] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 11] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 12] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 13] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 14] for i in range(1, grid_size - 1)])
+        blocks.extend([[i, 15] for i in range(1, grid_size - 1)])
+        agent_start[1] -= 3
     return blocks, agent_start, reward_locs
 
 
