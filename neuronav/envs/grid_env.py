@@ -223,8 +223,8 @@ class GridEnv(Env):
         # draw the blocks
         for x, y in self.blocks:
             start, end = self.get_square_edges(x, y, block_size, block_size - 2)
-            cv.rectangle(img, start, end, (150, 150, 150), -1)
-            cv.rectangle(img, start, end, (100, 100, 100), block_border - 1)
+            cv.rectangle(img, start, end, (175, 175, 175), -1)
+            cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
         # draw the reward locations
         for pos, reward in self.reward_locs.items():
             if reward > 0:
