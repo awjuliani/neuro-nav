@@ -14,7 +14,7 @@ def run_episode(
     agent,
     max_steps: int,
     start_pos=None,
-    reward_locs: Dict = None,
+    objects: Dict = None,
     random_start: bool = False,
     update_agent: bool = True,
     time_penalty: float = 0.0,
@@ -26,7 +26,7 @@ def run_episode(
     """
     obs = env.reset(
         agent_pos=start_pos,
-        reward_locs=reward_locs,
+        objects=objects,
         random_start=random_start,
         time_penalty=time_penalty,
     )
