@@ -108,7 +108,7 @@ class GraphEnv(Env):
             elif idx in self.objects['rewards']:
                 if self.objects['rewards'][idx] > 0:
                     color_map.append([0, np.clip(self.objects['rewards'][idx], 0, 1), 0])
-                elif self.reward_locs[idx] < 0:
+                elif self.objects['rewards'][idx] < 0:
                     color_map.append([-np.clip(self.objects['rewards'][idx], -1, 0), 0, 0])
                 else:
                     color_map.append("silver")
