@@ -14,7 +14,7 @@ def run_episode(
     agent,
     max_steps: int,
     start_pos=None,
-    reward_locs: Dict = None,
+    objects: Dict = None,
     random_start: bool = False,
     update_agent: bool = True,
     time_penalty: float = 0.0,
@@ -26,7 +26,7 @@ def run_episode(
     """
     obs = env.reset(
         agent_pos=start_pos,
-        reward_locs=reward_locs,
+        objects=objects,
         random_start=random_start,
         time_penalty=time_penalty,
     )
@@ -100,7 +100,7 @@ def plot_values_and_policy(
     start_pos: list,
     plot_title: str = None,
     rollout: bool = True,
-    reward_locs: dict = None,
+    objects: dict = None,
     subplot=None,
     plot_sr=None,
 ):
@@ -125,11 +125,11 @@ def plot_values_and_policy(
             start_pos,
             collect_states=True,
             update_agent=False,
-            reward_locs=reward_locs,
+            objects=objects,
         )
 
-    if reward_locs is None:
-        reward_locs = env.topo_reward_locs
+    if objects is None:
+        objects = env.topo_objects
 
     if subplot is None:
         _, ax = plt.subplots()
@@ -171,8 +171,8 @@ def plot_values_and_policy(
                         "S",
                         fontdict={"fontsize": 16, "weight": "bold", "ha": "center"},
                     )
-                elif (i, j) in reward_locs.keys():
-                    reward_val = reward_locs[(i, j)]
+                elif (i, j) in objects["rewards"].keys():
+                    reward_val = objects["rewards"][(i, j)]
                     if reward_val > 0:
                         use_color = cmap(0.75)
                     else:

@@ -19,37 +19,43 @@ class GraphStructure(enum.Enum):
 def two_step():
     reward_locs = {3: 1, 4: -1, 5: 0.5, 6: 0.5}
     edges = [[1, 2], [3, 4], [5, 6], [], [], [], []]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def three_arm_bandit():
     reward_locs = {1: 1, 2: 0.5, 3: -0.5}
     edges = [[1, 2, 3], [], [], []]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def two_way_linear():
     reward_locs = {4: 1}
     edges = [[0, 1], [0, 2], [1, 3], [2, 4], [3, 4]]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def ring():
     reward_locs = {4: 1}
     edges = [[1, 5], [0, 2], [1, 3], [2, 4], [3, 5], [4, 0]]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def linear():
     reward_locs = {5: 1}
     edges = [[1], [2], [3], [4], [5], []]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def t_graph():
     reward_locs = {5: 1}
     edges = [[1, 0], [2, 1], [3, 4], [5, 3], [6, 4], [], []]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def neighborhood():
@@ -71,19 +77,22 @@ def neighborhood():
         [11, 10, 12, 14],
         [10, 12, 11, 13],
     ]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def human_a():
     reward_locs = {4: 10, 5: 1}
     edges = [[2], [3], [4], [5], [], []]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def human_b():
     reward_locs = {3: 15, 5: 30}
     edges = [[1, 2], [3, 4], [4, 5], [3, 3], [4, 4], [5, 5]]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def t_loop():
@@ -103,7 +112,8 @@ def t_loop():
         [0, 11],
         [0, 12],
     ]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 def variable_magnitude():
@@ -132,7 +142,8 @@ def variable_magnitude():
         [],
         [],
     ]
-    return reward_locs, edges
+    objects = {"rewards": reward_locs}
+    return objects, edges
 
 
 structure_map = {

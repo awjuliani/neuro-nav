@@ -11,6 +11,7 @@ from neuronav.envs.grid_topographies import (
 )
 import matplotlib.pyplot as plt
 import cv2 as cv
+import copy
 
 
 class GridObsType(enum.Enum):
@@ -22,6 +23,8 @@ class GridObsType(enum.Enum):
     visual = "visual"
     images = "images"
     window = "window"
+    symbolic = "symbolic"
+    symbolic_window = "symbolic_window"
 
 
 class OrientationType(enum.Enum):
@@ -41,7 +44,7 @@ class GridEnv(Env):
         obs_type: GridObsType = GridObsType.index,
         orientation_type: OrientationType = OrientationType.fixed,
     ):
-        self.blocks, self.agent_start_pos, self.topo_reward_locs = generate_topography(
+        self.blocks, self.agent_start_pos, self.topo_objects = generate_topography(
             topography, grid_size
         )
         self.grid_size = grid_size.value
@@ -58,9 +61,10 @@ class GridEnv(Env):
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
-        self.reward_locs = {}
+        self.base_objects = {"rewards": {}, "markers": {}, "keys": [], "doors": []}
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
+        self.keys = 0
         self.free_spots = self.make_free_spots()
         if isinstance(obs_type, str):
             obs_type = GridObsType(obs_type)
@@ -128,12 +132,32 @@ class GridEnv(Env):
                     3,
                 ),
             )
+        elif obs_type == GridObsType.symbolic:
+            self.observation_space = spaces.Box(
+                0,
+                1,
+                shape=(
+                    self.grid_size,
+                    self.grid_size,
+                    5,
+                ),
+            )
+        elif obs_type == GridObsType.symbolic_window:
+            self.observation_space = spaces.Box(
+                0,
+                1,
+                shape=(
+                    5,
+                    5,
+                    5,
+                ),
+            )
         else:
             raise Exception("No valid ObservationType provided.")
 
     def reset(
         self,
-        reward_locs: Dict = None,
+        objects: Dict = None,
         agent_pos: list = None,
         episode_length: int = 100,
         random_start: bool = False,
@@ -147,6 +171,7 @@ class GridEnv(Env):
         self.episode_time = 0
         self.orientation = 0
         self.looking = 0
+        self.keys = 0
         self.time_penalty = time_penalty
         self.max_episode_time = episode_length
         self.terminate_on_reward = terminate_on_reward
@@ -158,10 +183,15 @@ class GridEnv(Env):
         else:
             self.agent_pos = self.agent_start_pos
 
-        if reward_locs != None:
-            self.reward_locs = reward_locs
+        base_object = copy.deepcopy(self.base_objects)
+        if objects != None:
+            use_objects = copy.deepcopy(objects)
         else:
-            self.reward_locs = self.topo_reward_locs
+            use_objects = copy.deepcopy(self.topo_objects)
+        for key in use_objects.keys():
+            if key in base_object.keys():
+                base_object[key] = use_objects[key]
+        self.objects = base_object
         return self.observation
 
     def get_free_spot(self):
@@ -176,20 +206,59 @@ class GridEnv(Env):
                     free_spots.append([i, j])
         return free_spots
 
-    def grid(self, render_objects: bool = True):
-        grid = np.zeros([self.grid_size, self.grid_size, 3])
-        if render_objects:
-            grid[self.agent_pos[0], self.agent_pos[1], :] = 1
-            for loc, reward in self.reward_locs.items():
-                if reward > 0:
-                    grid[loc[0], loc[1], 1] = np.clip(np.sqrt(reward), 0, 1)
-                else:
-                    grid[loc[0], loc[1], 0] = np.clip(np.sqrt(np.abs(reward)), 0, 1)
-        for block in self.blocks:
-            grid[block[0], block[1], :] = 0.5
+    def symbolic_obs(self):
+        """
+        Returns a symbolic representation of the environment in a numpy tensor.
+        Tensor shape is (grid_size, grid_size, 5)
+        5 channels are:
+            0: agent
+            1: rewards
+            2: keys
+            3: doors
+            4: walls
+        """
+        grid = np.zeros([self.grid_size, self.grid_size, 5])
+        grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
+        for loc, reward in self.objects["rewards"].items():
+            grid[loc[0], loc[1], 1] = 1
+        for loc in self.objects["keys"]:
+            grid[loc[0], loc[1], 2] = 1
+        for loc in self.objects["doors"]:
+            grid[loc[0], loc[1], 3] = 1
+        walls = self.render_walls()
+        grid[:, :, 4] = walls
         return grid
 
+    def render_walls(self):
+        """
+        Returns a numpy array of the walls in the environment.
+        """
+        grid = np.zeros([self.grid_size, self.grid_size])
+        for block in self.blocks:
+            grid[block[0], block[1]] = 1
+        return grid
+
+    def symbolic_window_obs(self):
+        # return a 5x5x5 tensor of the surrounding area
+        # Pads the edges with walls if the agent is near the edge
+        obs = self.symbolic_obs()
+        full_window = np.zeros([self.grid_size + 2, self.grid_size + 2, 5])
+        full_window[1:-1, 1:-1, :] = obs
+        full_window[0, :, 4] = 1
+        full_window[:, 0, 4] = 1
+        full_window[-1, :, 4] = 1
+        full_window[:, -1, 4] = 1
+        window = full_window[
+            self.agent_pos[0] - 1 : self.agent_pos[0] + 4,
+            self.agent_pos[1] - 1 : self.agent_pos[1] + 4,
+            :,
+        ]
+        return window
+
     def render(self):
+        """
+        Renders the environment in a pyplot window.
+        """
         image = self.make_visual_obs()
         plt.imshow(image)
         plt.axis("off")
@@ -207,6 +276,9 @@ class GridEnv(Env):
         )
 
     def make_visual_obs(self, resize=False):
+        """
+        Returns a visual observation of the environment from a top-down perspective.
+        """
         block_size = 20
         img_size = block_size * self.grid_size
         img = np.ones((img_size, img_size, 3), np.uint8) * 225
@@ -226,18 +298,53 @@ class GridEnv(Env):
             cv.rectangle(img, start, end, (175, 175, 175), -1)
             cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
         # draw the reward locations
-        for pos, reward in self.reward_locs.items():
+        for pos, reward in self.objects["rewards"].items():
             if reward > 0:
-                fill_color = (100, 100, 255)
-                border_color = (50, 50, 200)
+                fill_color = (100, 100, 255)  # blue
+                border_color = (50, 50, 200)  # blue
             else:
-                fill_color = (255, 100, 100)
-                border_color = (200, 50, 50)
+                fill_color = (255, 100, 100)  # red
+                border_color = (200, 50, 50)  # red
             start, end = self.get_square_edges(
                 pos[0], pos[1], block_size, block_size - 4
             )
             cv.rectangle(img, start, end, fill_color, -1)
             cv.rectangle(img, start, end, border_color, block_border - 1)
+
+        # draw the markers
+        for pos, marker_col in self.objects["markers"].items():
+            fill_color = marker_col
+            # clamp fill colors between and 0 and 1 and multiply by 255
+            fill_color = list(fill_color)
+            for i in range(3):
+                fill_color[i] = np.clip(fill_color[i], 0, 1).item() * 255
+            fill_color = tuple(fill_color)
+            print(fill_color, type(fill_color[0]))
+            start, end = self.get_square_edges(
+                pos[0], pos[1], block_size, block_size - 1
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+
+        # draw the keys
+        for key in self.objects["keys"]:
+            fill_color = (255, 215, 0)
+            border_color = (200, 160, 0)
+            start, end = self.get_square_edges(
+                key[0], key[1], block_size, block_size - 5
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+            cv.rectangle(img, start, end, border_color, block_border - 1)
+
+        # draw the doors
+        for pos in self.objects["doors"]:
+            fill_color = (0, 150, 0)
+            border_color = (0, 100, 0)
+            start, end = self.get_square_edges(
+                pos[0], pos[1], block_size, block_size - 2
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+            cv.rectangle(img, start, end, border_color, block_border - 1)
+
         # draw the agent as an isosoceles triangle
         agent_pos = self.agent_pos
         agent_dir = self.looking
@@ -290,6 +397,11 @@ class GridEnv(Env):
         return img
 
     def make_window(self, w_size=2, block_size=20, resize=True):
+        """
+        Returns a window of size (w_size * 2 + 1) x (w_size * 2 + 1) around the agent.
+        The window is padded with 1 block on each side to account for the agent's
+        position.
+        """
         base_image = self.make_visual_obs()
         template_size = block_size * (self.grid_size + 2)
         template = np.ones((template_size, template_size, 3), dtype=np.int8) * 150
@@ -305,21 +417,35 @@ class GridEnv(Env):
         return window
 
     def move_agent(self, direction: np.array):
+        """
+        Moves the agent in the given direction.
+        """
         new_pos = self.agent_pos + direction
         if self.check_target(new_pos):
             self.agent_pos = list(new_pos)
 
     def check_target(self, target: list):
+        """
+        Checks if the target is a valid (movable) position.
+        Returns True if the target is valid, False otherwise.
+        """
         x_check = -1 < target[0] < self.grid_size
         y_check = -1 < target[1] < self.grid_size
         block_check = list(target) not in self.blocks
-        return x_check and y_check and block_check
+        door_check = tuple(target) not in self.objects["doors"]
+        if self.keys > 0 and door_check is False:
+            door_check = True
+            self.objects["doors"].remove(tuple(target))
+            print(self.objects["doors"], target)
+            self.keys -= 1
+        return x_check and y_check and block_check and door_check
 
     def get_observation(self, perspective: list):
         """
         Returns an observation corresponding to the provided coordinates.
         """
         if self.obs_mode == GridObsType.onehot:
+            # one-hot encoding of the perspective
             one_hot = utils.onehot(
                 self.orientation * self.grid_size * self.grid_size
                 + perspective[0] * self.grid_size
@@ -368,6 +494,12 @@ class GridEnv(Env):
             return np.rot90(self.images[idx], k=3)
         elif self.obs_mode == GridObsType.window:
             return self.make_window()
+        elif self.obs_mode == GridObsType.symbolic:
+            return self.symbolic_obs()
+        elif self.obs_mode == GridObsType.symbolic_window:
+            return self.symbolic_window_obs()
+        else:
+            raise ValueError("Invalid observation mode.")
 
     @property
     def observation(self):
@@ -396,6 +528,9 @@ class GridEnv(Env):
         return distances.reshape(-1)
 
     def simple_ray(self, direction: int, start: list):
+        """
+        Returns the distance to the nearest object in the given direction.
+        """
         if self.orientation_type == OrientationType.variable:
             direction += self.orientation * 2
             if direction > 7:
@@ -430,6 +565,9 @@ class GridEnv(Env):
         return count
 
     def rotate(self, direction: int):
+        """
+        Rotates the agent orientation in the given direction.
+        """
         self.orientation += direction
         if self.orientation < 0:
             self.orientation = self.max_orient
@@ -467,8 +605,12 @@ class GridEnv(Env):
         else:
             reward = self.time_penalty
         eval_pos = tuple(self.agent_pos)
-        if eval_pos in self.reward_locs:
-            reward += self.reward_locs[eval_pos]
+        if eval_pos in self.objects["rewards"]:
+            reward += self.objects["rewards"][eval_pos]
             if self.terminate_on_reward:
                 self.done = True
+            self.objects["rewards"].pop(eval_pos)
+        if eval_pos in self.objects["keys"]:
+            self.keys += 1
+            self.objects["keys"].remove(eval_pos)
         return self.observation, reward, self.done, {}
