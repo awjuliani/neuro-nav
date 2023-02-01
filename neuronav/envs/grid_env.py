@@ -319,7 +319,6 @@ class GridEnv(Env):
             for i in range(3):
                 fill_color[i] = np.clip(fill_color[i], 0, 1).item() * 255
             fill_color = tuple(fill_color)
-            print(fill_color, type(fill_color[0]))
             start, end = self.get_square_edges(
                 pos[0], pos[1], block_size, block_size - 1
             )
@@ -436,7 +435,6 @@ class GridEnv(Env):
         if self.keys > 0 and door_check is False:
             door_check = True
             self.objects["doors"].remove(tuple(target))
-            print(self.objects["doors"], target)
             self.keys -= 1
         return x_check and y_check and block_check and door_check
 
