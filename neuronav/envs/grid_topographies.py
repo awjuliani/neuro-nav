@@ -89,9 +89,10 @@ def u_maze(grid_size: int):
 
 
 def two_rooms(grid_size: int):
-    agent_start = [grid_size - 2, grid_size - 2]
-    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid = int(grid_size // 2)
+    half_mid = int(mid // 2)
+    agent_start = [grid_size - 2, grid_size - 2]
+    objects = {"rewards": {(1, mid): 1.0}, "markers": {}, "keys": [(mid + half_mid, mid - half_mid)], "doors": [(mid, mid)]}
     blocks_b = [[mid, i] for i in range(grid_size)]
     blocks = blocks_b
     blocks.remove([mid, mid])

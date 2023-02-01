@@ -11,6 +11,7 @@ from neuronav.envs.grid_topographies import (
 )
 import matplotlib.pyplot as plt
 import cv2 as cv
+import copy
 
 
 class GridObsType(enum.Enum):
@@ -58,9 +59,10 @@ class GridEnv(Env):
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
-        self.base_objects = {"rewards": {}, "markers": {}}
+        self.base_objects = {"rewards": {}, "markers": {}, "keys": [], "doors": []}
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
+        self.keys = 0
         self.free_spots = self.make_free_spots()
         if isinstance(obs_type, str):
             obs_type = GridObsType(obs_type)
@@ -147,6 +149,7 @@ class GridEnv(Env):
         self.episode_time = 0
         self.orientation = 0
         self.looking = 0
+        self.keys = 0
         self.time_penalty = time_penalty
         self.max_episode_time = episode_length
         self.terminate_on_reward = terminate_on_reward
@@ -158,14 +161,15 @@ class GridEnv(Env):
         else:
             self.agent_pos = self.agent_start_pos
 
+        base_object = copy.deepcopy(self.base_objects)
         if objects != None:
-            use_objects = self.base_objects
-            for key in objects.keys():
-                if key in use_objects.keys():
-                    use_objects[key] = objects[key]
-            self.objects = use_objects
+            use_objects = copy.deepcopy(objects)
         else:
-            self.objects = self.topo_objects
+            use_objects = copy.deepcopy(self.topo_objects)
+        for key in use_objects.keys():
+            if key in base_object.keys():
+                base_object[key] = use_objects[key]
+        self.objects = base_object
         return self.observation
 
     def get_free_spot(self):
@@ -256,6 +260,26 @@ class GridEnv(Env):
                 pos[0], pos[1], block_size, block_size - 1
             )
             cv.rectangle(img, start, end, fill_color, -1)
+        
+        # draw the keys
+        for key in self.objects["keys"]:
+            fill_color = (255, 215, 0)
+            border_color = (200, 160, 0)
+            start, end = self.get_square_edges(
+                key[0], key[1], block_size, block_size - 5
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+            cv.rectangle(img, start, end, border_color, block_border - 1)
+
+        # draw the doors
+        for pos in self.objects["doors"]:
+            fill_color = (0, 150, 0)
+            border_color = (0, 100, 0)
+            start, end = self.get_square_edges(
+                pos[0], pos[1], block_size, block_size - 2
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+            cv.rectangle(img, start, end, border_color, block_border - 1)
 
         # draw the agent as an isosoceles triangle
         agent_pos = self.agent_pos
@@ -337,7 +361,13 @@ class GridEnv(Env):
         x_check = -1 < target[0] < self.grid_size
         y_check = -1 < target[1] < self.grid_size
         block_check = list(target) not in self.blocks
-        return x_check and y_check and block_check
+        door_check = tuple(target) not in self.objects["doors"]
+        if self.keys > 0 and door_check is False:
+            door_check = True
+            self.objects["doors"].remove(tuple(target))
+            print(self.objects["doors"], target)
+            self.keys -= 1
+        return x_check and y_check and block_check and door_check
 
     def get_observation(self, perspective: list):
         """
@@ -496,4 +526,8 @@ class GridEnv(Env):
             reward += self.objects["rewards"][eval_pos]
             if self.terminate_on_reward:
                 self.done = True
+            self.objects["rewards"].pop(eval_pos)
+        if eval_pos in self.objects["keys"]:
+            self.keys += 1
+            self.objects["keys"].remove(eval_pos)
         return self.observation, reward, self.done, {}

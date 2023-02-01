@@ -2,6 +2,7 @@ from typing import Dict
 import networkx as nx
 import neuronav.utils as utils
 import enum
+import copy
 import numpy as np
 from gym import Env, spaces
 from neuronav.envs.graph_structures import GraphStructure, structure_map
@@ -90,7 +91,7 @@ class GraphEnv(Env):
             self.agent_pos = self.agent_start_pos
         self.done = False
         if objects != None:
-            use_objects = self.base_objects
+            use_objects = copy.deepcopy(self.base_objects)
             for key in objects.keys():
                 if key in use_objects.keys():
                     use_objects[key] = objects[key]
