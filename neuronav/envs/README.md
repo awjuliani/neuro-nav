@@ -57,6 +57,8 @@ To add your own, edit [grid_env.py](./grid_env.py).
 | visual | Function-Approx | `[110, 110, 3]` | `[110, 110, 3` | A 3D tensor corresponding to the RGB image of the environment. |
 | images | Function-Approx | `[32, 32, 3]` | `[32, 32, 3` | A 3D tensor corresponding to a unique CIFAR10 image per state. |
 | window | Function-Approx | `[64, 64, 3]` | `[64, 64, 3]` | A 3D tensor corresponding to the 5x5 local window around the agent. |
+| symbolic | Function-Approx | `[n, n, 5]` | `[n, n, 5]` | A 5D tensor corresponding to a symbolic representation of the environment state.
+| symbolic_window | Function-Approx | `[5, 5, 5]` | `[5, 5, 5]` | A 5D tensor corresponding to a symbolic representation of the environment state.
 
 * Where `n` is the length of the grid.
 

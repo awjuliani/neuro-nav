@@ -23,6 +23,8 @@ class GridObsType(enum.Enum):
     visual = "visual"
     images = "images"
     window = "window"
+    symbolic = "symbolic"
+    symbolic_window = "symbolic_window"
 
 
 class OrientationType(enum.Enum):
@@ -130,6 +132,26 @@ class GridEnv(Env):
                     3,
                 ),
             )
+        elif obs_type == GridObsType.symbolic:
+            self.observation_space = spaces.Box(
+                0,
+                1,
+                shape=(
+                    self.grid_size,
+                    self.grid_size,
+                    5,
+                ),
+            )
+        elif obs_type == GridObsType.symbolic_window:
+            self.observation_space = spaces.Box(
+                0,
+                1,
+                shape=(
+                    5,
+                    5,
+                    5,
+                ),
+            )
         else:
             raise Exception("No valid ObservationType provided.")
 
@@ -184,20 +206,59 @@ class GridEnv(Env):
                     free_spots.append([i, j])
         return free_spots
 
-    def grid(self, render_objects: bool = True):
-        grid = np.zeros([self.grid_size, self.grid_size, 3])
-        if render_objects:
-            grid[self.agent_pos[0], self.agent_pos[1], :] = 1
-            for loc, reward in self.objects["rewards"].items():
-                if reward > 0:
-                    grid[loc[0], loc[1], 1] = np.clip(np.sqrt(reward), 0, 1)
-                else:
-                    grid[loc[0], loc[1], 0] = np.clip(np.sqrt(np.abs(reward)), 0, 1)
-        for block in self.blocks:
-            grid[block[0], block[1], :] = 0.5
+    def symbolic_obs(self):
+        """
+        Returns a symbolic representation of the environment in a numpy tensor.
+        Tensor shape is (grid_size, grid_size, 5)
+        5 channels are:
+            0: agent
+            1: rewards
+            2: keys
+            3: doors
+            4: walls
+        """
+        grid = np.zeros([self.grid_size, self.grid_size, 5])
+        grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
+        for loc, reward in self.objects["rewards"].items():
+            grid[loc[0], loc[1], 1] = 1
+        for loc in self.objects["keys"]:
+            grid[loc[0], loc[1], 2] = 1
+        for loc in self.objects["doors"]:
+            grid[loc[0], loc[1], 3] = 1
+        walls = self.render_walls()
+        grid[:, :, 4] = walls
         return grid
 
+    def render_walls(self):
+        """
+        Returns a numpy array of the walls in the environment.
+        """
+        grid = np.zeros([self.grid_size, self.grid_size])
+        for block in self.blocks:
+            grid[block[0], block[1]] = 1
+        return grid
+
+    def symbolic_window_obs(self):
+        # return a 5x5x5 tensor of the surrounding area
+        # Pads the edges with walls if the agent is near the edge
+        obs = self.symbolic_obs()
+        full_window = np.zeros([self.grid_size + 2, self.grid_size + 2, 5])
+        full_window[1:-1, 1:-1, :] = obs
+        full_window[0, :, 4] = 1
+        full_window[:, 0, 4] = 1
+        full_window[-1, :, 4] = 1
+        full_window[:, -1, 4] = 1
+        window = full_window[
+            self.agent_pos[0] - 1 : self.agent_pos[0] + 4,
+            self.agent_pos[1] - 1 : self.agent_pos[1] + 4,
+            :,
+        ]
+        return window
+
     def render(self):
+        """
+        Renders the environment in a pyplot window.
+        """
         image = self.make_visual_obs()
         plt.imshow(image)
         plt.axis("off")
@@ -215,6 +276,9 @@ class GridEnv(Env):
         )
 
     def make_visual_obs(self, resize=False):
+        """
+        Returns a visual observation of the environment from a top-down perspective.
+        """
         block_size = 20
         img_size = block_size * self.grid_size
         img = np.ones((img_size, img_size, 3), np.uint8) * 225
@@ -260,7 +324,7 @@ class GridEnv(Env):
                 pos[0], pos[1], block_size, block_size - 1
             )
             cv.rectangle(img, start, end, fill_color, -1)
-        
+
         # draw the keys
         for key in self.objects["keys"]:
             fill_color = (255, 215, 0)
@@ -353,11 +417,18 @@ class GridEnv(Env):
         return window
 
     def move_agent(self, direction: np.array):
+        """
+        Moves the agent in the given direction.
+        """
         new_pos = self.agent_pos + direction
         if self.check_target(new_pos):
             self.agent_pos = list(new_pos)
 
     def check_target(self, target: list):
+        """
+        Checks if the target is a valid (movable) position.
+        Returns True if the target is valid, False otherwise.
+        """
         x_check = -1 < target[0] < self.grid_size
         y_check = -1 < target[1] < self.grid_size
         block_check = list(target) not in self.blocks
@@ -423,6 +494,12 @@ class GridEnv(Env):
             return np.rot90(self.images[idx], k=3)
         elif self.obs_mode == GridObsType.window:
             return self.make_window()
+        elif self.obs_mode == GridObsType.symbolic:
+            return self.symbolic_obs()
+        elif self.obs_mode == GridObsType.symbolic_window:
+            return self.symbolic_window_obs()
+        else:
+            raise ValueError("Invalid observation mode.")
 
     @property
     def observation(self):
@@ -451,6 +528,9 @@ class GridEnv(Env):
         return distances.reshape(-1)
 
     def simple_ray(self, direction: int, start: list):
+        """
+        Returns the distance to the nearest object in the given direction.
+        """
         if self.orientation_type == OrientationType.variable:
             direction += self.orientation * 2
             if direction > 7:
@@ -485,6 +565,9 @@ class GridEnv(Env):
         return count
 
     def rotate(self, direction: int):
+        """
+        Rotates the agent orientation in the given direction.
+        """
         self.orientation += direction
         if self.orientation < 0:
             self.orientation = self.max_orient
