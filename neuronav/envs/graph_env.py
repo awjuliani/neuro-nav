@@ -43,7 +43,7 @@ class GraphEnv(Env):
             self.images = utils.cifar10()
 
     def generate_graph(self, structure: GraphStructure):
-        self.rewarding_states, self.edges = structure_map[structure]()
+        self.struct_objects, self.edges = structure_map[structure]()
         self.agent_start_pos = 0
         action_size = 0
         for edge in self.edges:
@@ -51,7 +51,6 @@ class GraphEnv(Env):
                 action_size = len(edge)
         self.action_space = spaces.Discrete(action_size)
         self.state_size = len(self.edges)
-        self.reward_locs = self.rewarding_states
 
     @property
     def observation(self):
@@ -73,7 +72,7 @@ class GraphEnv(Env):
     def reset(
         self,
         agent_pos: int = None,
-        reward_locs: Dict = None,
+        objects: Dict = None,
         random_start: bool = False,
         time_penalty: float = 0.0,
     ):
@@ -89,10 +88,10 @@ class GraphEnv(Env):
         else:
             self.agent_pos = self.agent_start_pos
         self.done = False
-        if reward_locs != None:
-            self.reward_locs = reward_locs
+        if objects != None:
+            self.objects = objects
         else:
-            self.reward_locs = self.rewarding_states
+            self.objects = self.struct_objects
         return self.observation
 
     def render(self):
@@ -105,11 +104,11 @@ class GraphEnv(Env):
             graph.add_node(idx)
             if idx == self.agent_pos:
                 color_map.append("cornflowerblue")
-            elif idx in self.reward_locs:
-                if self.reward_locs[idx] > 0:
-                    color_map.append([0, np.clip(self.reward_locs[idx], 0, 1), 0])
-                elif self.reward_locs[idx] < 0:
-                    color_map.append([-np.clip(self.reward_locs[idx], -1, 0), 0, 0])
+            elif idx in self.objects['rewards']:
+                if self.objects['rewards'][idx] > 0:
+                    color_map.append([0, np.clip(self.objects['rewards'][idx], 0, 1), 0])
+                elif self.objects['rewards'][idx] < 0:
+                    color_map.append([-np.clip(self.objects['rewards'][idx], -1, 0), 0, 0])
                 else:
                     color_map.append("silver")
             else:
@@ -150,8 +149,8 @@ class GraphEnv(Env):
                 candidate_position = candidate_positions
             self.agent_pos = candidate_position
             reward = 0
-            if self.agent_pos in self.reward_locs:
-                reward += self.reward_locs[self.agent_pos]
+            if self.agent_pos in self.objects['rewards']:
+                reward += self.objects['rewards'][self.agent_pos]
             reward -= self.time_penalty
             if len(self.edges[self.agent_pos]) == 0:
                 self.done = True
