@@ -58,7 +58,7 @@ class GridEnv(Env):
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
-        self.objects = {'rewards':{}, 'markers':{}}
+        self.base_objects = {"rewards": {}, "markers": {}}
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
         self.free_spots = self.make_free_spots()
@@ -139,7 +139,6 @@ class GridEnv(Env):
         random_start: bool = False,
         terminate_on_reward: bool = True,
         time_penalty: float = 0.0,
-        reward_locs: Dict = None,
     ):
         """
         Resets the environment to its initial configuration.
@@ -160,12 +159,11 @@ class GridEnv(Env):
             self.agent_pos = self.agent_start_pos
 
         if objects != None:
-            # make sure that the objects are in the right format, if not throw an error
-            if "rewards" not in objects.keys() or "markers" not in objects.keys():
-                raise Exception(
-                    "objects must be a dict with keys of 'reward' and 'markers'"
-                )
-            self.objects = objects
+            use_objects = self.base_objects
+            for key in objects.keys():
+                if key in use_objects.keys():
+                    use_objects[key] = objects[key]
+            self.objects = use_objects
         else:
             self.objects = self.topo_objects
         return self.observation
@@ -186,7 +184,7 @@ class GridEnv(Env):
         grid = np.zeros([self.grid_size, self.grid_size, 3])
         if render_objects:
             grid[self.agent_pos[0], self.agent_pos[1], :] = 1
-            for loc, reward in self.objects['rewards'].items():
+            for loc, reward in self.objects["rewards"].items():
                 if reward > 0:
                     grid[loc[0], loc[1], 1] = np.clip(np.sqrt(reward), 0, 1)
                 else:
@@ -229,28 +227,33 @@ class GridEnv(Env):
         # draw the blocks
         for x, y in self.blocks:
             start, end = self.get_square_edges(x, y, block_size, block_size - 2)
-            cv.rectangle(img, start, end, (175, 175, 175), -1) 
-            cv.rectangle(img, start, end, (125, 125, 125), block_border - 1) 
+            cv.rectangle(img, start, end, (175, 175, 175), -1)
+            cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
         # draw the reward locations
-        # 
-        for pos, reward in self.objects['rewards'].items():
+        for pos, reward in self.objects["rewards"].items():
             if reward > 0:
-                fill_color = (100, 100, 255) # blue
-                border_color = (50, 50, 200) # blue
+                fill_color = (100, 100, 255)  # blue
+                border_color = (50, 50, 200)  # blue
             else:
-                fill_color = (255, 100, 100) # red
-                border_color = (200, 50, 50) # red
+                fill_color = (255, 100, 100)  # red
+                border_color = (200, 50, 50)  # red
             start, end = self.get_square_edges(
                 pos[0], pos[1], block_size, block_size - 4
             )
             cv.rectangle(img, start, end, fill_color, -1)
             cv.rectangle(img, start, end, border_color, block_border - 1)
-        
+
         # draw the markers
-        for pos, marker_col in self.objects['markers'].items():
+        for pos, marker_col in self.objects["markers"].items():
             fill_color = marker_col
+            # clamp fill colors between and 0 and 1 and multiply by 255
+            fill_color = list(fill_color)
+            for i in range(3):
+                fill_color[i] = np.clip(fill_color[i], 0, 1).item() * 255
+            fill_color = tuple(fill_color)
+            print(fill_color, type(fill_color[0]))
             start, end = self.get_square_edges(
-                pos[0], pos[1], block_size, block_size - 4
+                pos[0], pos[1], block_size, block_size - 1
             )
             cv.rectangle(img, start, end, fill_color, -1)
 
@@ -489,8 +492,8 @@ class GridEnv(Env):
         else:
             reward = self.time_penalty
         eval_pos = tuple(self.agent_pos)
-        if eval_pos in self.objects['rewards']:
-            reward += self.objects['rewards'][eval_pos]
+        if eval_pos in self.objects["rewards"]:
+            reward += self.objects["rewards"][eval_pos]
             if self.terminate_on_reward:
                 self.done = True
         return self.observation, reward, self.done, {}

@@ -171,8 +171,8 @@ def plot_values_and_policy(
                         "S",
                         fontdict={"fontsize": 16, "weight": "bold", "ha": "center"},
                     )
-                elif (i, j) in objects['rewards'].keys():
-                    reward_val = objects['rewards'][(i, j)]
+                elif (i, j) in objects["rewards"].keys():
+                    reward_val = objects["rewards"][(i, j)]
                     if reward_val > 0:
                         use_color = cmap(0.75)
                     else:

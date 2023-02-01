@@ -4,8 +4,7 @@ import enum
 
 def four_rooms(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid = int(grid_size // 2)
     earl_mid = int(mid // 2) + 1
     if grid_size == 11:
@@ -28,8 +27,7 @@ def four_rooms(grid_size: int):
 
 def four_rooms_split(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-            'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid = int(grid_size // 2)
     earl_mid = int(mid // 2)
     if grid_size == 11:
@@ -59,15 +57,13 @@ def four_rooms_split(grid_size: int):
 def empty(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     blocks = []
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     return blocks, agent_start, objects
 
 
 def outer_ring(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     blocks = []
     extra_depth = 2
     for i in range(grid_size):
@@ -82,8 +78,7 @@ def outer_ring(grid_size: int):
 
 def u_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(grid_size - 2, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(grid_size - 2, 1): 1.0}, "markers": {}}
     blocks = []
     extra_depth = 2
     for i in range(grid_size):
@@ -95,8 +90,7 @@ def u_maze(grid_size: int):
 
 def two_rooms(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid = int(grid_size // 2)
     blocks_b = [[mid, i] for i in range(grid_size)]
     blocks = blocks_b
@@ -113,8 +107,7 @@ def two_rooms(grid_size: int):
 
 def obstacle(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid = int(grid_size // 2)
     if grid_size == 11:
         blocks_b = [[mid, i] for i in range(2, grid_size - 2)]
@@ -126,8 +119,7 @@ def obstacle(grid_size: int):
 
 def s_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid_a = int(grid_size // 3)
     mid_b = int(grid_size // 3 + grid_size // 3) + 1
     blocks_a = [[i, mid_a] for i in range(grid_size // 2 + 1 + grid_size // 4)]
@@ -138,8 +130,7 @@ def s_maze(grid_size: int):
 
 def hairpin(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid_a = int(grid_size // 5)
     mid_b = 2 * int(grid_size // 5)
     mid_c = 3 * int(grid_size // 5)
@@ -154,8 +145,7 @@ def hairpin(grid_size: int):
 
 def circle(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
-    objects = {'rewards': {(1, grid_size // 2): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, grid_size // 2): 1.0}, "markers": {}}
     blocks = []
     mask = utils.create_circular_mask(grid_size, grid_size)
     for i in range(grid_size):
@@ -167,8 +157,7 @@ def circle(grid_size: int):
 
 def ring(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
-    objects = {'rewards': {(1, grid_size // 2): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, grid_size // 2): 1.0}, "markers": {}}
     blocks = []
     big_mask = utils.create_circular_mask(grid_size, grid_size)
     small_mask = utils.create_circular_mask(grid_size, grid_size, radius=grid_size // 4)
@@ -181,8 +170,7 @@ def ring(grid_size: int):
 
 def t_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     width = 3
     half_width = width // 2
     middle_pos = grid_size // 2
@@ -198,8 +186,7 @@ def t_maze(grid_size: int):
 
 def i_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     width = 3
     half_width = width // 2
     middle_pos = grid_size // 2
@@ -215,8 +202,7 @@ def i_maze(grid_size: int):
 
 def hallways(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {'rewards': {(1, 1): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     blocks = []
     extra_depth = 1
     for i in range(grid_size):
@@ -233,8 +219,7 @@ def hallways(grid_size: int):
 
 def detour(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
-    objects = {'rewards': {(1, grid_size // 2): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, grid_size // 2): 1.0}, "markers": {}}
     blocks = []
     extra_depth = 1
     for i in range(grid_size):
@@ -252,8 +237,7 @@ def detour(grid_size: int):
 
 def detour_block(grid_size: int):
     agent_start = [grid_size - 2, grid_size // 2]
-    objects = {'rewards': {(1, grid_size // 2): 1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, grid_size // 2): 1.0}, "markers": {}}
     blocks = []
     extra_depth = 1
     for i in range(grid_size):
@@ -271,8 +255,10 @@ def detour_block(grid_size: int):
 
 def two_step(grid_size):
     agent_start = [grid_size - 2, grid_size // 2]
-    objects = {'rewards':  {(1, 1): 0.5, (1, 3): -1.0, (1, 9): 0.25, (1, 7): 0.25},
-               'markers': {}}
+    objects = {
+        "rewards": {(1, 1): 0.5, (1, 3): -1.0, (1, 9): 0.25, (1, 7): 0.25},
+        "markers": {},
+    }
     blocks = []
     blocks.extend([[i, 2] for i in range(1, grid_size - 1)])
     blocks.extend([[i, 8] for i in range(1, grid_size - 1)])
@@ -310,8 +296,7 @@ def two_step(grid_size):
 
 def narrow(grid_size):
     agent_start = [grid_size - 2, grid_size // 2]
-    objects = {'rewards':{(1, 5): 1.0, (5, 5): -1.0},
-               'markers': {}}
+    objects = {"rewards": {(1, 5): 1.0, (5, 5): -1.0}, "markers": {}}
     blocks = []
     add_blocks = [[i, 1] for i in range(1, grid_size - 1)]
     blocks.extend(add_blocks)

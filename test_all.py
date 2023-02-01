@@ -26,6 +26,20 @@ def test_plot_value_policy():
     plot_values_and_policy(agent, env, [9, 9], "Test Plot")
 
 
+def test_objects_graph():
+    objects = {"rewards": {0: 1}}
+    env = GraphEnv()
+    env.reset(objects=objects)
+    env.step(env.action_space.sample())
+
+
+def test_objects_grid():
+    objects = {"rewards": {(1, 1): 1}, "markers": {(1, 1): (1, 0, 0)}}
+    env = GridEnv()
+    env.reset(objects=objects)
+    env.step(env.action_space.sample())
+
+
 def test_graph_obs():
     for obs_type in GraphObsType:
         env = GraphEnv(obs_type=obs_type)

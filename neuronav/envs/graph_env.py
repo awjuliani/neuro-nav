@@ -30,6 +30,7 @@ class GraphEnv(Env):
         self.generate_graph(graph_structure)
         self.running = False
         self.obs_mode = obs_type
+        self.base_objects = {"rewards": {}}
         if obs_type == GraphObsType.onehot:
             self.observation_space = spaces.Box(
                 0, 1, shape=(self.state_size,), dtype=np.int32
@@ -89,7 +90,11 @@ class GraphEnv(Env):
             self.agent_pos = self.agent_start_pos
         self.done = False
         if objects != None:
-            self.objects = objects
+            use_objects = self.base_objects
+            for key in objects.keys():
+                if key in use_objects.keys():
+                    use_objects[key] = objects[key]
+            self.objects = use_objects
         else:
             self.objects = self.struct_objects
         return self.observation
@@ -104,11 +109,15 @@ class GraphEnv(Env):
             graph.add_node(idx)
             if idx == self.agent_pos:
                 color_map.append("cornflowerblue")
-            elif idx in self.objects['rewards']:
-                if self.objects['rewards'][idx] > 0:
-                    color_map.append([0, np.clip(self.objects['rewards'][idx], 0, 1), 0])
-                elif self.objects['rewards'][idx] < 0:
-                    color_map.append([-np.clip(self.objects['rewards'][idx], -1, 0), 0, 0])
+            elif idx in self.objects["rewards"]:
+                if self.objects["rewards"][idx] > 0:
+                    color_map.append(
+                        [0, np.clip(self.objects["rewards"][idx], 0, 1), 0]
+                    )
+                elif self.objects["rewards"][idx] < 0:
+                    color_map.append(
+                        [-np.clip(self.objects["rewards"][idx], -1, 0), 0, 0]
+                    )
                 else:
                     color_map.append("silver")
             else:
@@ -149,8 +158,8 @@ class GraphEnv(Env):
                 candidate_position = candidate_positions
             self.agent_pos = candidate_position
             reward = 0
-            if self.agent_pos in self.objects['rewards']:
-                reward += self.objects['rewards'][self.agent_pos]
+            if self.agent_pos in self.objects["rewards"]:
+                reward += self.objects["rewards"][self.agent_pos]
             reward -= self.time_penalty
             if len(self.edges[self.agent_pos]) == 0:
                 self.done = True
