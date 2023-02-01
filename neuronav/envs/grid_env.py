@@ -58,7 +58,7 @@ class GridEnv(Env):
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
-        self.objects = {} # a dict with keys of "reward" and "markers", each a dict
+        self.objects = {'rewards':{}, 'markers':{}}
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
         self.free_spots = self.make_free_spots()
@@ -159,19 +159,12 @@ class GridEnv(Env):
         else:
             self.agent_pos = self.agent_start_pos
 
-        # if both objects and reward_locs are None, throw an error
-        if objects == None and reward_locs == None:
-            raise Exception("Must provide either objects or reward_locs, but not both.")
-        # if reward_locs is not None, instantiate objects
-        if reward_locs != None:
-            objects = {'reward': reward_locs, 'markers': {}}
-        # if objects is not None, use it
-        elif objects != None:
-            # if only rewards is provided or only markers is provided, instantiate the other
-            if "rewards" not in objects:
-                objects["rewards"] = {}
-            if "markers" not in objects:
-                objects["markers"] = {}
+        if objects != None:
+            # make sure that the objects are in the right format, if not throw an error
+            if "rewards" not in objects.keys() or "markers" not in objects.keys():
+                raise Exception(
+                    "objects must be a dict with keys of 'reward' and 'markers'"
+                )
             self.objects = objects
         else:
             self.objects = self.topo_objects

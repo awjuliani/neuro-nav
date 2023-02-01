@@ -43,8 +43,7 @@ class GraphEnv(Env):
             self.images = utils.cifar10()
 
     def generate_graph(self, structure: GraphStructure):
-        self.objects, self.edges = structure_map[structure]()
-        self.rewarding_states = self.objects["rewards"] # TODO: is this redundant?
+        self.struct_objects, self.edges = structure_map[structure]()
         self.agent_start_pos = 0
         action_size = 0
         for edge in self.edges:
@@ -92,7 +91,7 @@ class GraphEnv(Env):
         if objects != None:
             self.objects = objects
         else:
-            self.objects = {'rewards': self.rewarding_states}
+            self.objects = self.struct_objects
         return self.observation
 
     def render(self):
