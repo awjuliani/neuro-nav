@@ -55,6 +55,11 @@ class BaseAgent:
             ) * self.epsilon * np.ones((self.action_size, self.state_size))
         return policy
 
+    def discount(self, rewards, gamma):
+        for i in range(len(rewards) - 2, -1, -1):
+            rewards[i] += gamma * rewards[i + 1]
+        return rewards
+
     def _update(self, current_exp):
         return None
 

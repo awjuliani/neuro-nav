@@ -7,6 +7,7 @@ from neuronav.envs.grid_topographies import GridTopography
 from neuronav.agents.td_agents import QET, TDQ, TDAC, TDSR
 from neuronav.agents.dyna_agents import DynaQ, DynaAC, DynaSR
 from neuronav.agents.mb_agents import MBV, SRMB
+from neuronav.agents.mc_agents import QEC, QMC
 from neuronav.agents.dist_agents import DistQ
 
 
@@ -154,6 +155,22 @@ def test_distq():
     env = GraphEnv(obs_type=GraphObsType.index)
     obs = env.reset()
     agent = DistQ(env.state_size, env.action_space.n)
+    act = agent.sample_action(obs)
+    env.step(act)
+
+
+def test_qec():
+    env = GraphEnv(obs_type=GraphObsType.index)
+    obs = env.reset()
+    agent = QEC(env.state_size, env.action_space.n)
+    act = agent.sample_action(obs)
+    env.step(act)
+
+
+def test_qmc():
+    env = GraphEnv(obs_type=GraphObsType.index)
+    obs = env.reset()
+    agent = QMC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
 

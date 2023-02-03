@@ -5,6 +5,10 @@ from neuronav.agents.base_agent import BaseAgent
 
 
 class QAgent(BaseAgent):
+    """
+    Base class for Q-Learning Agents
+    """
+
     def __init__(
         self,
         state_size: int,
