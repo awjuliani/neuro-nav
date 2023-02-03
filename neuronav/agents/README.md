@@ -22,6 +22,9 @@ The algorithms included here are all tabular. Tabular algorithms work with obser
 | SRMB | Q(s, a), T(s' \| s, a), ψ(s, a), ω(s) | value-iteration, one-step temporal difference | [Momennejad et al., 2017](https://www.nature.com/articles/s41562-017-0180-8) | A hybrid of value iteration and temporal-difference successor algorithms | Tabular | [Code](./mb_agents.py) |
 | QET | Q(s, a), e(s, a) | eligibility trace | [Sutton & Barto, 2018](http://incompleteideas.net/book/the-book-2nd.html) | A q-learning algorithm using online eligibility traces | Tabular | [Code](./td_agents.py) |
 | DistQ | Q(s, a, c) | one-step temporal difference | [Dabney et al., 2020](https://www.nature.com/articles/s41586-019-1924-6) | A distributional q-learning algorithm which uses separate learning rates for optimistic and pessimistic units. | Tabular | [Code](./dist_agents.py) |
+| QEC | Q(s, a) | episodic control | [Lengyel & Dayan, 2007](https://proceedings.neurips.cc/paper/2007/hash/1f4477bad7af3616c1f933a02bfabe4e-Abstract.html) | An episodic control algorithm that uses return targets from monte-carlo rollouts | Tabular | [Code](./mc_agents.py) |
+| QMC | Q(s, a) | monte-carlo | [Sutton & Barto, 2018](http://incompleteideas.net/book/the-book-2nd.html) | A q-learning algorithm that uses return targets from monte-carlo rollouts | Tabular | [Code](./mc_agents.py) |
+| SARSA | Q(s, a) | one-step temporal difference | [Rummery & Niranjan, 1994](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=7a09464f26e18a25a948baaa736270bfb84b5e12) | An on-policy sarsa algorithm | Tabular | [Code](./td_agents.py) |
 
 ## Algorithm hyperparameters
 

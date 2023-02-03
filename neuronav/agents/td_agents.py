@@ -5,6 +5,10 @@ from neuronav.agents.base_agent import BaseAgent
 
 
 class QAgent(BaseAgent):
+    """
+    Base class for Q-Learning Agents
+    """
+
     def __init__(
         self,
         state_size: int,
@@ -24,7 +28,7 @@ class QAgent(BaseAgent):
     def q_estimate(self, state):
         return None
 
-    def q_error(self, s, a, s_1, r, d):
+    def q_error(self, s, a, s_1, r, d, s_1a=None):
         if self.bootstrap == "max-min":
             s_a_1_optim = np.argmax(self.q_estimate(s_1))
             s_a_1_pessim = np.argmin(self.q_estimate(s_1))
@@ -38,6 +42,8 @@ class QAgent(BaseAgent):
             )
         elif self.bootstrap == "mean":
             q_bootstrap = self.q_estimate(s_1).mean(0)
+        elif s_1a is not None:
+            q_bootstrap = self.q_estimate(s_1)[s_1a]
         else:
             raise Exception("No Valid bootstrap type provided")
         if d:
@@ -347,3 +353,61 @@ class QET(BaseAgent):
 
     def reset(self):
         self.et *= 0.0
+
+
+class SARSA(QAgent):
+    """
+    Implementation of SARSA algorithm
+    """
+
+    def __init__(
+        self,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
+        Q_init=None,
+        **kwargs
+    ):
+        super().__init__(
+            state_size, action_size, lr, gamma, poltype, beta, epsilon, Q_init, **kwargs
+        )
+
+        if Q_init is None:
+            self.Q = np.zeros((action_size, state_size))
+        elif np.isscalar(Q_init):
+            self.Q = Q_init * npr.randn(action_size, state_size)
+        else:
+            self.Q = Q_init
+
+    def sample_action(self, state):
+        Qs = self.Q[:, state]
+        return self.base_sample_action(Qs)
+
+    def _update(self, current_exp):
+        if self.last_exp is None:
+            self.last_exp = current_exp
+            return 0.0
+        else:
+            s, a, s_1, r, d = self.last_exp
+            s_a_1 = current_exp[1]
+            r_1 = current_exp[3]
+            d_1 = current_exp[4]
+            q_error = r + self.gamma * self.Q[s_a_1, s_1] - self.Q[a, s]
+            self.Q[a, s] += self.lr * q_error
+            if d_1:
+                self.Q[s_a_1, s_1] += self.lr * (r_1 - self.Q[s_a_1, s_1])
+            self.last_exp = current_exp
+            return np.linalg.norm(q_error)
+
+    def get_policy(self):
+        return self.base_get_policy(self.Q)
+
+    def q_estimate(self, state):
+        return self.Q[:, state]
+
+    def reset(self):
+        self.last_exp = None
