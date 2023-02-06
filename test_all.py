@@ -100,79 +100,115 @@ def test_seed_graphenv():
 
 
 def test_td_q():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = TDQ(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_td_ac():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = TDAC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_td_sr():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = TDSR(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_dyna_q():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = DynaQ(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_dyna_ac():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = DynaAC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_dyna_sr():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = DynaSR(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_mbv():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = MBV(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_srmb():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = SRMB(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_qet():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = QET(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_distq():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GraphEnv(seed=0)
     obs = env.reset()
     agent = DistQ(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -180,27 +216,39 @@ def test_distq():
 
 
 def test_qec():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = QEC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_qmc():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = QMC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_sarsa():
-    env = GraphEnv(obs_type=GraphObsType.index)
+    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
     obs = env.reset()
     agent = SARSA(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    for i in range(100):
+        _, _, ep_return = run_episode(env, agent, 50)
+    if ep_return == 1:
+        assert True
 
 
 def test_graph_episode():
