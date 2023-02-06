@@ -79,6 +79,26 @@ def test_grid_topo():
             env.reset()
 
 
+def test_seed_gridenv():
+    env = GridEnv(seed=0, obs_type=GridObsType.symbolic)
+    env.reset(stochasticity=1.0)
+    obs_a, rew, don, _ = env.step(env.action_space.sample())
+    env = GridEnv(seed=0, obs_type=GridObsType.symbolic)
+    env.reset(stochasticity=1.0)
+    obs_b, rew, don, _ = env.step(env.action_space.sample())
+    assert obs_a.all() == obs_b.all()
+
+
+def test_seed_graphenv():
+    env = GraphEnv(seed=0, obs_type=GraphObsType.onehot)
+    env.reset(stochasticity=1.0)
+    obs_a, rew, don, _ = env.step(env.action_space.sample())
+    env = GraphEnv(seed=0, obs_type=GraphObsType.onehot)
+    env.reset(stochasticity=1.0)
+    obs_b, rew, don, _ = env.step(env.action_space.sample())
+    assert obs_a.all() == obs_b.all()
+
+
 def test_td_q():
     env = GraphEnv(obs_type=GraphObsType.index)
     obs = env.reset()

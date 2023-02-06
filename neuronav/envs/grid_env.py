@@ -43,7 +43,9 @@ class GridEnv(Env):
         grid_size: GridSize = GridSize.small,
         obs_type: GridObsType = GridObsType.index,
         orientation_type: OrientationType = OrientationType.fixed,
+        seed: int = None,
     ):
+        self.rng = np.random.RandomState(seed)
         self.blocks, self.agent_start_pos, self.topo_objects = generate_topography(
             topography, grid_size
         )
@@ -169,9 +171,21 @@ class GridEnv(Env):
         random_start: bool = False,
         terminate_on_reward: bool = True,
         time_penalty: float = 0.0,
+        stochasticity: float = 0.0,
     ):
         """
         Resets the environment to its initial configuration.
+        Args:
+            objects: A dictionary of objects to be placed in the environment.
+            agent_pos: The optional starting position of the agent.
+            episode_length: The maximum number of steps in an episode.
+            random_start: Whether to start the agent at a random position.
+            terminate_on_reward: Whether to terminate the episode when the agent
+                receives a reward.
+            time_penalty: The reward penalty for each step taken in the environment.
+            stochasticity: The probability of the agent taking a random action.
+        Returns:
+            The initial observation of the environment.
         """
         self.done = False
         self.episode_time = 0
@@ -181,6 +195,7 @@ class GridEnv(Env):
         self.time_penalty = time_penalty
         self.max_episode_time = episode_length
         self.terminate_on_reward = terminate_on_reward
+        self.stochasticity = stochasticity
 
         if agent_pos != None:
             self.agent_pos = agent_pos
@@ -593,7 +608,10 @@ class GridEnv(Env):
     def step(self, action: int):
         """
         Steps the environment forward given an action.
+        Action is an integer in the range [0, self.action_space.n).
         """
+        if self.stochasticity > self.rng.rand():
+            action = self.rng.randint(0, self.action_space.n)
         if self.orientation_type == OrientationType.variable:
             # 0 - Counter-clockwise rotation
             # 1 - Clockwise rotation

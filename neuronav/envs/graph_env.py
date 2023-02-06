@@ -6,6 +6,7 @@ import copy
 import numpy as np
 from gym import Env, spaces
 from neuronav.envs.graph_structures import GraphStructure, structure_map
+import random
 
 
 class GraphObsType(enum.Enum):
@@ -23,7 +24,9 @@ class GraphEnv(Env):
         self,
         graph_structure: GraphStructure = GraphStructure.linear,
         obs_type: GraphObsType = GraphObsType.index,
+        seed: int = None,
     ):
+        self.rng = np.random.RandomState(seed)
         if isinstance(graph_structure, str):
             graph_structure = GraphStructure(graph_structure)
         if isinstance(obs_type, str):
@@ -69,7 +72,7 @@ class GraphEnv(Env):
             return None
 
     def get_free_spot(self):
-        return np.random.randint(0, self.state_size)
+        return self.rng.randint(0, self.state_size)
 
     def reset(
         self,
@@ -77,11 +80,13 @@ class GraphEnv(Env):
         objects: Dict = None,
         random_start: bool = False,
         time_penalty: float = 0.0,
+        stochasticity: float = 0.0,
     ):
         """
         Resets the environment to initial configuration.
         """
         self.running = True
+        self.stochasticity = stochasticity
         self.time_penalty = time_penalty
         if agent_pos != None:
             self.agent_pos = agent_pos
@@ -150,9 +155,11 @@ class GraphEnv(Env):
             print("Episode fininshed. Please reset the environment.")
             return None, None, None, None
         else:
+            if self.stochasticity > self.rng.rand():
+                action = self.rng.randint(0, len(self.edges[self.agent_pos]))
             candidate_positions = self.edges[self.agent_pos][action]
             if type(candidate_positions) == tuple:
-                candidate_position = np.random.choice(
+                candidate_position = self.rng.choice(
                     candidate_positions[0], p=candidate_positions[1]
                 )
             else:
