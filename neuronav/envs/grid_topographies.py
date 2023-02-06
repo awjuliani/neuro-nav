@@ -26,14 +26,21 @@ def four_rooms(grid_size: int):
 
 
 def four_rooms_split(grid_size: int):
-    agent_start = [grid_size - 2, grid_size - 2]
-    objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid = int(grid_size // 2)
     earl_mid = int(mid // 2)
     if grid_size == 11:
         late_mid = mid + earl_mid + 1
     else:
         late_mid = mid + earl_mid
+
+    agent_start = [grid_size - 3, grid_size - 3]
+    objects = {
+        "rewards": {(earl_mid, earl_mid): 1.0},
+        "markers": {},
+        "keys": [(earl_mid, late_mid)],
+        "doors": [(earl_mid, mid)],
+        "warps": {(late_mid, earl_mid): (earl_mid + 1, late_mid)},
+    }
     blocks_a = [[mid, i] for i in range(grid_size)]
     blocks_b = [[i, mid] for i in range(grid_size)]
     blocks_c = [[mid - 1, i] for i in range(grid_size)]

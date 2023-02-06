@@ -61,7 +61,13 @@ class GridEnv(Env):
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
-        self.base_objects = {"rewards": {}, "markers": {}, "keys": [], "doors": []}
+        self.base_objects = {
+            "rewards": {},
+            "markers": {},
+            "keys": [],
+            "doors": [],
+            "warps": {},
+        }
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
         self.keys = 0
@@ -139,7 +145,7 @@ class GridEnv(Env):
                 shape=(
                     self.grid_size,
                     self.grid_size,
-                    5,
+                    6,
                 ),
             )
         elif obs_type == GridObsType.symbolic_window:
@@ -149,7 +155,7 @@ class GridEnv(Env):
                 shape=(
                     5,
                     5,
-                    5,
+                    6,
                 ),
             )
         else:
@@ -217,14 +223,16 @@ class GridEnv(Env):
             3: doors
             4: walls
         """
-        grid = np.zeros([self.grid_size, self.grid_size, 5])
+        grid = np.zeros([self.grid_size, self.grid_size, 6])
         grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
-        for loc, reward in self.objects["rewards"].items():
+        for loc in self.objects["rewards"].keys():
             grid[loc[0], loc[1], 1] = 1
         for loc in self.objects["keys"]:
             grid[loc[0], loc[1], 2] = 1
         for loc in self.objects["doors"]:
             grid[loc[0], loc[1], 3] = 1
+        for loc in self.objects["warps"].keys():
+            grid[loc[0], loc[1], 5] = 1
         walls = self.render_walls()
         grid[:, :, 4] = walls
         return grid
@@ -242,7 +250,7 @@ class GridEnv(Env):
         # return a 5x5x5 tensor of the surrounding area
         # Pads the edges with walls if the agent is near the edge
         obs = self.symbolic_obs()
-        full_window = np.zeros([self.grid_size + 2, self.grid_size + 2, 5])
+        full_window = np.zeros([self.grid_size + 2, self.grid_size + 2, 6])
         full_window[1:-1, 1:-1, :] = obs
         full_window[0, :, 4] = 1
         full_window[:, 0, 4] = 1
@@ -338,6 +346,16 @@ class GridEnv(Env):
         for pos in self.objects["doors"]:
             fill_color = (0, 150, 0)
             border_color = (0, 100, 0)
+            start, end = self.get_square_edges(
+                pos[0], pos[1], block_size, block_size - 2
+            )
+            cv.rectangle(img, start, end, fill_color, -1)
+            cv.rectangle(img, start, end, border_color, block_border - 1)
+
+        # draw the warp locations. They are purple
+        for pos, target in self.objects["warps"].items():
+            fill_color = (130, 0, 250)
+            border_color = (80, 0, 200)
             start, end = self.get_square_edges(
                 pos[0], pos[1], block_size, block_size - 2
             )
@@ -611,4 +629,6 @@ class GridEnv(Env):
         if eval_pos in self.objects["keys"]:
             self.keys += 1
             self.objects["keys"].remove(eval_pos)
+        if eval_pos in self.objects["warps"]:
+            self.agent_pos = self.objects["warps"][eval_pos]
         return self.observation, reward, self.done, {}
