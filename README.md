@@ -1,29 +1,8 @@
-# Neuro-Nav (Beta)
+# Neuro-Nav
 
 ![Example environments](/images/banner.png)
 
 Neuro-Nav is an open-source library for neurally plausible reinforcement learning (RL). It offers a set of standardized environments and RL algorithms drawn from canonical behavioral and neural studies in rodents and humans. In addition, this repository also contains a set of jupyter notebooks which reproduce various experimental results from the literature.
-
-*(Note: Neuro-Nav is currently in pre-release form. Additional documentation, environments, algorithms, and study replications plan to be added over the coming months. Please feel free to report issues or feature requests in the repository "Issues" section.)*
-
-## Requirements
-
-* Python 3.7+
-* NumPy
-* Gym
-* PyPlot
-* Scipy
-* NetworkX
-* OpenCV
-* Sklearn (optional)
-* Jupyter (optional)
-* PyTorch (optional)
-
-## Installation
-
-The `neuronav` package can be installed locally by running `pip install -e .` from the root of this directory.
-
-If you would like to use the experiment notebooks as well as the core library, please run `pip install -e .[experiments_local]` from the root of this directory to install the additional dependencies.
 
 ## Benchmark Environments
 
@@ -42,6 +21,28 @@ See [neuronav/agents](./neuronav/agents) for more information.
 Neuro-nav includes a number of interactive jupyter notebooks, featuring different experimental environments, tasks, and RL agent algorithms. You can use these notebooks to replicate various experiments across the literature, or to simply learn about what's possible to do with the library.
 
 See [notebooks](./notebooks) for more information.
+
+## Installation
+
+The easiest way to install the `neuronav` package is by running the following command:
+
+```
+pip install 'git+https://github.com/awjuliani/neuro-nav'
+```
+
+This will provide the environments and algorithms, but not the jupyter notebooks. If you would like access to the notebooks as well, you can locally download the repository, and then install `neuronav` by running the following command from the root of the directory where the repository is downloaded to:
+
+```
+pip install -e .
+```
+
+If you would like to use the experiment notebooks as well as the core library, please run `pip install -e .[experiments_local]` from the root of this directory to install the additional dependencies.
+
+It is also possible to access all notebooks using google colab. The links to the colab notebooks can be found [here](./notebooks/README.md).
+
+## Requirements
+
+Requirements for the `neuronav` library can be found [here](./setup.py).
 
 ## Contributing
 

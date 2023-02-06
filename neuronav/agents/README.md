@@ -6,8 +6,6 @@ These consist of implementations of the canonical Q-Learning, Actor-Critic, Valu
 
 The algorithms included here are all tabular. Tabular algorithms work with observations that are integer representations of the state of the agent (e.g., which grid the agent is in a grid world). This corresponds to the `index` observation type. 
 
-*(In order to support more rich observation spaces, future releases will include additional linear and non-linear policy and value functions.)*
-
 ## Included algorithms
 
 | Algorithm | Function(s) | Update Rule(s) | Reference | Description | Expressivity | Code Link |
