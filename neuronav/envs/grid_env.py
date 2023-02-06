@@ -240,8 +240,15 @@ class GridEnv(Env):
         """
         grid = np.zeros([self.grid_size, self.grid_size, 6])
         grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
-        for loc in self.objects["rewards"].keys():
-            grid[loc[0], loc[1], 1] = 1
+        for loc, reward in self.objects["rewards"].items():
+            if type(reward) != list:
+                draw = True
+            elif reward[1] == 1:
+                draw = True
+            else:
+                draw = False
+            if draw:
+                grid[loc[0], loc[1], 1] = 1
         for loc in self.objects["keys"]:
             grid[loc[0], loc[1], 2] = 1
         for loc in self.objects["doors"]:
@@ -322,17 +329,24 @@ class GridEnv(Env):
             cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
         # draw the reward locations
         for pos, reward in self.objects["rewards"].items():
-            if reward > 0:
-                fill_color = (100, 100, 255)  # blue
-                border_color = (50, 50, 200)  # blue
+            if type(reward) != list:
+                draw = True
+            elif reward[1] == 1:
+                draw = True
             else:
-                fill_color = (255, 100, 100)  # red
-                border_color = (200, 50, 50)  # red
-            start, end = self.get_square_edges(
-                pos[0], pos[1], block_size, block_size - 4
-            )
-            cv.rectangle(img, start, end, fill_color, -1)
-            cv.rectangle(img, start, end, border_color, block_border - 1)
+                draw = False
+            if draw:
+                if reward > 0:
+                    fill_color = (100, 100, 255)  # blue
+                    border_color = (50, 50, 200)  # blue
+                else:
+                    fill_color = (255, 100, 100)  # red
+                    border_color = (200, 50, 50)  # red
+                start, end = self.get_square_edges(
+                    pos[0], pos[1], block_size, block_size - 4
+                )
+                cv.rectangle(img, start, end, fill_color, -1)
+                cv.rectangle(img, start, end, border_color, block_border - 1)
 
         # draw the markers
         for pos, marker_col in self.objects["markers"].items():
@@ -640,7 +654,10 @@ class GridEnv(Env):
             reward = self.time_penalty
         eval_pos = tuple(self.agent_pos)
         if eval_pos in self.objects["rewards"]:
-            reward += self.objects["rewards"][eval_pos]
+            loc_reward = self.objects["rewards"][eval_pos]
+            if type(loc_reward) == list:
+                loc_reward = loc_reward[0]
+            reward += loc_reward
             if self.terminate_on_reward:
                 self.done = True
             self.objects["rewards"].pop(eval_pos)

@@ -85,7 +85,7 @@ def outer_ring(grid_size: int):
 
 def u_maze(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
-    objects = {"rewards": {(grid_size - 2, 1): 1.0}, "markers": {}}
+    objects = {"rewards": {(grid_size - 2, 1): [1.0, 0]}, "markers": {}}
     blocks = []
     extra_depth = 2
     for i in range(grid_size):
