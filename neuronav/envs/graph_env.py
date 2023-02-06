@@ -25,7 +25,9 @@ class GraphEnv(Env):
         graph_structure: GraphStructure = GraphStructure.linear,
         obs_type: GraphObsType = GraphObsType.index,
         seed: int = None,
+        use_noop: bool = False,
     ):
+        self.use_noop = use_noop
         self.rng = np.random.RandomState(seed)
         if isinstance(graph_structure, str):
             graph_structure = GraphStructure(graph_structure)
@@ -54,7 +56,7 @@ class GraphEnv(Env):
         for edge in self.edges:
             if len(edge) > action_size:
                 action_size = len(edge)
-        self.action_space = spaces.Discrete(action_size)
+        self.action_space = spaces.Discrete(action_size + self.use_noop)
         self.state_size = len(self.edges)
 
     @property
@@ -155,20 +157,23 @@ class GraphEnv(Env):
             print("Episode fininshed. Please reset the environment.")
             return None, None, None, None
         else:
-            if self.stochasticity > self.rng.rand():
-                action = self.rng.randint(0, len(self.edges[self.agent_pos]))
-            candidate_positions = self.edges[self.agent_pos][action]
-            if type(candidate_positions) == tuple:
-                candidate_position = self.rng.choice(
-                    candidate_positions[0], p=candidate_positions[1]
-                )
+            if self.use_noop and action == self.action_space.n - 1:
+                pass
             else:
-                candidate_position = candidate_positions
-            self.agent_pos = candidate_position
-            reward = 0
-            if self.agent_pos in self.objects["rewards"]:
-                reward += self.objects["rewards"][self.agent_pos]
-            reward -= self.time_penalty
-            if len(self.edges[self.agent_pos]) == 0:
-                self.done = True
+                if self.stochasticity > self.rng.rand():
+                    action = self.rng.randint(0, len(self.edges[self.agent_pos]))
+                candidate_positions = self.edges[self.agent_pos][action]
+                if type(candidate_positions) == tuple:
+                    candidate_position = self.rng.choice(
+                        candidate_positions[0], p=candidate_positions[1]
+                    )
+                else:
+                    candidate_position = candidate_positions
+                self.agent_pos = candidate_position
+                reward = 0
+                if self.agent_pos in self.objects["rewards"]:
+                    reward += self.objects["rewards"][self.agent_pos]
+                reward -= self.time_penalty
+                if len(self.edges[self.agent_pos]) == 0:
+                    self.done = True
             return self.observation, reward, self.done, {}

@@ -44,8 +44,10 @@ class GridEnv(Env):
         obs_type: GridObsType = GridObsType.index,
         orientation_type: OrientationType = OrientationType.fixed,
         seed: int = None,
+        use_noop: bool = False,
     ):
         self.rng = np.random.RandomState(seed)
+        self.use_noop = use_noop
         self.blocks, self.agent_start_pos, self.topo_objects = generate_topography(
             topography, grid_size
         )
@@ -54,11 +56,11 @@ class GridEnv(Env):
         self.orientation_type = orientation_type
         self.max_orient = 3
         if self.orientation_type == OrientationType.variable:
-            self.action_space = spaces.Discrete(3)
+            self.action_space = spaces.Discrete(3 + self.use_noop)
             self.orient_size = 4
         elif self.orientation_type == OrientationType.fixed:
             self.orient_size = 1
-            self.action_space = spaces.Discrete(4)
+            self.action_space = spaces.Discrete(4 + self.use_noop)
         else:
             raise Exception("No valid OrientationType provided.")
         self.state_size *= self.orient_size
