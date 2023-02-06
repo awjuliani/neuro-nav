@@ -1,6 +1,6 @@
 # Benchmark Environments
 
-A set of cognitive neuroscience inspired navigation and decision making tasks in environments with either graph or grid structures.
+A set of cognitive neuroscience inspired navigation and decision making tasks in environments that have either a grid or graph structure.
 
 These environments support the default `gym` interface which is commonly used in open source reinforcement learning packages. You can learn more about gym [here](https://github.com/openai/gym).
 
@@ -8,15 +8,15 @@ These environments support the default `gym` interface which is commonly used in
 
 `GridEnv` consists of a simple 2D grid environment with various topographies and observation types.
 
-### Topographies
+### Templates
 
-The `GridEnv` class can generate a variety of different maze layouts by setting the topography. Below is a list of the topographies which are supported. Topographies can be set as an enum when initializing the environment. For example: 
+The `GridEnv` class can generate a variety of different maze layouts by selecting one of the predefined template layouts. Below is a list of the templates which are included. Templates can be set as an enum when initializing the environment. For example: 
 
-```env = GridEnv(topography=GridTopography.empty)```
+```env = GridEnv(template=GridTemplate.empty)```
 
- To add your own topographies, edit [grid_topographies.py](./grid_topographies.py).
+ To add your own templates, edit [grid_templates.py](./grid_templates.py).
 
-| Topography Name | Image Small (11x11) | Image Large (17 x 17) | Reference |
+| Template | Image Small (11x11) | Image Large (17 x 17) | Reference |
 | --- | --- | --- | --- |
 | empty | ![empty](/images/grid_small/empty.png) | ![empty](/images/grid_large/empty.png) |
 | four_rooms | ![four_rooms](/images/grid_small/four_rooms.png) | ![four_rooms](/images/grid_large/four_rooms.png) |
@@ -37,13 +37,25 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 | two_step | ![two_step](/images/grid_small/two_step.png) | ![two_step](/images/grid_large/two_step.png) | |
 | narrow | ![narrow](/images/grid_small/narrow.png) | ![narrow](/images/grid_large/narrow.png) | [Zorowitz et al., 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8143038/) |
 
+### Objects
+
+There are a number of possible objects which can be placed at various locations in a grid environment by utilizing an `objects` dictionary. They are as follows:
+
+| Object | Usage | Description | Color | Image |
+| --- | --- | --- | --- | --- |
+| reward | `'rewards': {(x, y, o): v}`, where `x, y` is the location of the reward, `o` is whether the reward should be visible, and `v` is the value of the reward. | A reward object. Provides the agent with the reward value if it occupies the location. | Blue (Pos) / Red (Neg) | ![reward_pos](/images/objects/reward_pos.png) ![reward_neg](/images/objects/reward_neg.png) |
+| marker | `'markers': {(x, y): (r, g, b)}`, where `x, y` is the location of the marker, and `r, g, b` are the color values for the marker. | A marker object. Used to provide contextual information to the agent. | Variable | N/A |
+| key | `'keys': [(x, y)]`, where `x, y` is the location of the key. | A consumable key object. Allows the agent to open a door. | Yellow | ![key](/images/objects/key.png) |
+| door | `'doors': [(x, y)]`, where `x, y` is the location of the door. | A door object. Agent cannot enter a location with a door unless it posesses a key, which is consumed upon entry. | Green | ![door](/images/objects/door.png) |
+| warp | `'warps': {(x, y): (a, b)}`, where `x, y` is the location of the warp, and `a, b` is the location of the warp target. | A warp object. Transports the agent from the location of the warp to a specificed other location in the environment. | Purple | ![warp](/images/objects/warp.png) |
+
 ### Observation Types
 
 The `GridEnv` class also supports a variety of observation types for the agent. These vary in the amount of information provided to the agent, and in their format. 
 
 Observation types can be set as an enum when initializing the environment. For example: 
 
-```env = GridEnv(obs_type=GridObsType.index)```
+```env = GridEnv(obs_type=GridObservation.index)```
 
 To add your own, edit [grid_env.py](./grid_env.py).
 
@@ -57,8 +69,8 @@ To add your own, edit [grid_env.py](./grid_env.py).
 | visual | Function-Approx | `[110, 110, 3]` | `[110, 110, 3` | A 3D tensor corresponding to the RGB image of the environment. |
 | images | Function-Approx | `[32, 32, 3]` | `[32, 32, 3` | A 3D tensor corresponding to a unique CIFAR10 image per state. |
 | window | Function-Approx | `[64, 64, 3]` | `[64, 64, 3]` | A 3D tensor corresponding to the 5x5 local window around the agent. |
-| symbolic | Function-Approx | `[n, n, 5]` | `[n, n, 5]` | A 5D tensor corresponding to a symbolic representation of the environment state.
-| symbolic_window | Function-Approx | `[5, 5, 5]` | `[5, 5, 5]` | A 5D tensor corresponding to a symbolic representation of the environment state.
+| symbolic | Function-Approx | `[n, n, 6]` | `[n, n, 6]` | A 5D tensor corresponding to a symbolic representation of the environment state.
+| symbolic_window | Function-Approx | `[5, 5, 6]` | `[5, 5, 6]` | A 5D tensor corresponding to a symbolic representation of the environment state.
 
 * Where `n` is the length of the grid.
 
@@ -66,15 +78,15 @@ To add your own, edit [grid_env.py](./grid_env.py).
 
 `GraphEnv` consists of a simple graph environment with various layout structures and observation types. 
 
-### Structures
+### Templates
 
-Graph structures can be set as an enum when initializing the environment. For example: 
+Graph templates can be set as an enum when initializing the environment. For example: 
 
-```env = GraphEnv(graph_structure=GraphStructure.neighborhood)```
+```env = GraphEnv(template=GraphTemplate.neighborhood)```
 
-The graph structures can be added to by editing [graph_structures.py](./graph_structures.py)
+The graph templates can be added to by editing [graph_templates.py](./graph_templates.py)
 
-| Structure | Image | Reference |
+| Template | Image | Reference |
 | --- | --- | --- |
 | two_step | ![two_step](/images/graph/two_step.png) |
 | linear | ![linear](/images/graph/linear.png) |
@@ -94,7 +106,7 @@ The `GraphEnv` class also supports a variety of observation types for the agent.
 
 Observation types can be set as an enum when initializing the environment. For example: 
 
-```env = GraphEnv(obs_type=GraphObsType.index)```
+```env = GraphEnv(obs_type=GraphObservation.index)```
 
 To add your own, edit [graph_env.py](./graph_env.py).
 

@@ -2,7 +2,7 @@ import enum
 import numpy as np
 
 
-class GraphStructure(enum.Enum):
+class GraphTemplate(enum.Enum):
     two_step = "two_step"
     ring = "ring"
     two_way_linear = "two_way_linear"
@@ -146,16 +146,16 @@ def variable_magnitude():
     return objects, edges
 
 
-structure_map = {
-    GraphStructure.two_step: two_step,
-    GraphStructure.two_way_linear: two_way_linear,
-    GraphStructure.ring: ring,
-    GraphStructure.linear: linear,
-    GraphStructure.t_graph: t_graph,
-    GraphStructure.neighborhood: neighborhood,
-    GraphStructure.human_a: human_a,
-    GraphStructure.human_b: human_b,
-    GraphStructure.t_loop: t_loop,
-    GraphStructure.variable_magnitude: variable_magnitude,
-    GraphStructure.three_arm_bandit: three_arm_bandit,
+template_map = {
+    GraphTemplate.two_step: two_step,
+    GraphTemplate.two_way_linear: two_way_linear,
+    GraphTemplate.ring: ring,
+    GraphTemplate.linear: linear,
+    GraphTemplate.t_graph: t_graph,
+    GraphTemplate.neighborhood: neighborhood,
+    GraphTemplate.human_a: human_a,
+    GraphTemplate.human_b: human_b,
+    GraphTemplate.t_loop: t_loop,
+    GraphTemplate.variable_magnitude: variable_magnitude,
+    GraphTemplate.three_arm_bandit: three_arm_bandit,
 }
