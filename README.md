@@ -12,7 +12,7 @@ See [neuronav/envs](./neuronav/envs) for more information.
 
 ## Algorithm Toolkit
 
-Contains artifical agents which implement Temporal Difference (TD) and Dyna versions of Q-Learning, Successor Representation, and Actor-Critic algorithms.
+Contains artifical agents which implement a number of reinforcement learning algorithms, including: Temporal Difference (TD) and Dyna versions of Q-Learning, Successor Representation, and Actor-Critic algorithms.
 
 See [neuronav/agents](./neuronav/agents) for more information.
 
