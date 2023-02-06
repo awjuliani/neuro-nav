@@ -6,19 +6,19 @@ Neuro-Nav is an open-source library for neurally plausible reinforcement learnin
 
 ## Benchmark Environments
 
-Contains two highly parameterizable environments: `GridEnv` and `GraphEnv`.
+Contains two highly parameterizable environments: `GridEnv` and `GraphEnv`. Each comes with a variety of task templates, observation spaces, and other settings useful for research.
 
 See [neuronav/envs](./neuronav/envs) for more information.
 
 ## Algorithm Toolkit
 
-Contains artifical agents which implement a number of reinforcement learning algorithms, including: Temporal Difference (TD) and Dyna versions of Q-Learning, Successor Representation, and Actor-Critic algorithms.
+Contains artifical agents which implement over a dozen cannonical reinforcement learning algorithms, including: Temporal Difference (TD) and Dyna versions of Q-Learning, Successor Representation, and Actor-Critic algorithms.
 
 See [neuronav/agents](./neuronav/agents) for more information.
 
 ## Experiment Notebooks
 
-Neuro-nav includes a number of interactive jupyter notebooks, featuring different experimental environments, tasks, and RL agent algorithms. You can use these notebooks to replicate various experiments across the literature, or to simply learn about what's possible to do with the library.
+Neuro-nav includes a number of interactive jupyter notebooks, featuring different experimental environments, tasks, and RL agent algorithms. You can use these notebooks to replicate various experiments across the literature, or to simply learn about what's possible to do with the library. Notebooks include those that replicate results from computational neuroscience, psychiatry, and machine learning.
 
 See [notebooks](./notebooks) for more information.
 
