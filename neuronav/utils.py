@@ -129,7 +129,7 @@ def plot_values_and_policy(
         )
 
     if objects is None:
-        objects = env.topo_objects
+        objects = env.template_objects
 
     if subplot is None:
         _, ax = plt.subplots()

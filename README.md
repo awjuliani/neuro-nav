@@ -6,7 +6,7 @@ Neuro-Nav is an open-source library for neurally plausible reinforcement learnin
 
 ## Benchmark Environments
 
-Contains a set of Grid and Graph environments with various topographies and structures.
+Contains two highly parameterizable environments: `GridEnv` and `GraphEnv`.
 
 See [neuronav/envs](./neuronav/envs) for more information.
 

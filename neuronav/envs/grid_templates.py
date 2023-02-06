@@ -2,6 +2,12 @@ import neuronav.utils as utils
 import enum
 
 
+class GridSize(enum.Enum):
+    micro = 7
+    small = 11
+    large = 17
+
+
 def four_rooms(grid_size: int):
     agent_start = [grid_size - 2, grid_size - 2]
     objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
@@ -330,7 +336,7 @@ def narrow(grid_size):
     return blocks, agent_start, objects
 
 
-class GridTopography(enum.Enum):
+class GridTemplate(enum.Enum):
     empty = "empty"
     four_rooms = "four_rooms"
     outer_ring = "outer_ring"
@@ -351,42 +357,36 @@ class GridTopography(enum.Enum):
     narrow = "narrow"
 
 
-topography_map = {
-    GridTopography.empty: empty,
-    GridTopography.four_rooms: four_rooms,
-    GridTopography.outer_ring: outer_ring,
-    GridTopography.two_rooms: two_rooms,
-    GridTopography.u_maze: u_maze,
-    GridTopography.t_maze: t_maze,
-    GridTopography.hallways: hallways,
-    GridTopography.ring: ring,
-    GridTopography.s_maze: s_maze,
-    GridTopography.circle: circle,
-    GridTopography.i_maze: i_maze,
-    GridTopography.hairpin: hairpin,
-    GridTopography.detour: detour,
-    GridTopography.detour_block: detour_block,
-    GridTopography.four_rooms_split: four_rooms_split,
-    GridTopography.obstacle: obstacle,
-    GridTopography.two_step: two_step,
-    GridTopography.narrow: narrow,
+template_map = {
+    GridTemplate.empty: empty,
+    GridTemplate.four_rooms: four_rooms,
+    GridTemplate.outer_ring: outer_ring,
+    GridTemplate.two_rooms: two_rooms,
+    GridTemplate.u_maze: u_maze,
+    GridTemplate.t_maze: t_maze,
+    GridTemplate.hallways: hallways,
+    GridTemplate.ring: ring,
+    GridTemplate.s_maze: s_maze,
+    GridTemplate.circle: circle,
+    GridTemplate.i_maze: i_maze,
+    GridTemplate.hairpin: hairpin,
+    GridTemplate.detour: detour,
+    GridTemplate.detour_block: detour_block,
+    GridTemplate.four_rooms_split: four_rooms_split,
+    GridTemplate.obstacle: obstacle,
+    GridTemplate.two_step: two_step,
+    GridTemplate.narrow: narrow,
 }
 
 
-class GridSize(enum.Enum):
-    micro = 7
-    small = 11
-    large = 17
-
-
-def generate_topography(
-    topography: GridTopography = GridTopography.empty,
+def generate_layout(
+    template: GridTemplate = GridTemplate.empty,
     grid_size: GridSize = GridSize.small,
 ):
     grid_size = grid_size.value
-    if type(topography) == str:
-        topography = GridTopography(topography)
-    blocks, agent_start, objects = topography_map[topography](grid_size)
+    if type(template) == str:
+        template = GridTemplate(template)
+    blocks, agent_start, objects = template_map[template](grid_size)
     blocks = add_outer_blocks(blocks, grid_size)
     return blocks, agent_start, objects
 

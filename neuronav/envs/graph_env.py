@@ -5,11 +5,10 @@ import enum
 import copy
 import numpy as np
 from gym import Env, spaces
-from neuronav.envs.graph_structures import GraphStructure, structure_map
-import random
+from neuronav.envs.graph_templates import GraphTemplate, template_map
 
 
-class GraphObsType(enum.Enum):
+class GraphObservation(enum.Enum):
     onehot = "onehot"
     index = "index"
     images = "images"
@@ -22,35 +21,35 @@ class GraphEnv(Env):
 
     def __init__(
         self,
-        graph_structure: GraphStructure = GraphStructure.linear,
-        obs_type: GraphObsType = GraphObsType.index,
+        template: GraphTemplate = GraphTemplate.linear,
+        obs_type: GraphObservation = GraphObservation.index,
         seed: int = None,
         use_noop: bool = False,
     ):
         self.use_noop = use_noop
         self.rng = np.random.RandomState(seed)
-        if isinstance(graph_structure, str):
-            graph_structure = GraphStructure(graph_structure)
+        if isinstance(template, str):
+            template = GraphTemplate(template)
         if isinstance(obs_type, str):
-            obs_type = GraphObsType(obs_type)
-        self.generate_graph(graph_structure)
+            obs_type = GraphObservation(obs_type)
+        self.generate_layout(template)
         self.running = False
         self.obs_mode = obs_type
         self.base_objects = {"rewards": {}}
-        if obs_type == GraphObsType.onehot:
+        if obs_type == GraphObservation.onehot:
             self.observation_space = spaces.Box(
                 0, 1, shape=(self.state_size,), dtype=np.int32
             )
-        elif obs_type == GraphObsType.index:
+        elif obs_type == GraphObservation.index:
             self.observation_space = spaces.Box(
                 0, self.state_size, shape=(1,), dtype=np.int32
             )
-        elif obs_type == GraphObsType.images:
+        elif obs_type == GraphObservation.images:
             self.observation_space = spaces.Box(0, 1, shape=(32, 32, 3))
             self.images = utils.cifar10()
 
-    def generate_graph(self, structure: GraphStructure):
-        self.struct_objects, self.edges = structure_map[structure]()
+    def generate_layout(self, template: GraphTemplate):
+        self.template_objects, self.edges = template_map[template]()
         self.agent_start_pos = 0
         action_size = 0
         for edge in self.edges:
@@ -64,11 +63,11 @@ class GraphEnv(Env):
         """
         Returns an observation corresponding to the current state.
         """
-        if self.obs_mode == GraphObsType.onehot:
+        if self.obs_mode == GraphObservation.onehot:
             return utils.onehot(self.agent_pos, self.state_size)
-        elif self.obs_mode == GraphObsType.index:
+        elif self.obs_mode == GraphObservation.index:
             return self.agent_pos
-        elif self.obs_mode == GraphObsType.images:
+        elif self.obs_mode == GraphObservation.images:
             return np.rot90(self.images[self.agent_pos], k=3)
         else:
             return None
@@ -104,7 +103,7 @@ class GraphEnv(Env):
                     use_objects[key] = objects[key]
             self.objects = use_objects
         else:
-            self.objects = self.struct_objects
+            self.objects = self.template_objects
         return self.observation
 
     def render(self):

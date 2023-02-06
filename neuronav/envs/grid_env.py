@@ -4,9 +4,9 @@ import numpy as np
 import neuronav.utils as utils
 import random
 import enum
-from neuronav.envs.grid_topographies import (
-    generate_topography,
-    GridTopography,
+from neuronav.envs.grid_templates import (
+    generate_layout,
+    GridTemplate,
     GridSize,
 )
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ import cv2 as cv
 import copy
 
 
-class GridObsType(enum.Enum):
+class GridObservation(enum.Enum):
     onehot = "onehot"
     twohot = "twohot"
     geometric = "geometric"
@@ -27,7 +27,7 @@ class GridObsType(enum.Enum):
     symbolic_window = "symbolic_window"
 
 
-class OrientationType(enum.Enum):
+class GridOrientation(enum.Enum):
     fixed = "fixed"
     variable = "variable"
 
@@ -39,30 +39,30 @@ class GridEnv(Env):
 
     def __init__(
         self,
-        topography: GridTopography = GridTopography.empty,
-        grid_size: GridSize = GridSize.small,
-        obs_type: GridObsType = GridObsType.index,
-        orientation_type: OrientationType = OrientationType.fixed,
+        template: GridTemplate = GridTemplate.empty,
+        size: GridSize = GridSize.small,
+        obs_type: GridObservation = GridObservation.index,
+        orientation_type: GridOrientation = GridOrientation.fixed,
         seed: int = None,
         use_noop: bool = False,
     ):
         self.rng = np.random.RandomState(seed)
         self.use_noop = use_noop
-        self.blocks, self.agent_start_pos, self.topo_objects = generate_topography(
-            topography, grid_size
+        self.blocks, self.agent_start_pos, self.template_objects = generate_layout(
+            template, size
         )
-        self.grid_size = grid_size.value
+        self.grid_size = size.value
         self.state_size = self.grid_size * self.grid_size
         self.orientation_type = orientation_type
         self.max_orient = 3
-        if self.orientation_type == OrientationType.variable:
+        if self.orientation_type == GridOrientation.variable:
             self.action_space = spaces.Discrete(3 + self.use_noop)
             self.orient_size = 4
-        elif self.orientation_type == OrientationType.fixed:
+        elif self.orientation_type == GridOrientation.fixed:
             self.orient_size = 1
             self.action_space = spaces.Discrete(4 + self.use_noop)
         else:
-            raise Exception("No valid OrientationType provided.")
+            raise Exception("No valid GridOrientation provided.")
         self.state_size *= self.orient_size
         self.agent_pos = [0, 0]
         self.base_objects = {
@@ -77,9 +77,9 @@ class GridEnv(Env):
         self.keys = 0
         self.free_spots = self.make_free_spots()
         if isinstance(obs_type, str):
-            obs_type = GridObsType(obs_type)
+            obs_type = GridObservation(obs_type)
         self.obs_mode = obs_type
-        if obs_type == GridObsType.visual:
+        if obs_type == GridObservation.visual:
             self.observation_space = spaces.Box(
                 0,
                 1,
@@ -89,12 +89,12 @@ class GridEnv(Env):
                     3,
                 ),
             )
-        elif obs_type == GridObsType.onehot:
+        elif obs_type == GridObservation.onehot:
             self.observation_space = spaces.Box(
                 0, 1, shape=(self.state_size * self.orient_size,), dtype=np.int32
             )
-        elif obs_type == GridObsType.twohot:
-            if self.orientation_type == OrientationType.fixed:
+        elif obs_type == GridObservation.twohot:
+            if self.orientation_type == GridOrientation.fixed:
                 self.observation_space = spaces.Box(
                     0, 1, shape=(2 * self.grid_size,), dtype=np.int32
                 )
@@ -105,19 +105,19 @@ class GridEnv(Env):
                     shape=(2 * self.grid_size + self.orient_size,),
                     dtype=np.int32,
                 )
-        elif obs_type == GridObsType.geometric:
-            if self.orientation_type == OrientationType.fixed:
+        elif obs_type == GridObservation.geometric:
+            if self.orientation_type == GridOrientation.fixed:
                 self.observation_space = spaces.Box(0, 1, shape=(2,))
             else:
                 self.observation_space = spaces.Box(0, 1, shape=(2 + self.orient_size,))
-        elif obs_type == GridObsType.index:
+        elif obs_type == GridObservation.index:
             self.observation_space = spaces.Box(
                 0, self.state_size, shape=(1,), dtype=np.int32
             )
-        elif obs_type == GridObsType.boundary:
+        elif obs_type == GridObservation.boundary:
             self.ray_length = self.grid_size
             self.num_rays = 4
-            if self.orientation_type == OrientationType.fixed:
+            if self.orientation_type == GridOrientation.fixed:
                 self.observation_space = spaces.Box(
                     0,
                     1,
@@ -129,10 +129,10 @@ class GridEnv(Env):
                     1,
                     shape=(self.num_rays + self.orient_size,),
                 )
-        elif obs_type == GridObsType.images:
+        elif obs_type == GridObservation.images:
             self.observation_space = spaces.Box(0, 1, shape=(32, 32, 3))
             self.images, _, _, _ = utils.cifar10()
-        elif obs_type == GridObsType.window:
+        elif obs_type == GridObservation.window:
             self.observation_space = spaces.Box(
                 0,
                 1,
@@ -142,7 +142,7 @@ class GridEnv(Env):
                     3,
                 ),
             )
-        elif obs_type == GridObsType.symbolic:
+        elif obs_type == GridObservation.symbolic:
             self.observation_space = spaces.Box(
                 0,
                 1,
@@ -152,7 +152,7 @@ class GridEnv(Env):
                     6,
                 ),
             )
-        elif obs_type == GridObsType.symbolic_window:
+        elif obs_type == GridObservation.symbolic_window:
             self.observation_space = spaces.Box(
                 0,
                 1,
@@ -210,7 +210,7 @@ class GridEnv(Env):
         if objects != None:
             use_objects = copy.deepcopy(objects)
         else:
-            use_objects = copy.deepcopy(self.topo_objects)
+            use_objects = copy.deepcopy(self.template_objects)
         for key in use_objects.keys():
             if key in base_object.keys():
                 base_object[key] = use_objects[key]
@@ -491,7 +491,7 @@ class GridEnv(Env):
         """
         Returns an observation corresponding to the provided coordinates.
         """
-        if self.obs_mode == GridObsType.onehot:
+        if self.obs_mode == GridObservation.onehot:
             # one-hot encoding of the perspective
             one_hot = utils.onehot(
                 self.orientation * self.grid_size * self.grid_size
@@ -500,50 +500,50 @@ class GridEnv(Env):
                 self.state_size * self.orient_size,
             )
             return one_hot
-        elif self.obs_mode == GridObsType.twohot:
+        elif self.obs_mode == GridObservation.twohot:
             two_hot = utils.twohot(perspective, self.grid_size)
-            if self.orientation_type == OrientationType.variable:
+            if self.orientation_type == GridOrientation.variable:
                 two_hot = np.concatenate(
                     [two_hot, utils.onehot(self.orientation, self.orient_size)]
                 )
             return two_hot
-        elif self.obs_mode == GridObsType.geometric:
+        elif self.obs_mode == GridObservation.geometric:
             geo = np.array(perspective) / (self.grid_size - 1.0)
-            if self.orientation_type == OrientationType.variable:
+            if self.orientation_type == GridOrientation.variable:
                 geo = np.concatenate(
                     [geo, utils.onehot(self.orientation, self.orient_size)]
                 )
             return geo
-        elif self.obs_mode == GridObsType.visual:
+        elif self.obs_mode == GridObservation.visual:
             return self.make_visual_obs(True)
-        elif self.obs_mode == GridObsType.index:
+        elif self.obs_mode == GridObservation.index:
             idx = (
                 self.orientation * self.grid_size * self.grid_size
                 + perspective[0] * self.grid_size
                 + perspective[1]
             )
             return idx
-        elif self.obs_mode == GridObsType.boundary:
+        elif self.obs_mode == GridObservation.boundary:
             bounds = self.get_boundaries(
                 perspective, False, self.num_rays, self.ray_length
             )
-            if self.orientation_type == OrientationType.variable:
+            if self.orientation_type == GridOrientation.variable:
                 bounds = np.concatenate(
                     [bounds, utils.onehot(self.orientation, self.orient_size)]
                 )
             return bounds
-        elif self.obs_mode == GridObsType.images:
+        elif self.obs_mode == GridObservation.images:
             idx = (
                 self.orientation * self.state_size
                 + perspective[0] * self.grid_size
                 + perspective[1]
             )
             return np.rot90(self.images[idx], k=3)
-        elif self.obs_mode == GridObsType.window:
+        elif self.obs_mode == GridObservation.window:
             return self.make_window()
-        elif self.obs_mode == GridObsType.symbolic:
+        elif self.obs_mode == GridObservation.symbolic:
             return self.symbolic_obs()
-        elif self.obs_mode == GridObsType.symbolic_window:
+        elif self.obs_mode == GridObservation.symbolic_window:
             return self.symbolic_window_obs()
         else:
             raise ValueError("Invalid observation mode.")
@@ -578,7 +578,7 @@ class GridEnv(Env):
         """
         Returns the distance to the nearest object in the given direction.
         """
-        if self.orientation_type == OrientationType.variable:
+        if self.orientation_type == GridOrientation.variable:
             direction += self.orientation * 2
             if direction > 7:
                 direction -= 8
@@ -628,7 +628,7 @@ class GridEnv(Env):
         """
         if self.stochasticity > self.rng.rand():
             action = self.rng.randint(0, self.action_space.n)
-        if self.orientation_type == OrientationType.variable:
+        if self.orientation_type == GridOrientation.variable:
             # 0 - Counter-clockwise rotation
             # 1 - Clockwise rotation
             # 2 - Forward movement

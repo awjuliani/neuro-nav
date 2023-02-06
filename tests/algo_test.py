@@ -1,9 +1,6 @@
-import numpy as np
-from neuronav.utils import onehot, twohot, run_episode, plot_values_and_policy
-from neuronav.envs.graph_env import GraphEnv, GraphObsType
-from neuronav.envs.grid_env import GridEnv, GridSize, GridObsType, OrientationType
-from neuronav.envs.graph_structures import GraphStructure
-from neuronav.envs.grid_topographies import GridTopography
+from neuronav.utils import run_episode, plot_values_and_policy
+from neuronav.envs.graph_env import GraphEnv
+from neuronav.envs.grid_env import GridEnv, GridSize, GridObservation
 from neuronav.agents.td_agents import QET, TDQ, TDAC, TDSR, SARSA
 from neuronav.agents.dyna_agents import DynaQ, DynaAC, DynaSR
 from neuronav.agents.mb_agents import MBV, SRMB
@@ -12,7 +9,7 @@ from neuronav.agents.dist_agents import DistQ
 
 
 def test_td_q():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = TDQ(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -24,7 +21,7 @@ def test_td_q():
 
 
 def test_td_ac():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = TDAC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -36,7 +33,7 @@ def test_td_ac():
 
 
 def test_td_sr():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = TDSR(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -48,7 +45,7 @@ def test_td_sr():
 
 
 def test_dyna_q():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = DynaQ(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -60,7 +57,7 @@ def test_dyna_q():
 
 
 def test_dyna_ac():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = DynaAC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -72,7 +69,7 @@ def test_dyna_ac():
 
 
 def test_dyna_sr():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = DynaSR(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -84,7 +81,7 @@ def test_dyna_sr():
 
 
 def test_mbv():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = MBV(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -96,7 +93,7 @@ def test_mbv():
 
 
 def test_srmb():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = SRMB(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -108,7 +105,7 @@ def test_srmb():
 
 
 def test_qet():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = QET(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -128,7 +125,7 @@ def test_distq():
 
 
 def test_qec():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = QEC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -140,7 +137,7 @@ def test_qec():
 
 
 def test_qmc():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = QMC(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
@@ -152,7 +149,7 @@ def test_qmc():
 
 
 def test_sarsa():
-    env = GridEnv(obs_type=GridObsType.index, grid_size=GridSize.micro)
+    env = GridEnv(obs_type=GridObservation.index, size=GridSize.micro)
     obs = env.reset()
     agent = SARSA(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
