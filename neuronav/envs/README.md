@@ -37,6 +37,18 @@ The `GridEnv` class can generate a variety of different maze layouts by setting 
 | two_step | ![two_step](/images/grid_small/two_step.png) | ![two_step](/images/grid_large/two_step.png) | |
 | narrow | ![narrow](/images/grid_small/narrow.png) | ![narrow](/images/grid_large/narrow.png) | [Zorowitz et al., 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8143038/) |
 
+### Objects
+
+There are a number of possible objects which can be placed at various locations in a grid environment by utilizing an `objects` dictionary. They are as follows:
+
+| Object | Usage | Description | Color | Image |
+| --- | --- | --- | --- | --- |
+| reward | `'rewards': {(x, y, o): v}`, where `x, y` is the location of the reward, `o` is whether the reward should be visible, and `v` is the value of the reward. | A reward object. Provides the agent with the reward value if it occupies the location. | Blue (Pos) / Red (Neg) | ![reward_pos](/images/objects/reward_pos.png) ![reward_neg](/images/objects/reward_neg.png) |
+| marker | `'markers': {(x, y): (r, g, b)}`, where `x, y` is the location of the marker, and `r, g, b` are the color values for the marker. | A marker object. Used to provide contextual information to the agent. | Variable | N/A |
+| key | `'keys': [(x, y)]`, where `x, y` is the location of the key. | A consumable key object. Allows the agent to open a door. | Yellow | ![key](/images/objects/key.png) |
+| door | `'doors': [(x, y)]`, where `x, y` is the location of the door. | A door object. Agent cannot enter a location with a door unless it posesses a key, which is consumed upon entry. | Green | ![door](/images/objects/door.png) |
+| warp | `'warps': {(x, y): (a, b)}`, where `x, y` is the location of the warp, and `a, b` is the location of the warp target. | A warp object. Transports the agent from the location of the warp to a specificed other location in the environment. | Purple | ![warp](/images/objects/warp.png) |
+
 ### Observation Types
 
 The `GridEnv` class also supports a variety of observation types for the agent. These vary in the amount of information provided to the agent, and in their format. 
