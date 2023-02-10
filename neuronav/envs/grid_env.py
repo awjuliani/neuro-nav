@@ -333,8 +333,17 @@ class GridEnv(Env):
         for pos, reward in self.objects["rewards"].items():
             if type(reward) != list:
                 draw = True
-            elif reward[1] == 1:
+                if self.terminate_on_reward:
+                    factor = 1
+                else:
+                    factor = 1.5
+            elif reward[1] == True:
                 draw = True
+                if reward[2]:
+                    factor = 1
+                else:
+                    factor = 1.5
+                reward = reward[0]
             else:
                 draw = False
             if draw:
@@ -345,7 +354,7 @@ class GridEnv(Env):
                     fill_color = (255, 100, 100)  # red
                     border_color = (200, 50, 50)  # red
                 start, end = self.get_square_edges(
-                    pos[0], pos[1], block_size, block_size - 4
+                    pos[0], pos[1], block_size, block_size - int(4 * factor)
                 )
                 cv.rectangle(img, start, end, fill_color, -1)
                 cv.rectangle(img, start, end, border_color, block_border - 1)
@@ -626,46 +635,52 @@ class GridEnv(Env):
         Steps the environment forward given an action.
         Action is an integer in the range [0, self.action_space.n).
         """
-        if self.stochasticity > self.rng.rand():
-            action = self.rng.randint(0, self.action_space.n)
-        if self.orientation_type == GridOrientation.variable:
-            # 0 - Counter-clockwise rotation
-            # 1 - Clockwise rotation
-            # 2 - Forward movement
-            if action == 0:
-                self.rotate(-1)
-            if action == 1:
-                self.rotate(1)
-            if action == 2:
-                move_array = self.direction_map[self.orientation]
+        if self.done:
+            print("Episode fininshed. Please reset the environment.")
+            return None, None, None, None
+        else:
+            if self.stochasticity > self.rng.rand():
+                action = self.rng.randint(0, self.action_space.n)
+            if self.orientation_type == GridOrientation.variable:
+                # 0 - Counter-clockwise rotation
+                # 1 - Clockwise rotation
+                # 2 - Forward movement
+                if action == 0:
+                    self.rotate(-1)
+                if action == 1:
+                    self.rotate(1)
+                if action == 2:
+                    move_array = self.direction_map[self.orientation]
+                    self.move_agent(move_array)
+                self.looking = self.orientation
+            else:
+                # 0 - Up
+                # 1 - Right
+                # 2 - Down
+                # 3 - Left
+                # 4 - Stay
+                move_array = self.direction_map[action]
+                self.looking = action
                 self.move_agent(move_array)
-            self.looking = self.orientation
-        else:
-            # 0 - Up
-            # 1 - Right
-            # 2 - Down
-            # 3 - Left
-            # 4 - Stay
-            move_array = self.direction_map[action]
-            self.looking = action
-            self.move_agent(move_array)
-        self.episode_time += 1
-        if action == 4:
-            reward = 0
-        else:
-            reward = self.time_penalty
-        eval_pos = tuple(self.agent_pos)
-        if eval_pos in self.objects["rewards"]:
-            loc_reward = self.objects["rewards"][eval_pos]
-            if type(loc_reward) == list:
-                loc_reward = loc_reward[0]
-            reward += loc_reward
-            if self.terminate_on_reward:
-                self.done = True
-            self.objects["rewards"].pop(eval_pos)
-        if eval_pos in self.objects["keys"]:
-            self.keys += 1
-            self.objects["keys"].remove(eval_pos)
-        if eval_pos in self.objects["warps"]:
-            self.agent_pos = self.objects["warps"][eval_pos]
-        return self.observation, reward, self.done, {}
+            self.episode_time += 1
+            if action == 4:
+                reward = 0
+            else:
+                reward = self.time_penalty
+            eval_pos = tuple(self.agent_pos)
+            terminate = self.terminate_on_reward
+            if eval_pos in self.objects["rewards"]:
+                loc_reward = self.objects["rewards"][eval_pos]
+                if type(loc_reward) == list:
+                    terminate = loc_reward[2]
+                    loc_reward = loc_reward[0]
+                reward += loc_reward
+                if terminate:
+                    self.done = True
+                self.objects["rewards"].pop(eval_pos)
+            if eval_pos in self.objects["keys"]:
+                self.keys += 1
+                self.objects["keys"].remove(eval_pos)
+            if eval_pos in self.objects["warps"]:
+                self.agent_pos = self.objects["warps"][eval_pos]
+            return self.observation, reward, self.done, {}
