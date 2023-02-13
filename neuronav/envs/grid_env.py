@@ -700,11 +700,13 @@ class GridEnv(Env):
             eval_pos = tuple(self.agent_pos)
             terminate = self.terminate_on_reward
             if eval_pos in self.objects["rewards"]:
-                loc_reward = self.objects["rewards"][eval_pos]
-                if type(loc_reward) == list:
-                    terminate = loc_reward[2]
-                    loc_reward = loc_reward[0]
-                reward += loc_reward
+                reward_info = self.objects["rewards"][eval_pos]
+                if type(reward_info) == list:
+                    terminate = reward_info[2]
+                    reward_val = reward_info[0]
+                else:
+                    reward_val = reward_info
+                reward += reward_val
                 if terminate:
                     self.done = True
                 self.objects["rewards"].pop(eval_pos)
