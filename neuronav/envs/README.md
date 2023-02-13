@@ -43,7 +43,7 @@ There are a number of possible objects which can be placed at various locations 
 
 | Object | Usage | Description | Color | Image |
 | --- | --- | --- | --- | --- |
-| reward | `'rewards': {(x, y, o): v}`, where `x, y` is the location of the reward, `o` is whether the reward should be visible, and `v` is the value of the reward. | A reward object. Provides the agent with the reward value if it occupies the location. | Blue (Pos) / Red (Neg) | ![reward_pos](/images/objects/reward_pos.png) ![reward_neg](/images/objects/reward_neg.png) |
+| reward | `'rewards': {(x, y): [v, o, t]}`, where `x, y` is the location of the reward, `o` is whether the reward should be visible, `v` is the value of the reward, and `t` is whether the episode should terminate when the agent reaches the reward. | A reward object. Provides the agent with the reward value if it occupies the location. | Blue (Pos) / Red (Neg) | ![reward_pos](/images/objects/reward_pos.png) ![reward_neg](/images/objects/reward_neg.png) |
 | marker | `'markers': {(x, y): (r, g, b)}`, where `x, y` is the location of the marker, and `r, g, b` are the color values for the marker. | A marker object. Used to provide contextual information to the agent. | Variable | N/A |
 | key | `'keys': [(x, y)]`, where `x, y` is the location of the key. | A consumable key object. Allows the agent to open a door. | Yellow | ![key](/images/objects/key.png) |
 | door | `'doors': {(x, y): o}`, where `x, y` is the location of the door, and `o` is the orientation of the door (either 'h' or 'v'). | A door object. Agent cannot enter a location with a door unless it posesses a key, which is consumed upon entry. | Green | ![door](/images/objects/door.png) |
