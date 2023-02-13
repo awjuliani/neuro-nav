@@ -44,7 +44,7 @@ def four_rooms_split(grid_size: int):
         "rewards": {(earl_mid, earl_mid): 1.0},
         "markers": {},
         "keys": [(earl_mid, late_mid)],
-        "doors": [(earl_mid, mid)],
+        "doors": {(earl_mid, mid): "v"},
         "warps": {(late_mid, earl_mid): (earl_mid + 1, late_mid)},
     }
     blocks_a = [[mid, i] for i in range(grid_size)]
@@ -109,7 +109,7 @@ def two_rooms(grid_size: int):
         "rewards": {(1, mid): 1.0},
         "markers": {},
         "keys": [(mid + half_mid, mid - half_mid)],
-        "doors": [(mid, mid)],
+        "doors": {(mid, mid): "h"},
     }
     blocks_b = [[mid, i] for i in range(grid_size)]
     blocks = blocks_b

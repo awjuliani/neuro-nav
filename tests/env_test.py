@@ -24,7 +24,12 @@ def test_objects_graph():
 
 
 def test_objects_grid():
-    objects = {"rewards": {(1, 1): 1}, "markers": {(1, 1): (1, 0, 0)}}
+    objects = {
+        "rewards": {(1, 1): 1, (2, 2): [1, True, False]},
+        "markers": {(1, 1): (1, 0, 0)},
+        "doors": {(3, 3): 'v'},
+        "keys": [[4, 4]],
+    }
     env = GridEnv()
     env.reset(objects=objects)
     env.step(env.action_space.sample())
