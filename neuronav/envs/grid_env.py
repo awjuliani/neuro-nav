@@ -69,7 +69,7 @@ class GridEnv(Env):
             "rewards": {},
             "markers": {},
             "keys": [],
-            "doors": [],
+            "doors": {},
             "warps": {},
         }
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
@@ -376,19 +376,46 @@ class GridEnv(Env):
         for key in self.objects["keys"]:
             fill_color = (255, 215, 0)
             border_color = (200, 160, 0)
-            start, end = self.get_square_edges(
-                key[0], key[1], block_size, block_size - 5
+            # generate a diamond shape for the key
+            pts = np.array(
+                [
+                    [
+                        key[1] * block_size + block_size // 2,
+                        key[0] * block_size + block_size // 2 - 4,
+                    ],
+                    [
+                        key[1] * block_size + block_size // 2 + 4,
+                        key[0] * block_size + block_size // 2,
+                    ],
+                    [
+                        key[1] * block_size + block_size // 2,
+                        key[0] * block_size + block_size // 2 + 4,
+                    ],
+                    [
+                        key[1] * block_size + block_size // 2 - 4,
+                        key[0] * block_size + block_size // 2,
+                    ],
+                ]
             )
-            cv.rectangle(img, start, end, fill_color, -1)
-            cv.rectangle(img, start, end, border_color, block_border - 1)
+
+            cv.fillPoly(img, [pts], fill_color)
+            cv.polylines(img, [pts], True, border_color, 1)
 
         # draw the doors
-        for pos in self.objects["doors"]:
+        for pos, dir in self.objects["doors"].items():
             fill_color = (0, 150, 0)
             border_color = (0, 100, 0)
             start, end = self.get_square_edges(
                 pos[0], pos[1], block_size, block_size - 2
             )
+            if dir == "h":
+                start = (start[0] - 2, start[1] + 5)
+                end = (end[0] + 2, end[1] - 5)
+            elif dir == "v":
+                start = (start[0] + 5, start[1] - 2)
+                end = (end[0] - 5, end[1] + 2)
+            else:
+                raise ValueError("Invalid door direction")
             cv.rectangle(img, start, end, fill_color, -1)
             cv.rectangle(img, start, end, border_color, block_border - 1)
 
@@ -399,8 +426,11 @@ class GridEnv(Env):
             start, end = self.get_square_edges(
                 pos[0], pos[1], block_size, block_size - 2
             )
-            cv.rectangle(img, start, end, fill_color, -1)
-            cv.rectangle(img, start, end, border_color, block_border - 1)
+            # draw a circle at the warp pos
+            cv.circle(img, (start[0] + 7, start[1] + 7), 8, fill_color, -1)
+            cv.circle(
+                img, (start[0] + 7, start[1] + 7), 8, border_color, block_border - 1
+            )
 
         # draw the agent as an isosoceles triangle
         agent_pos = self.agent_pos
@@ -489,10 +519,10 @@ class GridEnv(Env):
         x_check = -1 < target[0] < self.grid_size
         y_check = -1 < target[1] < self.grid_size
         block_check = list(target) not in self.blocks
-        door_check = tuple(target) not in self.objects["doors"]
+        door_check = tuple(target) not in self.objects["doors"].keys()
         if self.keys > 0 and door_check is False:
             door_check = True
-            self.objects["doors"].remove(tuple(target))
+            self.objects["doors"].pop(tuple(target))
             self.keys -= 1
         return x_check and y_check and block_check and door_check
 
