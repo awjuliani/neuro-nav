@@ -27,7 +27,7 @@ def test_objects_grid():
     objects = {
         "rewards": {(1, 1): 1, (2, 2): [1, True, False]},
         "markers": {(1, 1): (1, 0, 0)},
-        "doors": {(3, 3): 'v'},
+        "doors": {(3, 3): "v"},
         "keys": [[4, 4]],
     }
     env = GridEnv()
@@ -91,3 +91,22 @@ def test_seed_graphenv():
     env.reset(stochasticity=1.0)
     obs_b, rew, don, _ = env.step(env.action_space.sample())
     assert obs_a.all() == obs_b.all()
+
+
+def test_gridenv_stochasticity():
+    env = GridEnv(seed=0, obs_type=GridObservation.symbolic)
+    action = 0
+    env.reset(stochasticity=1.0)
+    env.step(action)
+    pos_a = env.agent_pos
+    env.reset(stochasticity=0.0)
+    env.step(action)
+    pos_b = env.agent_pos
+    assert pos_a != pos_b
+
+
+def test_grid_visible_walls():
+    env = GridEnv(obs_type=GridObservation.visual)
+    obs_a = env.reset(visible_walls=True)
+    obs_b = env.reset(visible_walls=False)
+    assert not np.array_equal(obs_a, obs_b)
