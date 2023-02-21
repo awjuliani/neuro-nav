@@ -174,6 +174,7 @@ class GridEnv(Env):
         terminate_on_reward: bool = True,
         time_penalty: float = 0.0,
         stochasticity: float = 0.0,
+        visible_walls: bool = True,
     ):
         """
         Resets the environment to its initial configuration.
@@ -186,6 +187,7 @@ class GridEnv(Env):
                 receives a reward.
             time_penalty: The reward penalty for each step taken in the environment.
             stochasticity: The probability of the agent taking a random action.
+            visible_walls: Whether the agent can see the walls of the environment.
         Returns:
             The initial observation of the environment.
         """
@@ -198,6 +200,7 @@ class GridEnv(Env):
         self.max_episode_time = episode_length
         self.terminate_on_reward = terminate_on_reward
         self.stochasticity = stochasticity
+        self.visible_walls = visible_walls
 
         if agent_pos != None:
             self.agent_pos = agent_pos
@@ -257,8 +260,9 @@ class GridEnv(Env):
             grid[loc[0], loc[1], 3] = 1
         for loc in self.objects["warps"].keys():
             grid[loc[0], loc[1], 5] = 1
-        walls = self.render_walls()
-        grid[:, :, 4] = walls
+        if self.visible_walls:
+            walls = self.render_walls()
+            grid[:, :, 4] = walls
         return grid
 
     def render_walls(self):
@@ -324,11 +328,12 @@ class GridEnv(Env):
             cv.line(
                 img, (i * block_size, 0), (i * block_size, img_size), (210, 210, 210), 1
             )
-        # draw the blocks
-        for x, y in self.blocks:
-            start, end = self.get_square_edges(x, y, block_size, block_size - 2)
-            cv.rectangle(img, start, end, (175, 175, 175), -1)
-            cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
+        if self.visible_walls:
+            # draw the blocks
+            for x, y in self.blocks:
+                start, end = self.get_square_edges(x, y, block_size, block_size - 2)
+                cv.rectangle(img, start, end, (175, 175, 175), -1)
+                cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
         # draw the reward locations
         for pos, reward in self.objects["rewards"].items():
             if type(reward) != list:
