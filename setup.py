@@ -6,12 +6,12 @@ required = ["numpy", "gym", "matplotlib", "scipy", "networkx", "opencv-python"]
 
 extras_required = {
     "experiments_local": ["jupyterlab", "sklearn", "torch"],
-    "experiments_remote": ["sklearn", "torch"],
+    "experiments_remote": ["scikit-learn", "torch"],
 }
 
 setup(
     name="neuronav",
-    version="1.2.0",
+    version="1.3.0",
     description="Neuro-Nav",
     license="Apache License 2.0",
     author="Arthur Juliani",

@@ -38,8 +38,10 @@ def test_objects_grid():
 def test_graph_obs():
     for obs_type in GraphObservation:
         env = GraphEnv(obs_type=obs_type)
-        env.reset()
+        obs = env.reset()
         env.step(env.action_space.sample())
+        if obs_type != GraphObservation.index:
+            assert obs.shape == env.obs_space.shape
 
 
 def test_graph_templates():
@@ -54,16 +56,18 @@ def test_grid_orient():
         obs = env.reset()
         env.step(env.action_space.sample())
         if obs_type != GridObservation.index:
-            assert obs.shape == env.observation_space.shape
+            assert obs.shape == env.obs_space.shape
 
 
 def test_grid_obs():
     for obs_type in GridObservation:
         env = GridEnv(obs_type=obs_type)
         obs = env.reset()
+        # check that obs is not none. Output the obs_type if it is
+        assert obs is not None, obs_type
         env.step(env.action_space.sample())
         if obs_type != GridObservation.index:
-            assert obs.shape == env.observation_space.shape
+            assert obs.shape == env.obs_space.shape
 
 
 def test_grid_templates():

@@ -25,6 +25,8 @@ class GridObservation(enum.Enum):
     window = "window"
     symbolic = "symbolic"
     symbolic_window = "symbolic_window"
+    window_tight = "window_tight"
+    symbolic_window_tight = "symbolic_window_tight"
 
 
 class GridOrientation(enum.Enum):
@@ -80,26 +82,18 @@ class GridEnv(Env):
             obs_type = GridObservation(obs_type)
         self.obs_mode = obs_type
         if obs_type == GridObservation.visual:
-            self.observation_space = spaces.Box(
-                0,
-                1,
-                shape=(
-                    110,
-                    110,
-                    3,
-                ),
-            )
+            self.obs_space = spaces.Box(0, 1, shape=(110, 110, 3))
         elif obs_type == GridObservation.onehot:
-            self.observation_space = spaces.Box(
+            self.obs_space = spaces.Box(
                 0, 1, shape=(self.state_size * self.orient_size,), dtype=np.int32
             )
         elif obs_type == GridObservation.twohot:
             if self.orientation_type == GridOrientation.fixed:
-                self.observation_space = spaces.Box(
+                self.obs_space = spaces.Box(
                     0, 1, shape=(2 * self.grid_size,), dtype=np.int32
                 )
             else:
-                self.observation_space = spaces.Box(
+                self.obs_space = spaces.Box(
                     0,
                     1,
                     shape=(2 * self.grid_size + self.orient_size,),
@@ -107,61 +101,33 @@ class GridEnv(Env):
                 )
         elif obs_type == GridObservation.geometric:
             if self.orientation_type == GridOrientation.fixed:
-                self.observation_space = spaces.Box(0, 1, shape=(2,))
+                self.obs_space = spaces.Box(0, 1, shape=(2,))
             else:
-                self.observation_space = spaces.Box(0, 1, shape=(2 + self.orient_size,))
+                self.obs_space = spaces.Box(0, 1, shape=(2 + self.orient_size,))
         elif obs_type == GridObservation.index:
-            self.observation_space = spaces.Box(
-                0, self.state_size, shape=(1,), dtype=np.int32
-            )
+            self.obs_space = spaces.Box(0, self.state_size, shape=(1,), dtype=np.int32)
         elif obs_type == GridObservation.boundary:
             self.ray_length = self.grid_size
             self.num_rays = 4
             if self.orientation_type == GridOrientation.fixed:
-                self.observation_space = spaces.Box(
-                    0,
-                    1,
-                    shape=(self.num_rays,),
-                )
+                self.obs_space = spaces.Box(0, 1, shape=(self.num_rays,))
             else:
-                self.observation_space = spaces.Box(
-                    0,
-                    1,
-                    shape=(self.num_rays + self.orient_size,),
+                self.obs_space = spaces.Box(
+                    0, 1, shape=(self.num_rays + self.orient_size,)
                 )
         elif obs_type == GridObservation.images:
-            self.observation_space = spaces.Box(0, 1, shape=(32, 32, 3))
-            self.images, _, _, _ = utils.cifar10()
+            self.obs_space = spaces.Box(0, 1, shape=(32, 32, 3))
+            self.images = utils.cifar10()[0]
         elif obs_type == GridObservation.window:
-            self.observation_space = spaces.Box(
-                0,
-                1,
-                shape=(
-                    64,
-                    64,
-                    3,
-                ),
-            )
+            self.obs_space = spaces.Box(0, 1, shape=(64, 64, 3))
+        elif obs_type == GridObservation.window_tight:
+            self.obs_space = spaces.Box(0, 1, shape=(64, 64, 3))
         elif obs_type == GridObservation.symbolic:
-            self.observation_space = spaces.Box(
-                0,
-                1,
-                shape=(
-                    self.grid_size,
-                    self.grid_size,
-                    6,
-                ),
-            )
+            self.obs_space = spaces.Box(0, 1, shape=(self.grid_size, self.grid_size, 6))
         elif obs_type == GridObservation.symbolic_window:
-            self.observation_space = spaces.Box(
-                0,
-                1,
-                shape=(
-                    5,
-                    5,
-                    6,
-                ),
-            )
+            self.obs_space = spaces.Box(0, 1, shape=(5, 5, 6))
+        elif obs_type == GridObservation.symbolic_window_tight:
+            self.obs_space = spaces.Box(0, 1, shape=(3, 3, 6))
         else:
             raise Exception("No valid ObservationType provided.")
 
@@ -274,7 +240,7 @@ class GridEnv(Env):
             grid[block[0], block[1]] = 1
         return grid
 
-    def symbolic_window_obs(self):
+    def symbolic_window_obs(self, size=5):
         # return a 5x5x5 tensor of the surrounding area
         # Pads the edges with walls if the agent is near the edge
         obs = self.symbolic_obs()
@@ -284,11 +250,20 @@ class GridEnv(Env):
         full_window[:, 0, 4] = 1
         full_window[-1, :, 4] = 1
         full_window[:, -1, 4] = 1
-        window = full_window[
-            self.agent_pos[0] - 1 : self.agent_pos[0] + 4,
-            self.agent_pos[1] - 1 : self.agent_pos[1] + 4,
-            :,
-        ]
+        if size == 5:
+            window = full_window[
+                self.agent_pos[0] - 1 : self.agent_pos[0] + 4,
+                self.agent_pos[1] - 1 : self.agent_pos[1] + 4,
+                :,
+            ]
+        elif size == 3:
+            window = full_window[
+                self.agent_pos[0] : self.agent_pos[0] + 3,
+                self.agent_pos[1] : self.agent_pos[1] + 3,
+                :,
+            ]
+        else:
+            raise ValueError("Window size must be 3 or 5")
         return window
 
     def render(self):
@@ -589,6 +564,10 @@ class GridEnv(Env):
             return self.symbolic_obs()
         elif self.obs_mode == GridObservation.symbolic_window:
             return self.symbolic_window_obs()
+        elif self.obs_mode == GridObservation.window_tight:
+            return self.make_window(w_size=1)
+        elif self.obs_mode == GridObservation.symbolic_window_tight:
+            return self.symbolic_window_obs(size=3)
         else:
             raise ValueError("Invalid observation mode.")
 

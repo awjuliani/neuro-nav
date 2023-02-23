@@ -37,16 +37,12 @@ class GraphEnv(Env):
         self.obs_mode = obs_type
         self.base_objects = {"rewards": {}}
         if obs_type == GraphObservation.onehot:
-            self.observation_space = spaces.Box(
-                0, 1, shape=(self.state_size,), dtype=np.int32
-            )
+            self.obs_space = spaces.Box(0, 1, shape=(self.state_size,), dtype=np.int32)
         elif obs_type == GraphObservation.index:
-            self.observation_space = spaces.Box(
-                0, self.state_size, shape=(1,), dtype=np.int32
-            )
+            self.obs_space = spaces.Box(0, self.state_size, shape=(1,), dtype=np.int32)
         elif obs_type == GraphObservation.images:
-            self.observation_space = spaces.Box(0, 1, shape=(32, 32, 3))
-            self.images = utils.cifar10()
+            self.obs_space = spaces.Box(0, 1, shape=(32, 32, 3))
+            self.images = utils.cifar10()[0]
 
     def generate_layout(self, template: GraphTemplate):
         self.template_objects, self.edges = template_map[template]()
