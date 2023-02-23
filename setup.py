@@ -6,7 +6,7 @@ required = ["numpy", "gym", "matplotlib", "scipy", "networkx", "opencv-python"]
 
 extras_required = {
     "experiments_local": ["jupyterlab", "sklearn", "torch"],
-    "experiments_remote": ["sklearn", "torch"],
+    "experiments_remote": ["scikit-learn", "torch"],
 }
 
 setup(
