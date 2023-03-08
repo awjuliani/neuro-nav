@@ -102,11 +102,7 @@ class TDQ(QAgent):
         return self.base_sample_action(self.q_estimate(state))
 
     def update_q(self, current_exp, prospective=False):
-        s = current_exp[0]
-        s_a = current_exp[1]
-        s_1 = current_exp[2]
-        r = current_exp[3]
-        d = current_exp[4]
+        s, s_a, s_1, r, d = current_exp
         q_error = self.q_error(s, s_a, s_1, r, d)
 
         if not prospective:
@@ -411,3 +407,85 @@ class SARSA(QAgent):
 
     def reset(self):
         self.last_exp = None
+
+
+class MoodQ(QAgent):
+    """
+    Implementation of one-step temporal difference (TD) Q-Learning Algorithm.
+    """
+
+    def __init__(
+        self,
+        state_size: int,
+        action_size: int,
+        lr: float = 1e-1,
+        gamma: float = 0.99,
+        poltype: str = "softmax",
+        beta: float = 1e4,
+        epsilon: float = 1e-1,
+        Q_init=None,
+        bootstrap: str = "softmax",
+        w_value: float = 1.0,
+        lr_neg: float = None,
+        mood_factor: float = 0.0,
+        mood_lr: float = 1e-1,
+    ):
+        super().__init__(
+            state_size,
+            action_size,
+            lr,
+            gamma,
+            poltype,
+            beta,
+            epsilon,
+            bootstrap,
+            w_value,
+        )
+
+        if Q_init is None:
+            self.Q = np.zeros((action_size, state_size))
+        elif np.isscalar(Q_init):
+            self.Q = Q_init * npr.randn(action_size, state_size)
+        else:
+            self.Q = Q_init
+        if lr_neg is None:
+            self.lr_neg = self.lr
+        else:
+            self.lr_neg = lr_neg
+        self.mood_factor = mood_factor
+        self.mood_lr = mood_lr
+        self.reset()
+
+    def q_estimate(self, state):
+        return self.Q[:, state]
+
+    def reset(self):
+        self.mood = 0
+
+    def v_estimate(self, state):
+        q = self.q_estimate(state)
+        return np.sum(q * utils.softmax(q * self.beta))
+
+    def sample_action(self, state):
+        return self.base_sample_action(self.q_estimate(state))
+
+    def update_q(self, current_exp, prospective=False):
+        s, s_a, s_1, r, d = current_exp
+        q_error = self.q_error(s, s_a, s_1, r, d)
+
+        if not prospective:
+            # actually perform update to Q if not prospective
+            if q_error > 0:
+                use_lr = self.lr
+            else:
+                use_lr = self.lr_neg
+            self.Q[s_a, s] += use_lr * (q_error + self.mood * self.mood_factor)
+        return q_error
+
+    def _update(self, current_exp, **kwargs):
+        td_error = self.update_q(current_exp, **kwargs)
+        self.mood += self.mood_lr * (td_error - self.mood)
+        return td_error
+
+    def get_policy(self):
+        return self.base_get_policy(self.Q)
