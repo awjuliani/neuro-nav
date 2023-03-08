@@ -23,6 +23,7 @@ The algorithms included here are all tabular. Tabular algorithms work with obser
 | QEC | Q(s, a) | episodic control | [Lengyel & Dayan, 2007](https://proceedings.neurips.cc/paper/2007/hash/1f4477bad7af3616c1f933a02bfabe4e-Abstract.html) | An episodic control algorithm that uses return targets from monte-carlo rollouts | Tabular | [Code](./mc_agents.py) |
 | QMC | Q(s, a) | monte-carlo | [Sutton & Barto, 2018](http://incompleteideas.net/book/the-book-2nd.html) | A q-learning algorithm that uses return targets from monte-carlo rollouts | Tabular | [Code](./mc_agents.py) |
 | SARSA | Q(s, a) | one-step temporal difference | [Rummery & Niranjan, 1994](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=7a09464f26e18a25a948baaa736270bfb84b5e12) | An on-policy sarsa algorithm | Tabular | [Code](./td_agents.py) |
+| MoodQ | Q(s, a), M | one-step temporal difference | [Eldar et al., 2016](https://www.sciencedirect.com/science/article/pii/S1364661315001746) | A q-learning algorithm that uses a mood parameter to modulate learning rates | Tabular | [Code](./td_agents.py) |
 
 ## Algorithm hyperparameters
 
