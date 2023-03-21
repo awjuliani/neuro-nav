@@ -5,3 +5,5 @@
 .DS_Store
 /.vscode
 .ipynb_checkpoints
+/out
+./out
