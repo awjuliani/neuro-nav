@@ -281,11 +281,14 @@ gem_id = load_texture(f"{tex_folder}gem.png")
 gem_bad_id = load_texture(f"{tex_folder}gem_bad.png")
 wood_id = load_texture(f"{tex_folder}wood.png")
 key_id = load_texture(f"{tex_folder}key.png")
+warp_id = load_texture(f"{tex_folder}warp.png")
 
-env = GridEnv(template=GridTemplate.two_rooms, orientation_type=GridOrientation.fixed)
+env = GridEnv(
+    template=GridTemplate.four_rooms_split, orientation_type=GridOrientation.fixed
+)
 env.reset()
 
-acts = [0, 0, 3, 3, 3, 3, 3, 3, 1, 1, 0, 0, 0, 0, 0]
+acts = [3, 3, 3, 3, 3, 3, 0, 3, 3, 3, 3, 3, 3]
 
 img_list = []
 
@@ -299,13 +302,15 @@ for i in range(len(acts)):
     render_walls(env.blocks, env.agent_pos, env.looking)
     for reward in env.objects["rewards"]:
         if env.objects["rewards"][reward] > 0:
-            render_sphere(reward[0], 0.0, reward[1], 0.33, texture=gem_id)
+            render_sphere(reward[0], 0.0, reward[1], 0.25, texture=gem_id)
         else:
-            render_sphere(reward[0], 0.0, reward[1], 0.33, texture=gem_bad_id)
+            render_sphere(reward[0], 0.0, reward[1], 0.25, texture=gem_bad_id)
     for door in env.objects["doors"]:
         render_cube(door[0], 0.0, door[1], wood_id)
     for key in env.objects["keys"]:
-        render_sphere(key[0], 0.0, key[1], 0.1, texture=key_id)
+        render_sphere(key[0], -0.1, key[1], 0.1, texture=key_id)
+    for warp in env.objects["warps"]:
+        render_sphere(warp[0], -0.5, warp[1], 0.33, texture=warp_id)
     render_plane(5.0, -0.5, 5.0, 10.0, floor_id)
 
     buffer = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
