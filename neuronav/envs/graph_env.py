@@ -28,18 +28,29 @@ class GraphEnv(Env):
     ):
         self.use_noop = use_noop
         self.rng = np.random.RandomState(seed)
+
+        # Convert input strings to corresponding enums
         if isinstance(template, str):
             template = GraphTemplate(template)
         if isinstance(obs_type, str):
             obs_type = GraphObservation(obs_type)
+
+        # Generate layout
         self.generate_layout(template)
+
         self.running = False
         self.obs_mode = obs_type
         self.base_objects = {"rewards": {}}
+
+        # Set observation space based on obs_mode
         if obs_type == GraphObservation.onehot:
-            self.obs_space = spaces.Box(0, 1, shape=(self.state_size,), dtype=np.int32)
+            self.obs_space = spaces.Box(
+                low=0, high=1, shape=(self.state_size,), dtype=np.int32
+            )
         elif obs_type == GraphObservation.index:
-            self.obs_space = spaces.Box(0, self.state_size, shape=(1,), dtype=np.int32)
+            self.obs_space = spaces.Box(
+                low=0, high=self.state_size - 1, shape=(1,), dtype=np.int32
+            )
         elif obs_type == GraphObservation.images:
             self.obs_space = spaces.Box(0, 1, shape=(32, 32, 3))
             self.images = utils.cifar10()[0]
@@ -102,36 +113,32 @@ class GraphEnv(Env):
             self.objects = self.template_objects
         return self.observation
 
+    def _get_node_color(self, idx):
+        if idx == self.agent_pos:
+            return "cornflowerblue"
+        elif idx in self.objects["rewards"]:
+            if self.objects["rewards"][idx] > 0:
+                return [0, np.clip(self.objects["rewards"][idx], 0, 1), 0]
+            elif self.objects["rewards"][idx] < 0:
+                return [-np.clip(self.objects["rewards"][idx], -1, 0), 0, 0]
+        return "silver"
+
     def render(self):
         """
         Renders the graph environment to a pyplot figure.
         """
         graph = nx.DiGraph()
-        color_map = []
+        color_map = [self._get_node_color(idx) for idx in range(len(self.edges))]
+
         for idx, edge in enumerate(self.edges):
             graph.add_node(idx)
-            if idx == self.agent_pos:
-                color_map.append("cornflowerblue")
-            elif idx in self.objects["rewards"]:
-                if self.objects["rewards"][idx] > 0:
-                    color_map.append(
-                        [0, np.clip(self.objects["rewards"][idx], 0, 1), 0]
-                    )
-                elif self.objects["rewards"][idx] < 0:
-                    color_map.append(
-                        [-np.clip(self.objects["rewards"][idx], -1, 0), 0, 0]
-                    )
-                else:
-                    color_map.append("silver")
-            else:
-                color_map.append("silver")
-        for idx, edge in enumerate(self.edges):
             for target in edge:
                 if type(target) == tuple:
                     for subtarget in target[0]:
                         graph.add_edge(idx, subtarget)
                 else:
                     graph.add_edge(idx, target)
+
         nx.draw(
             graph,
             with_labels=True,
@@ -145,30 +152,44 @@ class GraphEnv(Env):
         """
         Takes a step in the environment given an action.
         """
-        if self.running is False:
-            print("Please call env.reset() before env.step().")
+        if not self.running:
+            print(
+                f"Please call {self.__class__.__name__}.reset() before {self.__class__.__name__}.step()."
+            )
             return None, None, None, None
-        elif self.done:
-            print("Episode fininshed. Please reset the environment.")
+        if self.done:
+            print(
+                f"Episode finished. Please reset the {self.__class__.__name__} environment."
+            )
             return None, None, None, None
+
+        # No-op action
+        if self.use_noop and action == self.action_space.n - 1:
+            reward = 0
         else:
-            if self.use_noop and action == self.action_space.n - 1:
-                pass
+            # Stochastic action selection
+            if self.stochasticity > self.rng.rand():
+                action = self.rng.randint(0, len(self.edges[self.agent_pos]))
+
+            candidate_positions = self.edges[self.agent_pos][action]
+
+            # Choose candidate position based on probability distribution
+            if type(candidate_positions) == tuple:
+                candidate_position = self.rng.choice(
+                    candidate_positions[0], p=candidate_positions[1]
+                )
             else:
-                if self.stochasticity > self.rng.rand():
-                    action = self.rng.randint(0, len(self.edges[self.agent_pos]))
-                candidate_positions = self.edges[self.agent_pos][action]
-                if type(candidate_positions) == tuple:
-                    candidate_position = self.rng.choice(
-                        candidate_positions[0], p=candidate_positions[1]
-                    )
-                else:
-                    candidate_position = candidate_positions
-                self.agent_pos = candidate_position
-                reward = 0
-                if self.agent_pos in self.objects["rewards"]:
-                    reward += self.objects["rewards"][self.agent_pos]
-                reward -= self.time_penalty
-                if len(self.edges[self.agent_pos]) == 0:
-                    self.done = True
-            return self.observation, reward, self.done, {}
+                candidate_position = candidate_positions
+
+            self.agent_pos = candidate_position
+
+            reward = 0
+            if self.agent_pos in self.objects["rewards"]:
+                reward += self.objects["rewards"][self.agent_pos]
+            reward -= self.time_penalty
+
+            # Check if the episode is done
+            if len(self.edges[self.agent_pos]) == 0:
+                self.done = True
+
+        return self.observation, reward, self.done, {}

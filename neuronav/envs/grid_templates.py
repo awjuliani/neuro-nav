@@ -13,21 +13,19 @@ def four_rooms(grid_size: int):
     objects = {"rewards": {(1, 1): 1.0}, "markers": {}}
     mid = int(grid_size // 2)
     earl_mid = int(mid // 2) + 1
-    if grid_size == 11:
-        late_mid = mid + earl_mid - 1
-    else:
-        late_mid = mid + earl_mid - 2
-    blocks_a = [[mid, i] for i in range(grid_size)]
-    blocks_b = [[i, mid] for i in range(grid_size)]
-    blocks = blocks_a + blocks_b
+    late_mid = mid + earl_mid - 1 if grid_size == 11 else mid + earl_mid - 2
+
+    blocks = [[mid, i] for i in range(grid_size)] + [[i, mid] for i in range(grid_size)]
+
     bottlenecks = [
         [mid, earl_mid],
         [mid, late_mid],
         [earl_mid, mid],
         [late_mid, mid],
     ]
-    for bottleneck in bottlenecks:
-        blocks.remove(bottleneck)
+
+    blocks = [block for block in blocks if block not in bottlenecks]
+
     return blocks, agent_start, objects
 
 
@@ -392,8 +390,11 @@ def generate_layout(
 
 
 def add_outer_blocks(blocks: list, grid_size: int):
-    for i in range(grid_size):
-        for j in range(grid_size):
-            if i == 0 or i == grid_size - 1 or j == 0 or j == grid_size - 1:
-                blocks.append([i, j])
+    outer_blocks = [
+        [i, j]
+        for i in range(grid_size)
+        for j in range(grid_size)
+        if i == 0 or i == grid_size - 1 or j == 0 or j == grid_size - 1
+    ]
+    blocks.extend(outer_blocks)
     return blocks
