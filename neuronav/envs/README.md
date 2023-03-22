@@ -25,13 +25,14 @@ To add your own, edit [grid_env.py](./grid_env.py).
 | twohot | Function-Approx | `[n + n]` | `[n + n + 4]` | Two concatenated one-hot encodings of the agent's x and y coordinates in the environment. |
 | geometric | Function-Approx | `[2]` | `[3]` | Two real-valued numbers between 0 and 1 representing the x and y coordinates of the agent in the environment. |
 | boundary | Function-Approx | `[n * 4]` | `[n * 4 + 4]` | A matrix corresponding to the one-hot encodings of the distances of the agent from the nearest wall in the four cardinal directions |
-| visual | Function-Approx | `[110, 110, 3]` | `[110, 110, 3` | A 3D tensor corresponding to the RGB image of the environment. |
+| visual | Function-Approx | `[128, 128, 3]` | `[128, 128, 3` | A 3D tensor corresponding to the RGB image of the environment. |
 | images | Function-Approx | `[32, 32, 3]` | `[32, 32, 3` | A 3D tensor corresponding to a unique CIFAR10 image per state. |
 | window | Function-Approx | `[64, 64, 3]` | `[64, 64, 3]` | A 3D tensor corresponding to the 5x5 local window around the agent. |
 | symbolic | Function-Approx | `[n, n, 6]` | `[n, n, 6]` | A 3D tensor corresponding to a symbolic representation of the environment state. |
 | symbolic_window | Function-Approx | `[5, 5, 6]` | `[5, 5, 6]` | A 3D tensor corresponding to a symbolic representation of the 5x5 environment state around the agent. |
 | window_tight | Function-Approx | `[64, 64, 3]` | `[64, 64, 3]` | A 3D tensor corresponding to the 3x3 local window around the agent. |
 | symbolic_window_tight | Function-Approx | `[3, 3, 6]` | `[3, 3, 6]` | A 3D tensor corresponding to a symbolic representation of the 3x3 environment state around the agent. |
+| renderer_3d | Function-Approx | `[128, 128, 3]` | `[128, 128, 3]` | A 3D tensor corresponding to a 3D rendering of the environment from the agent's perspective. |
 
 * Where `n` is the length of the grid.
 
