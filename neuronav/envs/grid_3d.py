@@ -1,11 +1,8 @@
 import glfw
 import numpy as np
+import os
 from OpenGL.GL import *
 from OpenGL.GLU import *
-import time
-import cv2
-import imageio
-from neuronav.envs.grid_env import GridEnv, GridOrientation, GridTemplate
 from neuronav.envs.gl_utils import (
     load_texture,
     render_plane,
@@ -19,7 +16,7 @@ class Grid3DRenderer:
         self.initialize_glfw(resolution)
         self.configure_opengl()
         self.width, self.height = glfw.get_framebuffer_size(self.window)
-        self.tex_folder = "./textures/"
+        self.tex_folder = os.path.join(os.path.dirname(__file__), "textures/")
         self.textures = {}
         self.textures["floor"] = load_texture(f"{self.tex_folder}floor.png")
         self.textures["wall"] = load_texture(f"{self.tex_folder}wall.png")
@@ -97,7 +94,13 @@ class Grid3DRenderer:
         self.set_camera(env.agent_pos, env.looking)
         self.render_walls(env.blocks, env.agent_pos, env.looking)
         self.render_objects(env)
-        render_plane(5.0, -0.5, 5.0, 10.0, self.textures["floor"])
+        render_plane(
+            env.grid_size / 2,
+            -0.5,
+            env.grid_size / 2,
+            env.grid_size,
+            self.textures["floor"],
+        )
         buffer = glReadPixels(0, 0, self.width, self.height, GL_RGB, GL_UNSIGNED_BYTE)
         image_np = np.frombuffer(buffer, dtype=np.uint8).reshape(
             self.height, self.width, 3
@@ -108,33 +111,3 @@ class Grid3DRenderer:
     def close(self):
         glfw.destroy_window(self.window)
         glfw.terminate()
-
-
-RESOLUTION = 256
-
-renderer = Grid3DRenderer(resolution=RESOLUTION)
-
-env = GridEnv(
-    template=GridTemplate.four_rooms_split, orientation_type=GridOrientation.fixed
-)
-env.reset()
-
-acts = [3, 3, 3, 3, 3, 3, 0, 3, 3, 3, 3, 3, 3]
-
-img_list = []
-timer = time.time()
-
-for i in range(len(acts)):
-    env.step(acts[i])
-    image_np = renderer.render_frame(env)
-    top_down = env.make_visual_obs()
-    top_down = cv2.resize(top_down, (RESOLUTION * 2, RESOLUTION * 2))
-    image_np = np.concatenate((image_np, top_down), axis=1)
-    img_list.append(image_np)
-
-print(time.time() - timer)
-
-renderer.close()
-
-# save a gif video of the agent's movement
-imageio.mimsave("./out/test.gif", img_list, fps=2)

@@ -12,6 +12,7 @@ from neuronav.envs.grid_templates import (
 import matplotlib.pyplot as plt
 import cv2 as cv
 import copy
+from neuronav.envs.grid_3d import Grid3DRenderer
 
 
 class GridObservation(enum.Enum):
@@ -27,6 +28,7 @@ class GridObservation(enum.Enum):
     symbolic_window = "symbolic_window"
     window_tight = "window_tight"
     symbolic_window_tight = "symbolic_window_tight"
+    rendered_3d = "rendered_3d"
 
 
 class GridOrientation(enum.Enum):
@@ -82,7 +84,7 @@ class GridEnv(Env):
             obs_type = GridObservation(obs_type)
         self.obs_mode = obs_type
         if obs_type == GridObservation.visual:
-            self.obs_space = spaces.Box(0, 1, shape=(110, 110, 3))
+            self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
         elif obs_type == GridObservation.onehot:
             self.obs_space = spaces.Box(
                 0, 1, shape=(self.state_size * self.orient_size,), dtype=np.int32
@@ -128,6 +130,9 @@ class GridEnv(Env):
             self.obs_space = spaces.Box(0, 1, shape=(5, 5, 6))
         elif obs_type == GridObservation.symbolic_window_tight:
             self.obs_space = spaces.Box(0, 1, shape=(3, 3, 6))
+        elif obs_type == GridObservation.rendered_3d:
+            self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
+            self.renderer = Grid3DRenderer(64)
         else:
             raise Exception("No valid ObservationType provided.")
 
@@ -271,6 +276,10 @@ class GridEnv(Env):
         Renders the environment in a pyplot window.
         """
         image = self.make_visual_obs()
+        if self.obs_mode == GridObservation.rendered_3d:
+            img_first = self.renderer.render_frame(self)
+            top_down = cv.resize(image, (128, 128))
+            image = np.concatenate((img_first, top_down), axis=1)
         plt.imshow(image)
         plt.axis("off")
         plt.show()
@@ -460,7 +469,7 @@ class GridEnv(Env):
             )
         cv.fillConvexPoly(img, pts, agent_color)
         if resize:
-            img = cv.resize(img, (110, 110))
+            img = cv.resize(img, (128, 128))
         return img
 
     def make_window(self, w_size=2, block_size=20, resize=True):
@@ -568,6 +577,8 @@ class GridEnv(Env):
             return self.make_window(w_size=1)
         elif self.obs_mode == GridObservation.symbolic_window_tight:
             return self.symbolic_window_obs(size=3)
+        elif self.obs_mode == GridObservation.rendered_3d:
+            return self.renderer.render_frame(self)
         else:
             raise ValueError("Invalid observation mode.")
 
@@ -700,3 +711,8 @@ class GridEnv(Env):
             if eval_pos in self.objects["warps"]:
                 self.agent_pos = self.objects["warps"][eval_pos]
             return self.observation, reward, self.done, {}
+
+    def close(self) -> None:
+        if self.obs_mode == GridObservation.rendered_3d:
+            self.renderer.close()
+        return super().close()
