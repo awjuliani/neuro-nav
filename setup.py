@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-required = ["numpy", "gym", "matplotlib", "scipy", "networkx", "opencv-python"]
+required = ["numpy", "gym", "matplotlib", "scipy", "networkx", "opencv-python", "PyOpenGL"]
 
 extras_required = {
     "experiments_local": ["jupyterlab", "sklearn", "torch"],
@@ -11,7 +11,7 @@ extras_required = {
 
 setup(
     name="neuronav",
-    version="1.4.0",
+    version="1.5.0",
     description="Neuro-Nav",
     license="Apache License 2.0",
     author="Arthur Juliani",
@@ -20,4 +20,6 @@ setup(
     packages=find_packages(),
     install_requires=required,
     extras_require=extras_required,
+    include_package_data=True,
+    package_data={"neuronav": ["envs/textures/*.png"]},
 )

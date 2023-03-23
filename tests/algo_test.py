@@ -6,6 +6,65 @@ from neuronav.agents.dyna_agents import DynaQ, DynaAC, DynaSR
 from neuronav.agents.mb_agents import MBV, SRMB
 from neuronav.agents.mc_agents import QEC, QMC
 from neuronav.agents.dist_agents import DistQ
+import pytest
+from neuronav.agents.base_agent import BaseAgent
+import numpy as np
+
+
+class TestAgent(BaseAgent):
+    def _update(self, current_exp):
+        return 0
+
+    def reset(self):
+        pass
+
+
+@pytest.fixture
+def test_agent():
+    return TestAgent(state_size=4, action_size=3)
+
+
+def test_base_agent_init(test_agent):
+    assert test_agent.state_size == 4
+    assert test_agent.action_size == 3
+    assert test_agent.lr == 1e-1
+    assert test_agent.beta == 1e4
+    assert test_agent.gamma == 0.99
+    assert test_agent.poltype == "softmax"
+    assert test_agent.num_updates == 0
+    assert test_agent.epsilon == 1e-1
+
+
+def test_base_agent_sample_action(test_agent):
+    policy_logits = np.array([1, 2, 3])
+    action = test_agent.base_sample_action(policy_logits)
+
+    assert action in [0, 1, 2]
+
+
+def test_base_agent_get_policy(test_agent):
+    policy_logits = np.array([1, 2, 3])
+    policy = test_agent.base_get_policy(policy_logits)
+
+    assert policy.shape == (3,)
+    assert np.isclose(np.sum(policy), 1.0)
+
+
+def test_base_agent_discount(test_agent):
+    rewards = [1, 2, 3, 4]
+    gamma = 0.5
+    discounted_rewards = test_agent.discount(rewards, gamma)
+
+    assert len(discounted_rewards) == len(rewards)
+    assert discounted_rewards == [3.25, 4.5, 5.0, 4]
+
+
+def test_base_agent_update(test_agent):
+    current_exp = None
+    error = test_agent.update(current_exp)
+
+    assert test_agent.num_updates == 1
+    assert error == 0
 
 
 def test_td_q():
@@ -122,6 +181,7 @@ def test_distq():
     agent = DistQ(env.state_size, env.action_space.n)
     act = agent.sample_action(obs)
     env.step(act)
+    agent.update((obs, act, 0, obs, False))
 
 
 def test_qec():
