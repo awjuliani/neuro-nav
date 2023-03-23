@@ -285,7 +285,7 @@ class GridEnv(Env):
 
         return window
 
-    def render(self):
+    def render(self, provide=False):
         """
         Renders the environment in a pyplot window.
         """
@@ -297,6 +297,8 @@ class GridEnv(Env):
         plt.imshow(image)
         plt.axis("off")
         plt.show()
+        if provide:
+            return image
 
     def get_square_edges(self, x, y, unit_size, block_size):
         # swap x and y because of the way cv2 draws images
