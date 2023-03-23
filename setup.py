@@ -2,7 +2,15 @@
 
 from setuptools import setup, find_packages
 
-required = ["numpy", "gym", "matplotlib", "scipy", "networkx", "opencv-python", "PyOpenGL"]
+required = [
+    "numpy",
+    "gym",
+    "matplotlib",
+    "scipy",
+    "networkx",
+    "opencv-python",
+    "PyOpenGL",
+]
 
 extras_required = {
     "experiments_local": ["jupyterlab", "sklearn", "torch"],

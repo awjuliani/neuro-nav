@@ -30,7 +30,7 @@ class Grid3DRenderer:
         self.textures["warp"] = load_texture(f"{self.tex_folder}warp.png")
 
     def initialize_display(self):
-        if sys.platform != 'win32':
+        if sys.platform != "win32":
             self.virtual_display = Display(visible=0, size=(1, 1))
             self.virtual_display.start()
 
@@ -74,7 +74,12 @@ class Grid3DRenderer:
     def render_objects(self, env):
         self.render_walls(env.blocks, env.agent_pos, env.looking)
         for reward in env.objects["rewards"]:
-            if env.objects["rewards"][reward] > 0:
+            reward_val = (
+                env.objects["rewards"][reward][0]
+                if isinstance(env.objects["rewards"][reward], list)
+                else env.objects["rewards"][reward]
+            )
+            if reward_val > 0:
                 render_sphere(
                     reward[0], 0.0, reward[1], 0.25, texture=self.textures["gem"]
                 )
