@@ -20,4 +20,6 @@ setup(
     packages=find_packages(),
     install_requires=required,
     extras_require=extras_required,
+    include_package_data=True,
+    package_data={"neuronav": ["envs/textures/*.png"]},
 )
