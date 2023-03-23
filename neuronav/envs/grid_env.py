@@ -138,7 +138,7 @@ class GridEnv(Env):
             self.obs_space = spaces.Box(0, 1, shape=(3, 3, 6))
         elif obs_type == GridObservation.rendered_3d:
             self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
-            self.renderer = Grid3DRenderer(64)
+            self.renderer = Grid3DRenderer(128)
         else:
             raise Exception("No valid ObservationType provided.")
 

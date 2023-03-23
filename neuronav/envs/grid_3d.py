@@ -42,6 +42,11 @@ class Grid3DRenderer:
             glfw.init()
         glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
         window = glfw.create_window(resolution, resolution, "Offscreen", None, None)
+        # Adjust the window size based on the content scale
+        x_scale, y_scale = glfw.get_window_content_scale(window)
+        adjusted_width = int(resolution / x_scale)
+        adjusted_height = int(resolution / y_scale)
+        glfw.set_window_size(window, adjusted_width, adjusted_height)
         glfw.make_context_current(window)
         self.window = window
 
