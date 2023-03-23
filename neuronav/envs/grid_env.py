@@ -59,15 +59,7 @@ class GridEnv(Env):
         self.state_size = self.grid_size * self.grid_size
         self.orientation_type = orientation_type
         self.max_orient = 3
-        if self.orientation_type == GridOrientation.variable:
-            self.action_space = spaces.Discrete(3 + self.use_noop)
-            self.orient_size = 4
-        elif self.orientation_type == GridOrientation.fixed:
-            self.orient_size = 1
-            self.action_space = spaces.Discrete(4 + self.use_noop)
-        else:
-            raise Exception("No valid GridOrientation provided.")
-        self.state_size *= self.orient_size
+        self.set_action_space()
         self.agent_pos = [0, 0]
         self.base_objects = {
             "rewards": {},
@@ -80,6 +72,20 @@ class GridEnv(Env):
         self.done = False
         self.keys = 0
         self.free_spots = self.make_free_spots()
+        self.set_obs_space(obs_type)
+
+    def set_action_space(self):
+        if self.orientation_type == GridOrientation.variable:
+            self.action_space = spaces.Discrete(3 + self.use_noop)
+            self.orient_size = 4
+        elif self.orientation_type == GridOrientation.fixed:
+            self.orient_size = 1
+            self.action_space = spaces.Discrete(4 + self.use_noop)
+        else:
+            raise Exception("No valid GridOrientation provided.")
+        self.state_size *= self.orient_size
+
+    def set_obs_space(self, obs_type):
         if isinstance(obs_type, str):
             obs_type = GridObservation(obs_type)
         self.obs_mode = obs_type
@@ -173,7 +179,7 @@ class GridEnv(Env):
         self.stochasticity = stochasticity
         self.visible_walls = visible_walls
 
-        if agent_pos != None:
+        if agent_pos is not None:
             self.agent_pos = agent_pos
         elif random_start:
             self.agent_pos = self.get_free_spot()
@@ -181,7 +187,7 @@ class GridEnv(Env):
             self.agent_pos = self.agent_start_pos
 
         base_object = copy.deepcopy(self.base_objects)
-        if objects != None:
+        if objects is not None:
             use_objects = copy.deepcopy(objects)
         else:
             use_objects = copy.deepcopy(self.template_objects)
@@ -192,48 +198,58 @@ class GridEnv(Env):
         return self.observation
 
     def get_free_spot(self):
-        selection = random.choice(self.free_spots)
-        return selection
+        return random.choice(self.free_spots)
 
     def make_free_spots(self):
-        free_spots = []
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
-                if [i, j] not in self.blocks:
-                    free_spots.append([i, j])
-        return free_spots
+        return [
+            [i, j]
+            for i in range(self.grid_size)
+            for j in range(self.grid_size)
+            if [i, j] not in self.blocks
+        ]
 
     def symbolic_obs(self):
         """
         Returns a symbolic representation of the environment in a numpy tensor.
-        Tensor shape is (grid_size, grid_size, 5)
-        5 channels are:
+        Tensor shape is (grid_size, grid_size, 6)
+        6 channels are:
             0: agent
             1: rewards
             2: keys
             3: doors
             4: walls
+            5: warps
         """
         grid = np.zeros([self.grid_size, self.grid_size, 6])
-        grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
-        for loc, reward in self.objects["rewards"].items():
-            if type(reward) != list:
-                draw = True
-            elif reward[1] == 1:
-                draw = True
-            else:
-                draw = False
-            if draw:
-                grid[loc[0], loc[1], 1] = 1
-        for loc in self.objects["keys"]:
-            grid[loc[0], loc[1], 2] = 1
-        for loc in self.objects["doors"]:
-            grid[loc[0], loc[1], 3] = 1
-        for loc in self.objects["warps"].keys():
-            grid[loc[0], loc[1], 5] = 1
+
+        # Set agent's position
+        grid[tuple(self.agent_pos), 0] = 1
+
+        # Set rewards
+        reward_locs = [
+            loc
+            for loc, reward in self.objects["rewards"].items()
+            if type(reward) != list or reward[1] == 1
+        ]
+        grid[tuple(zip(*reward_locs)), 1] = 1
+
+        # Set keys
+        key_locs = self.objects["keys"]
+        grid[tuple(zip(*key_locs)), 2] = 1
+
+        # Set doors
+        door_locs = self.objects["doors"]
+        grid[tuple(zip(*door_locs)), 3] = 1
+
+        # Set warps
+        warp_locs = self.objects["warps"].keys()
+        grid[tuple(zip(*warp_locs)), 5] = 1
+
+        # Set walls
         if self.visible_walls:
             walls = self.render_walls()
             grid[:, :, 4] = walls
+
         return grid
 
     def render_walls(self):
@@ -245,30 +261,28 @@ class GridEnv(Env):
             grid[block[0], block[1]] = 1
         return grid
 
-    def symbolic_window_obs(self, size=5):
-        # return a 5x5x5 tensor of the surrounding area
-        # Pads the edges with walls if the agent is near the edge
-        obs = self.symbolic_obs()
-        full_window = np.zeros([self.grid_size + 2, self.grid_size + 2, 6])
-        full_window[1:-1, 1:-1, :] = obs
-        full_window[0, :, 4] = 1
-        full_window[:, 0, 4] = 1
-        full_window[-1, :, 4] = 1
-        full_window[:, -1, 4] = 1
-        if size == 5:
-            window = full_window[
-                self.agent_pos[0] - 1 : self.agent_pos[0] + 4,
-                self.agent_pos[1] - 1 : self.agent_pos[1] + 4,
-                :,
-            ]
-        elif size == 3:
-            window = full_window[
-                self.agent_pos[0] : self.agent_pos[0] + 3,
-                self.agent_pos[1] : self.agent_pos[1] + 3,
-                :,
-            ]
-        else:
+    def symbolic_window_obs(self, size: int = 5):
+        if size not in [3, 5]:
             raise ValueError("Window size must be 3 or 5")
+
+        obs = self.symbolic_obs()
+        pad_size = (size - 1) // 2
+        full_window = np.pad(
+            obs,
+            ((pad_size, pad_size), (pad_size, pad_size), (0, 0)),
+            mode="constant",
+            constant_values=0,
+        )
+        full_window[:, :, 4] = np.where(
+            full_window[:, :, 4] == 0, 1, full_window[:, :, 4]
+        )
+
+        window = full_window[
+            self.agent_pos[0] : self.agent_pos[0] + size,
+            self.agent_pos[1] : self.agent_pos[1] + size,
+            :,
+        ]
+
         return window
 
     def render(self):
@@ -593,67 +607,51 @@ class GridEnv(Env):
         num_rays: int = 4,
         ray_length: int = 10,
     ):
-        distances = []
-        if num_rays == 4:
-            nums = [0, 2, 4, 6]
-        else:
-            nums = [6, 0, 2]
-        for num in nums:
-            distance = self.simple_ray(num, object_point)
+        def normalize_distance(distance: int):
             if use_onehot:
-                distance = utils.onehot(distance, ray_length)
-            else:
-                distance = distance / self.grid_size
-            distances.append(distance)
-        distances = np.stack(distances)
-        return distances.reshape(-1)
+                return utils.onehot(distance, ray_length)
+            return distance / self.grid_size
+
+        if num_rays == 4:
+            ray_angles = [0, 2, 4, 6]
+        else:
+            ray_angles = [6, 0, 2]
+
+        distances = [
+            normalize_distance(self.simple_ray(angle, object_point))
+            for angle in ray_angles
+        ]
+
+        return np.stack(distances).reshape(-1)
 
     def simple_ray(self, direction: int, start: list):
         """
         Returns the distance to the nearest object in the given direction.
         """
         if self.orientation_type == GridOrientation.variable:
-            direction += self.orientation * 2
-            if direction > 7:
-                direction -= 8
+            direction = (direction + self.orientation * 2) % 8
 
         ray_length = self.grid_size
 
-        count = -1
+        count = 0
         hit = False
-        try_pos = start
+        try_pos = start.copy()
+
+        moves = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
 
         while not hit:
-            count += 1
-            if direction == 0:
-                try_pos = [try_pos[0] - 1, try_pos[1]]
-            if direction == 1:
-                try_pos = [try_pos[0] - 1, try_pos[1] + 1]
-            if direction == 2:
-                try_pos = [try_pos[0], try_pos[1] + 1]
-            if direction == 3:
-                try_pos = [try_pos[0] + 1, try_pos[1] + 1]
-            if direction == 4:
-                try_pos = [try_pos[0] + 1, try_pos[1]]
-            if direction == 5:
-                try_pos = [try_pos[0] + 1, try_pos[1] - 1]
-            if direction == 6:
-                try_pos = [try_pos[0], try_pos[1] - 1]
-            if direction == 7:
-                try_pos = [try_pos[0] - 1, try_pos[1] - 1]
+            dx, dy = moves[direction]
+            try_pos = [try_pos[0] + dx, try_pos[1] + dy]
             hit = not self.check_target(try_pos) or count == ray_length
+            count += 1
 
-        return count
+        return count - 1
 
     def rotate(self, direction: int):
         """
         Rotates the agent orientation in the given direction.
         """
-        self.orientation += direction
-        if self.orientation < 0:
-            self.orientation = self.max_orient
-        if self.orientation > self.max_orient:
-            self.orientation = 0
+        self.orientation = (self.orientation + direction) % (self.max_orient + 1)
 
     def step(self, action: int):
         """
@@ -661,56 +659,59 @@ class GridEnv(Env):
         Action is an integer in the range [0, self.action_space.n).
         """
         if self.done:
-            print("Episode fininshed. Please reset the environment.")
+            print("Episode finished. Please reset the environment.")
             return None, None, None, None
-        else:
-            if self.stochasticity > self.rng.rand():
-                action = self.rng.randint(0, self.action_space.n)
-            if self.orientation_type == GridOrientation.variable:
-                # 0 - Counter-clockwise rotation
-                # 1 - Clockwise rotation
-                # 2 - Forward movement
-                if action == 0:
-                    self.rotate(-1)
-                if action == 1:
-                    self.rotate(1)
-                if action == 2:
-                    move_array = self.direction_map[self.orientation]
-                    self.move_agent(move_array)
-                self.looking = self.orientation
-            else:
-                # 0 - Up
-                # 1 - Right
-                # 2 - Down
-                # 3 - Left
-                # 4 - Stay
-                move_array = self.direction_map[action]
-                self.looking = action
+
+        if self.stochasticity > self.rng.rand():
+            action = self.rng.randint(0, self.action_space.n)
+
+        if self.orientation_type == GridOrientation.variable:
+            # 0 - Counter-clockwise rotation
+            # 1 - Clockwise rotation
+            # 2 - Forward movement
+            if action == 0:
+                self.rotate(-1)
+            elif action == 1:
+                self.rotate(1)
+            elif action == 2:
+                move_array = self.direction_map[self.orientation]
                 self.move_agent(move_array)
-            self.episode_time += 1
-            if action == 4:
-                reward = 0
+            self.looking = self.orientation
+        else:
+            # 0 - North
+            # 1 - East
+            # 2 - South
+            # 3 - West
+            # 4 - Stay
+            move_array = self.direction_map[action]
+            self.looking = action
+            self.move_agent(move_array)
+
+        self.episode_time += 1
+        reward = 0 if action == 4 else self.time_penalty
+        eval_pos = tuple(self.agent_pos)
+        terminate = self.terminate_on_reward
+
+        if eval_pos in self.objects["rewards"]:
+            reward_info = self.objects["rewards"][eval_pos]
+            if isinstance(reward_info, list):
+                terminate = reward_info[2]
+                reward_val = reward_info[0]
             else:
-                reward = self.time_penalty
-            eval_pos = tuple(self.agent_pos)
-            terminate = self.terminate_on_reward
-            if eval_pos in self.objects["rewards"]:
-                reward_info = self.objects["rewards"][eval_pos]
-                if type(reward_info) == list:
-                    terminate = reward_info[2]
-                    reward_val = reward_info[0]
-                else:
-                    reward_val = reward_info
-                reward += reward_val
-                if terminate:
-                    self.done = True
-                self.objects["rewards"].pop(eval_pos)
-            if eval_pos in self.objects["keys"]:
-                self.keys += 1
-                self.objects["keys"].remove(eval_pos)
-            if eval_pos in self.objects["warps"]:
-                self.agent_pos = self.objects["warps"][eval_pos]
-            return self.observation, reward, self.done, {}
+                reward_val = reward_info
+            reward += reward_val
+            if terminate:
+                self.done = True
+            self.objects["rewards"].pop(eval_pos)
+
+        if eval_pos in self.objects["keys"]:
+            self.keys += 1
+            self.objects["keys"].remove(eval_pos)
+
+        if eval_pos in self.objects["warps"]:
+            self.agent_pos = self.objects["warps"][eval_pos]
+
+        return self.observation, reward, self.done, {}
 
     def close(self) -> None:
         if self.obs_mode == GridObservation.rendered_3d:
