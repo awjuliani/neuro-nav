@@ -6,7 +6,7 @@ These environments support the default `gym` interface which is commonly used in
 
 ## GridEnv
 
-`GridEnv` consists of a simple 2D grid environment with various topographies and observation types.
+`GridEnv` consists of a grid environment with various topographies and observation types. It can be rendered in either a 2D top-down view or a 3D first-person perspective view.
 
 ### Observation Types
 
@@ -40,13 +40,13 @@ To add your own, edit [grid_env.py](./grid_env.py).
 
 There are a number of possible objects which can be placed at various locations in a grid environment by utilizing an `objects` dictionary. They are as follows:
 
-| Object | Usage | Description | Color | Image |
-| --- | --- | --- | --- | --- |
-| reward | `'rewards': {(x, y): [v, o, t]}`, where `x, y` is the location of the reward, `o` is whether the reward should be visible, `v` is the value of the reward, and `t` is whether the episode should terminate when the agent reaches the reward. | A reward object. Provides the agent with the reward value if it occupies the location. | Blue (Pos) / Red (Neg) | ![reward_pos](/images/objects/reward_pos.png) ![reward_neg](/images/objects/reward_neg.png) |
+| Object | Usage | Description | Color | Image (2D) | Image (3D) |
+| --- | --- | --- | --- | --- | --- |
+| reward | `'rewards': {(x, y): [v, o, t]}`, where `x, y` is the location of the reward, `o` is whether the reward should be visible, `v` is the value of the reward, and `t` is whether the episode should terminate when the agent reaches the reward. | A reward object. Provides the agent with the reward value if it occupies the location. | Blue (Pos) / Red (Neg) | ![reward_pos](/images/objects/reward_pos.png) ![reward_neg](/images/objects/reward_neg.png) | ![reward_pos](/images/objects_3d/reward_pos.png) ![reward_neg](/images/objects_3d/reward_neg.png) |
 | marker | `'markers': {(x, y): (r, g, b)}`, where `x, y` is the location of the marker, and `r, g, b` are the color values for the marker. | A marker object. Used to provide contextual information to the agent. | Variable | N/A |
-| key | `'keys': [(x, y)]`, where `x, y` is the location of the key. | A consumable key object. Allows the agent to open a door. | Yellow | ![key](/images/objects/key.png) |
-| door | `'doors': {(x, y): o}`, where `x, y` is the location of the door, and `o` is the orientation of the door (either 'h' or 'v'). | A door object. Agent cannot enter a location with a door unless it posesses a key, which is consumed upon entry. | Green | ![door](/images/objects/door.png) |
-| warp | `'warps': {(x, y): (a, b)}`, where `x, y` is the location of the warp, and `a, b` is the location of the warp target. | A warp object. Transports the agent from the location of the warp to a specificed other location in the environment. | Purple | ![warp](/images/objects/warp.png) |
+| key | `'keys': [(x, y)]`, where `x, y` is the location of the key. | A consumable key object. Allows the agent to open a door. | Yellow | ![key](/images/objects/key.png) | ![key](/images/objects_3d/key.png) |
+| door | `'doors': {(x, y): o}`, where `x, y` is the location of the door, and `o` is the orientation of the door (either 'h' or 'v'). | A door object. Agent cannot enter a location with a door unless it posesses a key, which is consumed upon entry. | Green | ![door](/images/objects/door.png) | ![door](/images/objects_3d/door.png) |
+| warp | `'warps': {(x, y): (a, b)}`, where `x, y` is the location of the warp, and `a, b` is the location of the warp target. | A warp object. Transports the agent from the location of the warp to a specificed other location in the environment. | Purple | ![warp](/images/objects/warp.png) | ![warp](/images/objects_3d/warp.png) |
 
 ### Templates
 
