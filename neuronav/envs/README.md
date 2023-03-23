@@ -36,6 +36,10 @@ To add your own, edit [grid_env.py](./grid_env.py).
 
 * Where `n` is the length of the grid.
 
+#### 3D Rendering
+
+Note: In order to use the 3D rendering observation type on linux machines without a display ("headless"), you must have the `xvfb` package installed. You can install it with `sudo apt-get install xvfb`.
+
 ### Objects
 
 There are a number of possible objects which can be placed at various locations in a grid environment by utilizing an `objects` dictionary. They are as follows:
