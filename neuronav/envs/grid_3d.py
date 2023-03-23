@@ -1,8 +1,10 @@
 import glfw
 import numpy as np
 import os
+import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from pyvirtualdisplay import Display
 from neuronav.envs.gl_utils import (
     load_texture,
     render_plane,
@@ -13,6 +15,7 @@ from neuronav.envs.gl_utils import (
 
 class Grid3DRenderer:
     def __init__(self, resolution=256):
+        self.virtual_display = None
         self.initialize_glfw(resolution)
         self.configure_opengl()
         self.width, self.height = glfw.get_framebuffer_size(self.window)
@@ -26,8 +29,17 @@ class Grid3DRenderer:
         self.textures["key"] = load_texture(f"{self.tex_folder}key.png")
         self.textures["warp"] = load_texture(f"{self.tex_folder}warp.png")
 
+    def initialize_display(self):
+        if sys.platform != 'win32':
+            self.virtual_display = Display(visible=0, size=(1, 1))
+            self.virtual_display.start()
+
     def initialize_glfw(self, resolution):
-        glfw.init()
+        try:
+            glfw.init()
+        except:
+            self.initialize_display()
+            glfw.init()
         glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
         window = glfw.create_window(resolution, resolution, "Offscreen", None, None)
         glfw.make_context_current(window)
@@ -109,5 +121,7 @@ class Grid3DRenderer:
         return image_np
 
     def close(self):
+        if self.virtual_display is not None:
+            self.virtual_display.stop()
         glfw.destroy_window(self.window)
         glfw.terminate()
