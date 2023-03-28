@@ -10,6 +10,7 @@ required = [
     "networkx",
     "opencv-python",
     "PyOpenGL",
+    "PyVirtualDisplay",
 ]
 
 extras_required = {
@@ -19,7 +20,7 @@ extras_required = {
 
 setup(
     name="neuronav",
-    version="1.5.1",
+    version="1.5.2",
     description="Neuro-Nav",
     license="Apache License 2.0",
     author="Arthur Juliani",
