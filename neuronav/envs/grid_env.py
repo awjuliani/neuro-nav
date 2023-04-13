@@ -686,7 +686,8 @@ class GridEnv(Env):
             # 3 - West
             # 4 - Stay
             move_array = self.direction_map[action]
-            self.looking = action
+            if action != 4:
+                self.looking = action
             self.move_agent(move_array)
 
         self.episode_time += 1

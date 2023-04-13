@@ -80,3 +80,12 @@ def test_grid_visible_walls():
     obs_a = env.reset(visible_walls=True)
     obs_b = env.reset(visible_walls=False)
     assert not np.array_equal(obs_a, obs_b)
+
+
+def test_grid_noop():
+    for obs_type in GridObservation:
+        env = GridEnv(obs_type=obs_type, use_noop=True)
+        env.reset()
+        obs_a, rew, don, _ = env.step(4)
+        obs_b, rew, don, _ = env.step(4)
+        assert np.array_equal(obs_a, obs_b)
