@@ -178,6 +178,7 @@ class GridEnv(Env):
         self.terminate_on_reward = terminate_on_reward
         self.stochasticity = stochasticity
         self.visible_walls = visible_walls
+        self.cached_objects = None
 
         if agent_pos is not None:
             self.agent_pos = agent_pos
@@ -300,27 +301,23 @@ class GridEnv(Env):
         if provide:
             return image
 
-    def get_square_edges(self, x, y, unit_size, block_size):
-        # swap x and y because of the way cv2 draws images
-        x, y = y, x
+    def get_square_edges(self, y, x, unit_size, block_size):
         block_border = block_size // 10
         true_start = unit_size - block_size + 1
         block_end = block_size - block_border * 2 + 1
+
+        x_unit = x * unit_size
+        y_unit = y * unit_size
+
         return (
-            (x * unit_size + true_start, y * unit_size + true_start),
-            (x * unit_size + block_end, y * unit_size + block_end),
+            (y_unit + true_start, x_unit + true_start),
+            (y_unit + block_end, x_unit + block_end),
         )
 
-    def make_visual_obs(self, resize=False):
-        """
-        Returns a visual observation of the environment from a top-down perspective.
-        """
-        block_size = 20
+    def make_base_image(self, block_size, block_border):
+        # draw thin lines to separate each position
         img_size = block_size * self.grid_size
         img = np.ones((img_size, img_size, 3), np.uint8) * 225
-        block_border = block_size // 10
-
-        # draw thin lines to separate each position
         for i in range(self.grid_size + 1):
             cv.line(
                 img, (0, i * block_size), (img_size, i * block_size), (210, 210, 210), 1
@@ -334,6 +331,30 @@ class GridEnv(Env):
                 start, end = self.get_square_edges(x, y, block_size, block_size - 2)
                 cv.rectangle(img, start, end, (175, 175, 175), -1)
                 cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
+        return img
+
+    def make_visual_obs(self, resize=False):
+        """
+        Returns a visual observation of the environment from a top-down perspective.
+        """
+        block_size = 20
+        block_border = block_size // 10
+
+        if self.cached_objects is None:
+            self.cached_objects = copy.deepcopy([self.objects, self.blocks])
+            img = self.make_base_image(block_size, block_border)
+            self.cached_image = img.copy()
+        else:
+            if (
+                self.cached_objects[0] == self.objects
+                and self.cached_objects[1] == self.blocks
+            ):
+                img = self.cached_image.copy()
+            else:
+                img = self.make_base_image(block_size, block_border)
+                self.cached_image = img.copy()
+                self.cached_objects = copy.deepcopy([self.objects, self.blocks])
+
         # draw the reward locations
         for pos, reward in self.objects["rewards"].items():
             if type(reward) != list:
@@ -485,7 +506,7 @@ class GridEnv(Env):
             )
         cv.fillConvexPoly(img, pts, agent_color)
         if resize:
-            img = cv.resize(img, (128, 128))
+            img = cv.resize(img, (128, 128), interpolation=cv.INTER_NEAREST)
         return img
 
     def make_window(self, w_size=2, block_size=20, resize=True):
@@ -505,7 +526,7 @@ class GridEnv(Env):
         end_y = block_size * (y + w_size + 2)
         window = template[start_x:end_x, start_y:end_y]
         if resize:
-            window = cv.resize(window, (64, 64))
+            window = cv.resize(window, (64, 64), interpolation=cv.INTER_NEAREST)
         return window
 
     def move_agent(self, direction: np.array):
@@ -521,15 +542,25 @@ class GridEnv(Env):
         Checks if the target is a valid (movable) position.
         Returns True if the target is valid, False otherwise.
         """
+        target_tuple = tuple(target)
+        target_list = list(target_tuple)
         x_check = -1 < target[0] < self.grid_size
         y_check = -1 < target[1] < self.grid_size
-        block_check = list(target) not in self.blocks
-        door_check = tuple(target) not in self.objects["doors"].keys()
-        if self.keys > 0 and door_check is False:
-            door_check = True
-            self.objects["doors"].pop(tuple(target))
-            self.keys -= 1
-        return x_check and y_check and block_check and door_check
+
+        if not (x_check and y_check):
+            return False
+
+        if target_list in self.blocks:
+            return False
+
+        if target_tuple in self.objects["doors"]:
+            if self.keys > 0:
+                self.objects["doors"].pop(target_tuple)
+                self.keys -= 1
+            else:
+                return False
+
+        return True
 
     def get_observation(self, perspective: list):
         """
