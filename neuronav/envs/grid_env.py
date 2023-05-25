@@ -327,7 +327,7 @@ class GridEnv(Env):
             )
         if self.visible_walls:
             # draw the blocks
-            for x, y in self.blocks:
+            for y, x in self.blocks:
                 start, end = self.get_square_edges(x, y, block_size, block_size - 2)
                 cv.rectangle(img, start, end, (175, 175, 175), -1)
                 cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
@@ -380,7 +380,7 @@ class GridEnv(Env):
                     fill_color = (255, 100, 100)  # red
                     border_color = (200, 50, 50)  # red
                 start, end = self.get_square_edges(
-                    pos[0], pos[1], block_size, block_size - int(4 * factor)
+                    pos[1], pos[0], block_size, block_size - int(4 * factor)
                 )
                 cv.rectangle(img, start, end, fill_color, -1)
                 cv.rectangle(img, start, end, border_color, block_border - 1)
@@ -394,7 +394,7 @@ class GridEnv(Env):
                 fill_color[i] = np.clip(fill_color[i], 0, 1).item() * 255
             fill_color = tuple(fill_color)
             start, end = self.get_square_edges(
-                pos[0], pos[1], block_size, block_size - 1
+                pos[1], pos[0], block_size, block_size - 1
             )
             cv.rectangle(img, start, end, fill_color, -1)
 
@@ -432,7 +432,7 @@ class GridEnv(Env):
             fill_color = (0, 150, 0)
             border_color = (0, 100, 0)
             start, end = self.get_square_edges(
-                pos[0], pos[1], block_size, block_size - 2
+                pos[1], pos[0], block_size, block_size - 2
             )
             if dir == "h":
                 start = (start[0] - 2, start[1] + 5)
@@ -450,7 +450,7 @@ class GridEnv(Env):
             fill_color = (130, 0, 250)
             border_color = (80, 0, 200)
             start, end = self.get_square_edges(
-                pos[0], pos[1], block_size, block_size - 2
+                pos[1], pos[0], block_size, block_size - 2
             )
             # draw a circle at the warp pos
             cv.circle(img, (start[0] + 7, start[1] + 7), 8, fill_color, -1)
