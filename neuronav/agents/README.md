@@ -4,7 +4,7 @@ A set of cognitive neuroscience inspired agents and learning algorithms.
 
 These consist of implementations of the canonical Q-Learning, Actor-Critic, Value-Iteration, Successor Representation algorithms and more.
 
-The algorithms included here are all tabular. Tabular algorithms work with observations that are integer representations of the state of the agent (e.g., which grid the agent is in a grid world). This corresponds to the `index` observation type. 
+The algorithms included here are all tabular. Tabular algorithms work with observations that are integer representations of the state of the agent (e.g., which grid the agent is in a grid world). This corresponds to the `index` observation type.
 
 ## Included algorithms
 
