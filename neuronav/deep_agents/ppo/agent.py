@@ -25,7 +25,6 @@ class PPOAgent(BaseAgent):
         self.reset_buffer()
 
     def sample_action(self, obs):
-        obs = torch.tensor(obs, dtype=torch.float32)
         action, _, _ = self.model.sample_action(obs)
         return action
 
@@ -63,7 +62,6 @@ class PPOAgent(BaseAgent):
 
     def update(self, current_exp):
         obs, action, obs_next, reward, done = current_exp
-        obs = torch.tensor(obs, dtype=torch.float32)
         reward = torch.tensor(reward, dtype=torch.float32)
         self.ep_obs.append(obs)
         self.ep_acts.append(action)
