@@ -1,7 +1,5 @@
 from neuronav.deep_agents.ppo.agent import PPOAgent
-from neuronav.deep_agents.ppo.model import PPOModel
 from neuronav.deep_agents.sac.agent import SACAgent
-from neuronav.deep_agents.sac.model import SACModel
 from neuronav.envs.grid_env import GridEnv, GridObservation
 import math
 import torch
@@ -68,3 +66,55 @@ def test_obs_types_sac():
             obs = torch.Tensor(obs.copy())
             action = agent.sample_action(obs)
             _, _, _, _ = env.step(action)
+
+
+def test_ppo_update():
+    env = GridEnv(obs_type=GridObservation.geometric)
+    agent = PPOAgent(get_model_params(env), agent_params_ppo)
+    for _ in range(10):
+        obs = env.reset()
+        for _ in range(100):
+            obs = torch.Tensor(obs.copy())
+            action = agent.sample_action(obs)
+            next_obs, reward, done, _ = env.step(action)
+            agent.update([obs, action, next_obs, reward, done])
+            obs = next_obs
+            if done:
+                break
+
+
+def test_sac_update():
+    env = GridEnv(obs_type=GridObservation.geometric)
+    agent = SACAgent(get_model_params(env), agent_params_sac)
+    for _ in range(10):
+        obs = env.reset()
+        for _ in range(100):
+            obs = torch.Tensor(obs.copy())
+            action = agent.sample_action(obs)
+            next_obs, reward, done, _ = env.step(action)
+            agent.update([obs, action, next_obs, reward, done])
+            obs = next_obs
+            if done:
+                break
+
+
+def test_ppo_value():
+    # call sample_value on an observation
+    env = GridEnv(obs_type=GridObservation.geometric)
+    agent = PPOAgent(get_model_params(env), agent_params_ppo)
+    obs = env.reset()
+    obs = torch.Tensor(obs.copy())
+    value = agent.sample_value(obs)
+    assert value.shape == (1,)
+    assert value.dtype == torch.float32
+
+
+def test_sac_value():
+    # call sample_value on an observation
+    env = GridEnv(obs_type=GridObservation.geometric)
+    agent = SACAgent(get_model_params(env), agent_params_sac)
+    obs = env.reset()
+    obs = torch.Tensor(obs.copy())
+    value = agent.sample_value(obs)
+    assert value.shape == (1,)
+    assert value.dtype == torch.float32

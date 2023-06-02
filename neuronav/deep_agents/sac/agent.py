@@ -124,9 +124,8 @@ class SACAgent(BaseAgent):
 
     def sample_value(self, obs):
         obs = torch.Tensor(obs)
-        value = self.model.critic(obs.unsqueeze(0).to(self.device))
-        value = value.item()
-        return value
+        value_a, value_b = self.model.critic(obs.unsqueeze(0).to(self.device))
+        return torch.mean(value_a, dim=-1)
 
     def sample_policy(self, obs):
         obs = torch.Tensor(obs)
