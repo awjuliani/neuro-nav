@@ -28,6 +28,17 @@ class PPOAgent(BaseAgent):
         action, _, _ = self.model.sample_action(obs)
         return action
 
+    def sample_value(self, obs):
+        _, value = self.model(obs)
+        return value
+
+    def sample_policy(self, obs):
+        logits, _ = self.model(obs)
+        return F.softmax(logits, dim=-1)
+
+    def sample_hidden(self, obs):
+        return self.model.encode(obs)
+
     def reset(self):
         if len(self.ep_obs) > 0:
             self.append_buffer()

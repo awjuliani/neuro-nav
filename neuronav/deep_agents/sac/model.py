@@ -63,12 +63,16 @@ class SACCritic(nn.Module):
         self.optimizer = optim.AdamW(self.parameters(), lr=self.lr)
 
     def forward(self, obs):
-        x = obs.view(-1, self.obs_size)
-        c1_h = self.critic1_encoder(x)
+        c1_h, c2_h = self.encode(obs)
         value1 = self.critic1(c1_h)
-        c2_h = self.critic2_encoder(x)
         value2 = self.critic2(c2_h)
         return value1, value2
+
+    def encode(self, obs):
+        x = obs.view(-1, self.obs_size)
+        c1_h = self.critic1_encoder(x)
+        c2_h = self.critic2_encoder(x)
+        return c1_h, c2_h
 
     def copy(self):
         return copy.deepcopy(self)

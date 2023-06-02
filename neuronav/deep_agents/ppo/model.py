@@ -20,11 +20,15 @@ class PPOModel(torch.nn.Module):
         self.optimizer = optim.AdamW(self.parameters(), lr=model_params["lr"])
 
     def forward(self, x):
-        x = x.view(-1, self.obs_size)
-        h = self.encoder(x)
+        h = self.encode(x)
         logits = self.policy(h)
         value = self.value(h)
         return logits, value.view(-1)
+
+    def encode(self, x):
+        x = x.view(-1, self.obs_size)
+        h = self.encoder(x)
+        return h
 
     def sample_action(self, obs):
         logits, value = self.forward(obs)

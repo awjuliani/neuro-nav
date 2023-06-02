@@ -121,3 +121,24 @@ class SACAgent(BaseAgent):
         )
         action = action.item()
         return action
+
+    def sample_value(self, obs):
+        obs = torch.Tensor(obs)
+        value = self.model.critic(obs.unsqueeze(0).to(self.device))
+        value = value.item()
+        return value
+
+    def sample_policy(self, obs):
+        obs = torch.Tensor(obs)
+        action, log_pi = self.model.policy.sample_action(
+            obs.unsqueeze(0).to(self.device)
+        )
+        probs = F.softmax(log_pi, dim=-1)
+        probs = probs.squeeze().detach().cpu().numpy()
+        return probs
+
+    def sample_hidden(self, obs):
+        obs = torch.Tensor(obs)
+        hidden_a, _ = self.model.critic.encode(obs.unsqueeze(0).to(self.device))
+        hidden_a = hidden_a.squeeze().detach().cpu().numpy()
+        return hidden_a
