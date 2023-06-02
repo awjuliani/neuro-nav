@@ -233,7 +233,7 @@ class GridEnv(Env):
         grid = np.zeros([self.grid_size, self.grid_size, 6])
 
         # Set agent's position
-        grid[tuple(self.agent_pos), 0] = 1
+        grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
 
         # Set rewards
         reward_locs = [
@@ -241,19 +241,23 @@ class GridEnv(Env):
             for loc, reward in self.objects["rewards"].items()
             if type(reward) != list or reward[1] == 1
         ]
-        grid[tuple(zip(*reward_locs)), 1] = 1
+        for loc in reward_locs:
+            grid[loc[0], loc[1], 1] = 1
 
         # Set keys
         key_locs = self.objects["keys"]
-        grid[tuple(zip(*key_locs)), 2] = 1
+        for loc in key_locs:
+            grid[loc[0], loc[1], 2] = 1
 
         # Set doors
         door_locs = self.objects["doors"]
-        grid[tuple(zip(*door_locs)), 3] = 1
+        for loc in door_locs:
+            grid[loc[0], loc[1], 3] = 1
 
         # Set warps
         warp_locs = self.objects["warps"].keys()
-        grid[tuple(zip(*warp_locs)), 5] = 1
+        for loc in warp_locs:
+            grid[loc[0], loc[1], 5] = 1
 
         # Set walls
         if self.visible_walls:
