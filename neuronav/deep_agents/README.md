@@ -6,8 +6,8 @@ A set of deep reinforcement learning algorithms implemented in PyTorch.
 
 | Algorithm | Reference | Description | Code Link |
 | --- | --- | --- | --- |
-| PPO | [Schulman et al. 2017](https://arxiv.org/abs/1707.06347) | A proximal policy gradient algorithm | [Code](./ppo/) |
-| SAC | [Haarnoja et al., 2018](https://arxiv.org/abs/1812.05905) | A maximum entropy soft actor-critic algorithm | [Code](./sac/) |
+| PPO | [Schulman et al. 2017](https://arxiv.org/abs/1707.06347) | A proximal policy gradient algorithm (on-policy) | [Code](./ppo/) |
+| SAC | [Haarnoja et al., 2018](https://arxiv.org/abs/1812.05905) | A maximum entropy soft actor-critic algorithm (off-policy) | [Code](./sac/) |
 
 ## Hyperparameters
 
