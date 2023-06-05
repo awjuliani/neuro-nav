@@ -16,7 +16,7 @@ required = [
 ]
 
 extras_required = {
-    "experiments_local": ["jupyterlab", "sklearn"],
+    "experiments_local": ["jupyterlab", "scikit-learn"],
     "experiments_remote": ["scikit-learn"],
 }
 
