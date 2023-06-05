@@ -40,6 +40,25 @@ class GridOrientation(enum.Enum):
 class GridEnv(Env):
     """
     Grid Environment. A 2D maze-like OpenAI gym compatible RL environment.
+
+    Parameters
+    ----------
+    template : GridTemplate
+        The layout template to use for the environment.
+    size : GridSize
+        The size of the grid (micro, small, large).
+    obs_type : GridObservation
+        The type of observation to use.
+    orientation_type : GridOrientation
+        The type of orientation to use.
+    seed : int
+        The seed to use for the environment.
+    use_noop : bool
+        Whether to include a no-op action in the action space.
+    torch_obs : bool
+        Whether to use torch observations.
+        This converts the observation to a torch tensor.
+        If the observation is an image, it will be in the shape (3, 64, 64).
     """
 
     def __init__(
