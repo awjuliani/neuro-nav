@@ -8,7 +8,7 @@ Neuro-nav includes a number of interactive jupyter notebooks. These demonstrate 
 | ------------- | ----------- | ---------- | --------------- | --- |
 | [Usage Tutorial](./usage_tutorial.ipynb) | This notebook provides a basic usage tutorial of both environment types. This is the best place to start for those seeking to understand the features of neuro-nav. | N/A | N/A | [Link](https://colab.research.google.com/github/awjuliani/neuro-nav/blob/main/notebooks/usage_tutorial.ipynb) |
 | [CCN 2022 Tutorial](./ccn_tutorial.ipynb) | This notebook was made to accompany the CCN 2022 Tutorial "Varieties of Human-like AI." It provides an overview of a number of the algorithms included in Neuro-Nav, and their properties. | N/A | N/A | [Link](https://colab.research.google.com/github/awjuliani/neuro-nav/blob/main/notebooks/ccn_tutorial.ipynb) |
-
+| [Deep RL Tutorial](./deeprl_tutorial.ipynb) | This notebook provides a basic tutorial of deep reinforcement learning algorithms. It includes implementations of both PPO and SAC. | N/A | N/A | [Link](https://colab.research.google.com/github/awjuliani/neuro-nav/blob/main/notebooks/deeprl_tutorial.ipynb) |
 
 ## Cognitive Neuroscience Notebooks
 

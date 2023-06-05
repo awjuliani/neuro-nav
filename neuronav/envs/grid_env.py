@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 import copy
 from neuronav.envs.grid_3d import Grid3DRenderer
+import torch
 
 
 class GridObservation(enum.Enum):
@@ -39,6 +40,25 @@ class GridOrientation(enum.Enum):
 class GridEnv(Env):
     """
     Grid Environment. A 2D maze-like OpenAI gym compatible RL environment.
+
+    Parameters
+    ----------
+    template : GridTemplate
+        The layout template to use for the environment.
+    size : GridSize
+        The size of the grid (micro, small, large).
+    obs_type : GridObservation
+        The type of observation to use.
+    orientation_type : GridOrientation
+        The type of orientation to use.
+    seed : int
+        The seed to use for the environment.
+    use_noop : bool
+        Whether to include a no-op action in the action space.
+    torch_obs : bool
+        Whether to use torch observations.
+        This converts the observation to a torch tensor.
+        If the observation is an image, it will be in the shape (3, 64, 64).
     """
 
     def __init__(
@@ -49,6 +69,7 @@ class GridEnv(Env):
         orientation_type: GridOrientation = GridOrientation.fixed,
         seed: int = None,
         use_noop: bool = False,
+        torch_obs: bool = False,
     ):
         self.rng = np.random.RandomState(seed)
         self.use_noop = use_noop
@@ -58,6 +79,7 @@ class GridEnv(Env):
         self.grid_size = size.value
         self.state_size = self.grid_size * self.grid_size
         self.orientation_type = orientation_type
+        self.torch_obs = torch_obs
         self.max_orient = 3
         self.set_action_space()
         self.agent_pos = [0, 0]
@@ -90,7 +112,10 @@ class GridEnv(Env):
             obs_type = GridObservation(obs_type)
         self.obs_mode = obs_type
         if obs_type == GridObservation.visual:
-            self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
+            if self.torch_obs:
+                self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
+            else:
+                self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
         elif obs_type == GridObservation.onehot:
             self.obs_space = spaces.Box(
                 0, 1, shape=(self.state_size * self.orient_size,), dtype=np.int32
@@ -137,7 +162,10 @@ class GridEnv(Env):
         elif obs_type == GridObservation.symbolic_window_tight:
             self.obs_space = spaces.Box(0, 1, shape=(3, 3, 6))
         elif obs_type == GridObservation.rendered_3d:
-            self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
+            if self.torch_obs:
+                self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
+            else:
+                self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
             self.renderer = Grid3DRenderer(128)
         else:
             raise Exception("No valid ObservationType provided.")
@@ -224,7 +252,7 @@ class GridEnv(Env):
         grid = np.zeros([self.grid_size, self.grid_size, 6])
 
         # Set agent's position
-        grid[tuple(self.agent_pos), 0] = 1
+        grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
 
         # Set rewards
         reward_locs = [
@@ -232,19 +260,23 @@ class GridEnv(Env):
             for loc, reward in self.objects["rewards"].items()
             if type(reward) != list or reward[1] == 1
         ]
-        grid[tuple(zip(*reward_locs)), 1] = 1
+        for loc in reward_locs:
+            grid[loc[0], loc[1], 1] = 1
 
         # Set keys
         key_locs = self.objects["keys"]
-        grid[tuple(zip(*key_locs)), 2] = 1
+        for loc in key_locs:
+            grid[loc[0], loc[1], 2] = 1
 
         # Set doors
         door_locs = self.objects["doors"]
-        grid[tuple(zip(*door_locs)), 3] = 1
+        for loc in door_locs:
+            grid[loc[0], loc[1], 3] = 1
 
         # Set warps
         warp_locs = self.objects["warps"].keys()
-        grid[tuple(zip(*warp_locs)), 5] = 1
+        for loc in warp_locs:
+            grid[loc[0], loc[1], 5] = 1
 
         # Set walls
         if self.visible_walls:
@@ -631,7 +663,10 @@ class GridEnv(Env):
 
     @property
     def observation(self):
-        return self.get_observation(self.agent_pos)
+        if self.torch_obs:
+            return self.prepare_obs_torch(self.get_observation(self.agent_pos))
+        else:
+            return self.get_observation(self.agent_pos)
 
     def get_boundaries(
         self,
@@ -685,6 +720,24 @@ class GridEnv(Env):
         Rotates the agent orientation in the given direction.
         """
         self.orientation = (self.orientation + direction) % (self.max_orient + 1)
+
+    def prepare_obs_torch(self, obs):
+        if (
+            self.obs_mode == GridObservation.window
+            or self.obs_mode == GridObservation.window_tight
+        ):
+            # swap axes to get channels first
+            obs = np.swapaxes(obs, 0, 2) / 255.0
+        elif self.obs_mode == GridObservation.index:
+            obs = np.array([obs])
+        elif (
+            self.obs_mode == GridObservation.visual
+            or self.obs_mode == GridObservation.rendered_3d
+        ):
+            # downsample obs to 64x64 using cv2
+            obs = cv.resize(obs, (64, 64), interpolation=cv.INTER_AREA)
+            obs = np.swapaxes(obs, 0, 2) / 255.0
+        return torch.Tensor(obs.copy())
 
     def step(self, action: int):
         """

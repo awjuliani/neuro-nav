@@ -11,16 +11,17 @@ required = [
     "opencv-python",
     "PyOpenGL",
     "PyVirtualDisplay",
+    "torch",
 ]
 
 extras_required = {
-    "experiments_local": ["jupyterlab", "sklearn", "torch"],
-    "experiments_remote": ["scikit-learn", "torch"],
+    "experiments_local": ["jupyterlab", "sklearn"],
+    "experiments_remote": ["scikit-learn"],
 }
 
 setup(
     name="neuronav",
-    version="1.5.5",
+    version="2.0.0",
     description="Neuro-Nav",
     license="Apache License 2.0",
     author="Arthur Juliani",

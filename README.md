@@ -16,6 +16,12 @@ Contains artifical agents which implement over a dozen cannonical reinforcement 
 
 See [neuronav/agents](./neuronav/agents) for more information.
 
+## Deep RL Algorithms
+
+Contains a set of deep reinforcement learning algorithms implemented in PyTorch. These include Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC).
+
+See [neuronav/deep_agents](./neuronav/deep_agents) for more information.
+
 ## Experiment Notebooks
 
 Neuro-nav includes a number of interactive jupyter notebooks, featuring different experimental environments, tasks, and RL agent algorithms. You can use these notebooks to replicate various experiments across the literature, or to simply learn about what's possible to do with the library. Notebooks include those that replicate results from computational neuroscience, psychiatry, and machine learning.
@@ -46,10 +52,10 @@ Requirements for the `neuronav` library can be found [here](./setup.py).
 
 ## Contributing
 
-Neuro-Nav is an open source project, and we actively encourage community contributions. 
-These can take various forms, such as new environments, tasks, algorithms, bug fixes, documentation, citations of relevant work, or additional experiment notebooks. 
-If there is a small contribution you would like to make, please feel free to open a pull request, and we can review it. 
-If there is a larger contribution you are considering, please open a github issue. This way, the contribution can be discussed, and potential support can be provided if needed. 
+Neuro-Nav is an open source project, and we actively encourage community contributions.
+These can take various forms, such as new environments, tasks, algorithms, bug fixes, documentation, citations of relevant work, or additional experiment notebooks.
+If there is a small contribution you would like to make, please feel free to open a pull request, and we can review it.
+If there is a larger contribution you are considering, please open a github issue. This way, the contribution can be discussed, and potential support can be provided if needed.
 If you have ideas for changes or features you would like to see in the library in the future, but don't have the resources to contribute yourself, please feel free to open a github issue describing the request.
 
 ## Citing
