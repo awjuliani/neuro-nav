@@ -12,6 +12,7 @@ required = [
     "PyOpenGL",
     "PyVirtualDisplay",
     "torch",
+    "glfw",
 ]
 
 extras_required = {
