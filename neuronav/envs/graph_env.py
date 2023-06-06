@@ -6,6 +6,7 @@ import copy
 import numpy as np
 from gym import Env, spaces
 from neuronav.envs.graph_templates import GraphTemplate, template_map
+import torch
 
 
 class GraphObservation(enum.Enum):
@@ -25,6 +26,7 @@ class GraphEnv(Env):
         obs_type: GraphObservation = GraphObservation.index,
         seed: int = None,
         use_noop: bool = False,
+        torch_obs: bool = False,
     ):
         self.use_noop = use_noop
         self.rng = np.random.RandomState(seed)
@@ -40,6 +42,7 @@ class GraphEnv(Env):
 
         self.running = False
         self.obs_mode = obs_type
+        self.torch_obs = torch_obs
         self.base_objects = {"rewards": {}}
 
         # Set observation space based on obs_mode
@@ -67,6 +70,20 @@ class GraphEnv(Env):
 
     @property
     def observation(self):
+        if self.torch_obs:
+            obs = self.get_observation()
+            if self.obs_mode == GraphObservation.onehot:
+                return torch.tensor(obs.copy(), dtype=torch.float32)
+            elif self.obs_mode == GraphObservation.index:
+                return torch.tensor(np.array([obs]).copy(), dtype=torch.int64)
+            elif self.obs_mode == GraphObservation.images:
+                return torch.tensor(
+                    self.get_observation().copy(), dtype=torch.float32
+                ).permute(2, 0, 1)
+        else:
+            return self.get_observation()
+
+    def get_observation(self):
         """
         Returns an observation corresponding to the current state.
         """
@@ -77,7 +94,7 @@ class GraphEnv(Env):
         elif self.obs_mode == GraphObservation.images:
             return np.rot90(self.images[self.agent_pos], k=3)
         else:
-            return None
+            raise NotImplementedError
 
     def get_free_spot(self):
         return self.rng.randint(0, self.state_size)

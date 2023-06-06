@@ -1,6 +1,7 @@
 from neuronav.deep_agents.ppo.agent import PPOAgent
 from neuronav.deep_agents.sac.agent import SACAgent
 from neuronav.envs.grid_env import GridEnv, GridObservation
+from neuronav.envs.graph_env import GraphEnv, GraphObservation
 import math
 import torch
 
@@ -61,6 +62,28 @@ def test_obs_types_sac():
     for obs_type in GridObservation:
         if obs_type != GridObservation.index:
             env = GridEnv(obs_type=obs_type)
+            agent = SACAgent(get_model_params(env), agent_params_sac)
+            obs = env.reset()
+            obs = torch.Tensor(obs.copy())
+            action = agent.sample_action(obs)
+            _, _, _, _ = env.step(action)
+
+
+def test_obs_types_graph_ppo():
+    for obs_type in GraphObservation:
+        if obs_type != GraphObservation.index:
+            env = GraphEnv(obs_type=obs_type)
+            agent = PPOAgent(get_model_params(env), agent_params_ppo)
+            obs = env.reset()
+            obs = torch.Tensor(obs.copy())
+            action = agent.sample_action(obs)
+            _, _, _, _ = env.step(action)
+
+
+def test_obs_types_graph_sac():
+    for obs_type in GraphObservation:
+        if obs_type != GraphObservation.index:
+            env = GraphEnv(obs_type=obs_type)
             agent = SACAgent(get_model_params(env), agent_params_sac)
             obs = env.reset()
             obs = torch.Tensor(obs.copy())
