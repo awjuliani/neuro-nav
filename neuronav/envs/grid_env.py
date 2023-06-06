@@ -727,7 +727,7 @@ class GridEnv(Env):
             or self.obs_mode == GridObservation.window_tight
         ):
             # swap axes to get channels first
-            obs = np.swapaxes(obs, 0, 2) / 255.0
+            obs = np.moveaxis(obs, 2, 0) / 255.0
         elif self.obs_mode == GridObservation.index:
             obs = np.array([obs])
         elif (
@@ -736,7 +736,9 @@ class GridEnv(Env):
         ):
             # downsample obs to 64x64 using cv2
             obs = cv.resize(obs, (64, 64), interpolation=cv.INTER_AREA)
-            obs = np.swapaxes(obs, 0, 2) / 255.0
+            obs = np.moveaxis(obs, 2, 0) / 255.0
+        elif self.obs_mode == GridObservation.images:
+            obs = np.moveaxis(obs, 2, 0)
         return torch.Tensor(obs.copy())
 
     def step(self, action: int):
