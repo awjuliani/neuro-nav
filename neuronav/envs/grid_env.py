@@ -12,7 +12,6 @@ from neuronav.envs.grid_templates import (
 import matplotlib.pyplot as plt
 import cv2 as cv
 import copy
-from neuronav.envs.grid_3d import Grid3DRenderer
 import torch
 
 
@@ -166,6 +165,7 @@ class GridEnv(Env):
                 self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
             else:
                 self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
+            from neuronav.envs.grid_3d import Grid3DRenderer
             self.renderer = Grid3DRenderer(128)
         else:
             raise Exception("No valid ObservationType provided.")
