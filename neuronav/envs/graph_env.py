@@ -77,9 +77,8 @@ class GraphEnv(Env):
             elif self.obs_mode == GraphObservation.index:
                 return torch.tensor(np.array([obs]).copy(), dtype=torch.int64)
             elif self.obs_mode == GraphObservation.images:
-                return torch.tensor(
-                    self.get_observation().copy(), dtype=torch.float32
-                ).permute(2, 0, 1)
+                img = np.moveaxis(obs, 2, 0)
+                return torch.tensor(img.copy(), dtype=torch.float32)
         else:
             return self.get_observation()
 

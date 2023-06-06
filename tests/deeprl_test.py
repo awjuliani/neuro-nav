@@ -28,9 +28,23 @@ agent_params_ppo = {
 }
 
 
+visual64_types = [
+    GridObservation.window,
+    GridObservation.window_tight,
+    GridObservation.visual,
+    GridObservation.rendered_3d,
+]
+
+visual32_types = [
+    GridObservation.images,
+]
+
+
 def get_model_params(env):
-    if env.obs_mode == GridObservation.window:
+    if env.obs_mode in visual64_types:
         enc_type = "conv64"
+    elif env.obs_mode in visual32_types:
+        enc_type = "conv32"
     else:
         enc_type = "linear"
     model_params = {
@@ -48,12 +62,9 @@ def get_model_params(env):
 def test_obs_types_ppo():
     for obs_type in GridObservation:
         if obs_type != GridObservation.index:
-            print(f"Testing obs_type: {obs_type}")
-            env = GridEnv(obs_type=obs_type)
+            env = GridEnv(obs_type=obs_type, torch_obs=True)
             agent = PPOAgent(get_model_params(env), agent_params_ppo)
             obs = env.reset()
-            print(obs.shape)
-            obs = torch.Tensor(obs.copy())
             action = agent.sample_action(obs)
             _, _, _, _ = env.step(action)
 
@@ -61,10 +72,9 @@ def test_obs_types_ppo():
 def test_obs_types_sac():
     for obs_type in GridObservation:
         if obs_type != GridObservation.index:
-            env = GridEnv(obs_type=obs_type)
+            env = GridEnv(obs_type=obs_type, torch_obs=True)
             agent = SACAgent(get_model_params(env), agent_params_sac)
             obs = env.reset()
-            obs = torch.Tensor(obs.copy())
             action = agent.sample_action(obs)
             _, _, _, _ = env.step(action)
 
@@ -72,10 +82,9 @@ def test_obs_types_sac():
 def test_obs_types_graph_ppo():
     for obs_type in GraphObservation:
         if obs_type != GraphObservation.index:
-            env = GraphEnv(obs_type=obs_type)
+            env = GraphEnv(obs_type=obs_type, torch_obs=True)
             agent = PPOAgent(get_model_params(env), agent_params_ppo)
             obs = env.reset()
-            obs = torch.Tensor(obs.copy())
             action = agent.sample_action(obs)
             _, _, _, _ = env.step(action)
 
@@ -83,10 +92,9 @@ def test_obs_types_graph_ppo():
 def test_obs_types_graph_sac():
     for obs_type in GraphObservation:
         if obs_type != GraphObservation.index:
-            env = GraphEnv(obs_type=obs_type)
+            env = GraphEnv(obs_type=obs_type, torch_obs=True)
             agent = SACAgent(get_model_params(env), agent_params_sac)
             obs = env.reset()
-            obs = torch.Tensor(obs.copy())
             action = agent.sample_action(obs)
             _, _, _, _ = env.step(action)
 
