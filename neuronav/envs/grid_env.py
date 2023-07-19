@@ -261,6 +261,8 @@ class GridEnv(Env):
             if type(reward) != list or reward[1] == 1
         ]
         for loc, reward in reward_list:
+            if type(reward) == list:
+                reward = reward[0]
             grid[loc[0], loc[1], 1] = reward
 
         # Set keys
