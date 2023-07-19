@@ -255,13 +255,13 @@ class GridEnv(Env):
         grid[self.agent_pos[0], self.agent_pos[1], 0] = 1
 
         # Set rewards
-        reward_locs = [
-            loc
+        reward_list = [
+            (loc, reward)
             for loc, reward in self.objects["rewards"].items()
             if type(reward) != list or reward[1] == 1
         ]
-        for loc in reward_locs:
-            grid[loc[0], loc[1], 1] = 1
+        for loc, reward in reward_list:
+            grid[loc[0], loc[1], 1] = reward
 
         # Set keys
         key_locs = self.objects["keys"]
