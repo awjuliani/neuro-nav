@@ -22,7 +22,7 @@ extras_required = {
 
 setup(
     name="neuronav",
-    version="2.1.1",
+    version="2.2.0",
     description="Neuro-Nav",
     license="Apache License 2.0",
     author="Arthur Juliani",
