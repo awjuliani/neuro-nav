@@ -760,7 +760,7 @@ class GridEnv(Env):
         if self.stochasticity > self.rng.rand():
             action = self.rng.randint(0, self.action_space.n)
 
-        if self.manual_collect == False:
+        if self.manual_collect == True:
             can_collect = False
         else:
             can_collect = True
