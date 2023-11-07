@@ -89,3 +89,19 @@ def test_grid_noop():
         obs_a, rew, don, _ = env.step(4)
         obs_b, rew, don, _ = env.step(4)
         assert np.array_equal(obs_a, obs_b)
+
+
+def test_grid_manual_collect():
+    actions = [0, 0, 0, 0, 3, 3, 3, 3]
+    for obs_type in GridObservation:
+        env = GridEnv(obs_type=obs_type, manual_collect=True, size=GridSize.micro)
+        env.reset()
+        for action in actions:
+            _, rew, don, _ = env.step(action)
+        assert(rew == 0.0)
+        assert(don is False)
+        assert(env.agent_pos == [1, 1])
+        _, rew, don, _ = env.step(4)
+        assert(rew == 1.0)
+        assert(don is True)
+        assert(env.agent_pos == [1, 1])

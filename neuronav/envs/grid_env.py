@@ -58,6 +58,8 @@ class GridEnv(Env):
         Whether to use torch observations.
         This converts the observation to a torch tensor.
         If the observation is an image, it will be in the shape (3, 64, 64).
+    manual_collect : bool
+        Whether to use the collect reward action (default == False).
     """
 
     def __init__(
@@ -69,9 +71,12 @@ class GridEnv(Env):
         seed: int = None,
         use_noop: bool = False,
         torch_obs: bool = False,
+        manual_collect: bool = False
+
     ):
         self.rng = np.random.RandomState(seed)
         self.use_noop = use_noop
+        self.manual_collect = manual_collect
         self.blocks, self.agent_start_pos, self.template_objects = generate_layout(
             template, size
         )
@@ -97,11 +102,11 @@ class GridEnv(Env):
 
     def set_action_space(self):
         if self.orientation_type == GridOrientation.variable:
-            self.action_space = spaces.Discrete(3 + self.use_noop)
+            self.action_space = spaces.Discrete(3 + self.use_noop + self.manual_collect)
             self.orient_size = 4
         elif self.orientation_type == GridOrientation.fixed:
             self.orient_size = 1
-            self.action_space = spaces.Discrete(4 + self.use_noop)
+            self.action_space = spaces.Discrete(4 + self.use_noop + self.manual_collect)
         else:
             raise Exception("No valid GridOrientation provided.")
         self.state_size *= self.orient_size
@@ -755,10 +760,17 @@ class GridEnv(Env):
         if self.stochasticity > self.rng.rand():
             action = self.rng.randint(0, self.action_space.n)
 
+        if self.manual_collect == True:
+            can_collect = False
+        else:
+            can_collect = True
+
         if self.orientation_type == GridOrientation.variable:
             # 0 - Counter-clockwise rotation
             # 1 - Clockwise rotation
             # 2 - Forward movement
+            # 3 - Stay (if flag use_noop == True)/ Collect (if flag manual_collect == True)
+            # 4 - Collect (if flag manual_collect == True)
             if action == 0:
                 self.rotate(-1)
             elif action == 1:
@@ -766,16 +778,33 @@ class GridEnv(Env):
             elif action == 2:
                 move_array = self.direction_map[self.orientation]
                 self.move_agent(move_array)
+            elif action == 3:
+                if self.use_noop:
+                    pass
+                else:
+                    can_collect = True
+            elif action == 4:
+                can_collect = True
+
             self.looking = self.orientation
         else:
             # 0 - North
             # 1 - East
             # 2 - South
             # 3 - West
-            # 4 - Stay
+            # 4 - Stay (if flag use_noop == True) / Collect (if flag manual_collect == True)
+            # 5 - Collect (if flag manual_collect == True)
             move_array = self.direction_map[action]
-            if action != 4:
+            if action < 4:
                 self.looking = action
+            elif action == 4:
+                if self.use_noop:
+                    pass
+                else:
+                    can_collect = True
+            elif action == 5:
+                can_collect = True
+
             self.move_agent(move_array)
 
         self.episode_time += 1
@@ -783,7 +812,8 @@ class GridEnv(Env):
         eval_pos = tuple(self.agent_pos)
         terminate = self.terminate_on_reward
 
-        if eval_pos in self.objects["rewards"]:
+
+        if (eval_pos in self.objects["rewards"]) & can_collect == True:
             reward_info = self.objects["rewards"][eval_pos]
             if isinstance(reward_info, list):
                 terminate = reward_info[2]
