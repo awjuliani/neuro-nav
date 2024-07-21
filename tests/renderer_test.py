@@ -21,9 +21,7 @@ class TestGrid3DRenderer(unittest.TestCase):
         self.mock_env.agent_pos = (0, 0)
         self.mock_env.looking = 1
 
-        self.renderer.render_walls(
-            self.mock_env.blocks, self.mock_env.agent_pos, self.mock_env.looking
-        )
+        self.renderer.render_walls(self.mock_env.blocks)
 
         # No assertions here, just testing if the method runs without errors
 

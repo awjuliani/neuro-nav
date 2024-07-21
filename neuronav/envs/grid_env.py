@@ -9,6 +9,7 @@ from neuronav.envs.grid_templates import (
     GridTemplate,
     GridSize,
 )
+from neuronav.envs.grid_2d import Grid2DRenderer
 import matplotlib.pyplot as plt
 import cv2 as cv
 import copy
@@ -71,8 +72,7 @@ class GridEnv(Env):
         seed: int = None,
         use_noop: bool = False,
         torch_obs: bool = False,
-        manual_collect: bool = False
-
+        manual_collect: bool = False,
     ):
         self.rng = np.random.RandomState(seed)
         self.use_noop = use_noop
@@ -81,6 +81,7 @@ class GridEnv(Env):
             template, size
         )
         self.grid_size = size.value
+        self.renderer_2d = Grid2DRenderer(self.grid_size)
         self.state_size = self.grid_size * self.grid_size
         self.orientation_type = orientation_type
         self.torch_obs = torch_obs
@@ -171,7 +172,8 @@ class GridEnv(Env):
             else:
                 self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
             from neuronav.envs.grid_3d import Grid3DRenderer
-            self.renderer = Grid3DRenderer(128)
+
+            self.renderer_3d = Grid3DRenderer(128)
         else:
             raise Exception("No valid ObservationType provided.")
 
@@ -325,18 +327,17 @@ class GridEnv(Env):
 
         return window
 
-    def render(self, provide=False):
-        """
-        Renders the environment in a pyplot window.
-        """
-        image = self.make_visual_obs()
+    def render(self, provide=False, mode="human"):
+        image = self.renderer_2d.render_frame(self)
         if self.obs_mode == GridObservation.rendered_3d:
-            img_first = self.renderer.render_frame(self)
-            top_down = cv.resize(image, (128, 128))
-            image = np.concatenate((img_first, top_down), axis=1)
-        plt.imshow(image)
-        plt.axis("off")
-        plt.show()
+            img_3d = self.renderer_3d.render_frame(self)
+            img_2d_resized = cv.resize(image, (128, 128))
+            image = np.concatenate((img_3d, img_2d_resized), axis=1)
+
+        if mode == "human":
+            plt.imshow(image)
+            plt.axis("off")
+            plt.show()
         if provide:
             return image
 
@@ -373,200 +374,13 @@ class GridEnv(Env):
         return img
 
     def make_visual_obs(self, resize=False):
-        """
-        Returns a visual observation of the environment from a top-down perspective.
-        """
-        block_size = 20
-        block_border = block_size // 10
-
-        if self.cached_objects is None:
-            self.cached_objects = copy.deepcopy([self.objects, self.blocks])
-            img = self.make_base_image(block_size, block_border)
-            self.cached_image = img.copy()
-        else:
-            if (
-                self.cached_objects[0] == self.objects
-                and self.cached_objects[1] == self.blocks
-            ):
-                img = self.cached_image.copy()
-            else:
-                img = self.make_base_image(block_size, block_border)
-                self.cached_image = img.copy()
-                self.cached_objects = copy.deepcopy([self.objects, self.blocks])
-
-        # draw the reward locations
-        for pos, reward in self.objects["rewards"].items():
-            if type(reward) != list:
-                draw = True
-                if self.terminate_on_reward:
-                    factor = 1
-                else:
-                    factor = 1.5
-            elif reward[1] == True:
-                draw = True
-                if reward[2]:
-                    factor = 1
-                else:
-                    factor = 1.5
-                reward = reward[0]
-            else:
-                draw = False
-            if draw:
-                if reward > 0:
-                    fill_color = (100, 100, 255)  # blue
-                    border_color = (50, 50, 200)  # blue
-                else:
-                    fill_color = (255, 100, 100)  # red
-                    border_color = (200, 50, 50)  # red
-                start, end = self.get_square_edges(
-                    pos[1], pos[0], block_size, block_size - int(4 * factor)
-                )
-                cv.rectangle(img, start, end, fill_color, -1)
-                cv.rectangle(img, start, end, border_color, block_border - 1)
-
-        # draw the markers
-        for pos, marker_col in self.objects["markers"].items():
-            fill_color = marker_col
-            # clamp fill colors between and 0 and 1 and multiply by 255
-            fill_color = list(fill_color)
-            for i in range(3):
-                fill_color[i] = np.clip(fill_color[i], 0, 1).item() * 255
-            fill_color = tuple(fill_color)
-            start, end = self.get_square_edges(
-                pos[1], pos[0], block_size, block_size - 1
-            )
-            cv.rectangle(img, start, end, fill_color, -1)
-
-        # draw the keys
-        for key in self.objects["keys"]:
-            fill_color = (255, 215, 0)
-            border_color = (200, 160, 0)
-            # generate a diamond shape for the key
-            pts = np.array(
-                [
-                    [
-                        key[1] * block_size + block_size // 2,
-                        key[0] * block_size + block_size // 2 - 4,
-                    ],
-                    [
-                        key[1] * block_size + block_size // 2 + 4,
-                        key[0] * block_size + block_size // 2,
-                    ],
-                    [
-                        key[1] * block_size + block_size // 2,
-                        key[0] * block_size + block_size // 2 + 4,
-                    ],
-                    [
-                        key[1] * block_size + block_size // 2 - 4,
-                        key[0] * block_size + block_size // 2,
-                    ],
-                ]
-            )
-
-            cv.fillPoly(img, [pts], fill_color)
-            cv.polylines(img, [pts], True, border_color, 1)
-
-        # draw the doors
-        for pos, dir in self.objects["doors"].items():
-            fill_color = (0, 150, 0)
-            border_color = (0, 100, 0)
-            start, end = self.get_square_edges(
-                pos[1], pos[0], block_size, block_size - 2
-            )
-            if dir == "h":
-                start = (start[0] - 2, start[1] + 5)
-                end = (end[0] + 2, end[1] - 5)
-            elif dir == "v":
-                start = (start[0] + 5, start[1] - 2)
-                end = (end[0] - 5, end[1] + 2)
-            else:
-                raise ValueError("Invalid door direction")
-            cv.rectangle(img, start, end, fill_color, -1)
-            cv.rectangle(img, start, end, border_color, block_border - 1)
-
-        # draw the warp locations. They are purple
-        for pos, target in self.objects["warps"].items():
-            fill_color = (130, 0, 250)
-            border_color = (80, 0, 200)
-            start, end = self.get_square_edges(
-                pos[1], pos[0], block_size, block_size - 2
-            )
-            # draw a circle at the warp pos
-            cv.circle(img, (start[0] + 7, start[1] + 7), 8, fill_color, -1)
-            cv.circle(
-                img, (start[0] + 7, start[1] + 7), 8, border_color, block_border - 1
-            )
-
-        # draw the agent as an isosoceles triangle
-        agent_pos = self.agent_pos
-        agent_dir = self.looking
-        agent_color = (0, 0, 0)
-        agent_size = block_size // 2
-        agent_offset = block_size // 4
-        # swap x and y because of the way cv2 draws images
-        agent_pos = (agent_pos[1], agent_pos[0])
-        x_offset = agent_pos[0] * block_size + agent_offset
-        y_offset = agent_pos[1] * block_size + agent_offset
-        if agent_dir == 2:
-            # facing down
-            pts = np.array(
-                [
-                    (x_offset, y_offset),
-                    (x_offset + agent_size, y_offset),
-                    (x_offset + agent_size // 2, y_offset + agent_size),
-                ]
-            )
-        elif agent_dir == 3:
-            # facing left
-            pts = np.array(
-                [
-                    (x_offset + agent_size, y_offset),
-                    (x_offset + agent_size, y_offset + agent_size),
-                    (x_offset, y_offset + agent_size // 2),
-                ]
-            )
-        elif agent_dir == 0:
-            # facing up
-            pts = np.array(
-                [
-                    (x_offset, y_offset + agent_size),
-                    (x_offset + agent_size, y_offset + agent_size),
-                    (x_offset + agent_size // 2, y_offset),
-                ]
-            )
-        elif agent_dir == 1:
-            # facing right
-            pts = np.array(
-                [
-                    (x_offset, y_offset),
-                    (x_offset, y_offset + agent_size),
-                    (x_offset + agent_size, y_offset + agent_size // 2),
-                ]
-            )
-        cv.fillConvexPoly(img, pts, agent_color)
+        img = self.renderer_2d.render_frame(self)
         if resize:
             img = cv.resize(img, (128, 128), interpolation=cv.INTER_NEAREST)
         return img
 
     def make_window(self, w_size=2, block_size=20, resize=True):
-        """
-        Returns a window of size (w_size * 2 + 1) x (w_size * 2 + 1) around the agent.
-        The window is padded with 1 block on each side to account for the agent's
-        position.
-        """
-        base_image = self.make_visual_obs()
-        template_size = block_size * (self.grid_size + 2)
-        template = np.ones((template_size, template_size, 3), dtype=np.int8) * 150
-        template[block_size:-block_size, block_size:-block_size, :] = base_image
-        x, y = self.agent_pos
-        start_x = block_size * (x - w_size + 1)
-        end_x = block_size * (x + w_size + 2)
-        start_y = block_size * (y - w_size + 1)
-        end_y = block_size * (y + w_size + 2)
-        window = template[start_x:end_x, start_y:end_y]
-        if resize:
-            window = cv.resize(window, (64, 64), interpolation=cv.INTER_NEAREST)
-        return window
+        return self.renderer_2d.render_window(self, w_size, resize)
 
     def move_agent(self, direction: np.array):
         """
@@ -664,7 +478,7 @@ class GridEnv(Env):
         elif self.obs_mode == GridObservation.symbolic_window_tight:
             return self.symbolic_window_obs(size=3)
         elif self.obs_mode == GridObservation.rendered_3d:
-            return self.renderer.render_frame(self)
+            return self.renderer_3d.render_frame(self)
         else:
             raise ValueError("Invalid observation mode.")
 
@@ -812,7 +626,6 @@ class GridEnv(Env):
         eval_pos = tuple(self.agent_pos)
         terminate = self.terminate_on_reward
 
-
         if (eval_pos in self.objects["rewards"]) & can_collect == True:
             reward_info = self.objects["rewards"][eval_pos]
             if isinstance(reward_info, list):
@@ -836,5 +649,5 @@ class GridEnv(Env):
 
     def close(self) -> None:
         if self.obs_mode == GridObservation.rendered_3d:
-            self.renderer.close()
+            self.renderer_3d.close()
         return super().close()

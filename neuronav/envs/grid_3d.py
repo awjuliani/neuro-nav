@@ -21,13 +21,22 @@ class Grid3DRenderer:
         self.width, self.height = glfw.get_framebuffer_size(self.window)
         self.tex_folder = os.path.join(os.path.dirname(__file__), "textures/")
         self.textures = {}
-        self.textures["floor"] = load_texture(f"{self.tex_folder}floor.png")
-        self.textures["wall"] = load_texture(f"{self.tex_folder}wall.png")
-        self.textures["gem"] = load_texture(f"{self.tex_folder}gem.png")
-        self.textures["gem_bad"] = load_texture(f"{self.tex_folder}gem_bad.png")
-        self.textures["wood"] = load_texture(f"{self.tex_folder}wood.png")
-        self.textures["key"] = load_texture(f"{self.tex_folder}key.png")
-        self.textures["warp"] = load_texture(f"{self.tex_folder}warp.png")
+        self.load_textures()
+        self.cached_walls = None
+        self.cached_objects = None
+
+    def load_textures(self):
+        texture_files = {
+            "floor": "floor.png",
+            "wall": "wall.png",
+            "gem": "gem.png",
+            "gem_bad": "gem_bad.png",
+            "wood": "wood.png",
+            "key": "key.png",
+            "warp": "warp.png",
+        }
+        for name, file in texture_files.items():
+            self.textures[name] = load_texture(f"{self.tex_folder}{file}")
 
     def initialize_display(self):
         if sys.platform != "win32":
@@ -71,50 +80,44 @@ class Grid3DRenderer:
             pos[0], pos[1], pos[2], target[0], target[1], target[2], up[0], up[1], up[2]
         )
 
-    def render_objects(self, env):
-        self.render_walls(env.blocks, env.agent_pos, env.looking)
-        for reward in env.objects["rewards"]:
-            reward_val = (
-                env.objects["rewards"][reward][0]
-                if isinstance(env.objects["rewards"][reward], list)
-                else env.objects["rewards"][reward]
-            )
-            if reward_val > 0:
-                render_sphere(
-                    reward[0], 0.0, reward[1], 0.25, texture=self.textures["gem"]
-                )
-            else:
-                render_sphere(
-                    reward[0], 0.0, reward[1], 0.25, texture=self.textures["gem_bad"]
-                )
-        for door in env.objects["doors"]:
-            render_cube(door[0], 0.0, door[1], self.textures["wood"])
-        for key in env.objects["keys"]:
-            render_sphere(key[0], -0.1, key[1], 0.1, texture=self.textures["key"])
-        for warp in env.objects["warps"]:
-            render_sphere(warp[0], -0.5, warp[1], 0.33, texture=self.textures["warp"])
+    def render_walls(self, blocks):
+        if self.cached_walls is None or blocks != self.cached_walls:
+            self.cached_walls = blocks
+            glNewList(1, GL_COMPILE)
+            for block in blocks:
+                render_cube(block[0], 0.0, block[1], self.textures["wall"])
+            glEndList()
+        glCallList(1)
 
-    def render_walls(self, blocks, agent_pos, agent_dir):
-        for block in blocks:
-            # check if the block is in the agent's field of view
-            if agent_dir == 0:
-                if block[0] > agent_pos[0]:
-                    continue
-            elif agent_dir == 1:
-                if block[1] < agent_pos[1]:
-                    continue
-            elif agent_dir == 2:
-                if block[0] < agent_pos[0]:
-                    continue
-            elif agent_dir == 3:
-                if block[1] > agent_pos[1]:
-                    continue
-            render_cube(block[0], 0.0, block[1], self.textures["wall"])
+    def render_objects(self, env):
+        if self.cached_objects != env.objects:
+            self.cached_objects = env.objects.copy()
+            glNewList(2, GL_COMPILE)
+            for reward in env.objects["rewards"]:
+                reward_val = (
+                    env.objects["rewards"][reward][0]
+                    if isinstance(env.objects["rewards"][reward], list)
+                    else env.objects["rewards"][reward]
+                )
+                texture = (
+                    self.textures["gem"] if reward_val > 0 else self.textures["gem_bad"]
+                )
+                render_sphere(reward[0], 0.0, reward[1], 0.25, texture=texture)
+            for door in env.objects["doors"]:
+                render_cube(door[0], 0.0, door[1], self.textures["wood"])
+            for key in env.objects["keys"]:
+                render_sphere(key[0], -0.1, key[1], 0.1, texture=self.textures["key"])
+            for warp in env.objects["warps"]:
+                render_sphere(
+                    warp[0], -0.5, warp[1], 0.33, texture=self.textures["warp"]
+                )
+            glEndList()
+        glCallList(2)
 
     def render_frame(self, env):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.set_camera(env.agent_pos, env.looking)
-        self.render_walls(env.blocks, env.agent_pos, env.looking)
+        self.render_walls(env.blocks)
         self.render_objects(env)
         render_plane(
             env.grid_size / 2,

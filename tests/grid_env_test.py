@@ -98,10 +98,10 @@ def test_grid_manual_collect():
         env.reset()
         for action in actions:
             _, rew, don, _ = env.step(action)
-        assert(rew == 0.0)
-        assert(don is False)
-        assert(env.agent_pos == [1, 1])
+        assert rew == 0.0
+        assert don is False
+        assert env.agent_pos == [1, 1]
         _, rew, don, _ = env.step(4)
-        assert(rew == 1.0)
-        assert(don is True)
-        assert(env.agent_pos == [1, 1])
+        assert rew == 1.0
+        assert don is True
+        assert env.agent_pos == [1, 1]
