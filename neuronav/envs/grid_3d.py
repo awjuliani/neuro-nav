@@ -34,14 +34,15 @@ class Grid3DRenderer:
             raise RuntimeError("Failed to create GLFW window")
 
         glfw.make_context_current(self.window)
-        self.width, self.height = self.resolution, self.resolution  # Update this line
+        self.width, self.height = self.resolution, self.resolution
 
     def configure_opengl(self, fov=60.0):
+        glViewport(0, 0, self.width, self.height)
         glClearColor(135 / 255, 206 / 255, 235 / 255, 1.0)
         glEnable(GL_DEPTH_TEST)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(fov, 1, 0.1, 100.0)
+        gluPerspective(fov, self.width / self.height, 0.1, 100.0)
         glMatrixMode(GL_MODELVIEW)
 
     def load_textures(self):
@@ -95,6 +96,7 @@ class Grid3DRenderer:
         return list_id
 
     def render_frame(self, env):
+        glViewport(0, 0, self.width, self.height)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.set_camera(env.agent_pos, env.looking)
 
@@ -128,7 +130,7 @@ class Grid3DRenderer:
         image = np.frombuffer(buffer, dtype=np.uint8).reshape(
             self.height, self.width, 3
         )
-        return np.flip(image, axis=(0, 1))
+        return np.flip(image, axis=0)  # Only flip vertically
 
     def close(self):
         for list_id in self.display_lists.values():
