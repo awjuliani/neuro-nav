@@ -2,7 +2,6 @@ import numpy as np
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from PIL import Image
-import math
 
 # Cache for loaded textures
 texture_cache = {}

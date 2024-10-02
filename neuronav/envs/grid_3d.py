@@ -3,7 +3,6 @@ import numpy as np
 import os
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from pyvirtualdisplay import Display
 from neuronav.envs.gl_utils import (
     load_texture,
     render_plane,
