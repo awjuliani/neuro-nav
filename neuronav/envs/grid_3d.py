@@ -13,7 +13,7 @@ from neuronav.envs.gl_utils import (
 
 
 class Grid3DRenderer:
-    def __init__(self, resolution=256):
+    def __init__(self, resolution=128):
         self.resolution = resolution
         self.virtual_display = None
         self.initialize_glfw()
@@ -34,7 +34,7 @@ class Grid3DRenderer:
             raise RuntimeError("Failed to create GLFW window")
 
         glfw.make_context_current(self.window)
-        self.width, self.height = glfw.get_framebuffer_size(self.window)
+        self.width, self.height = self.resolution, self.resolution  # Update this line
 
     def configure_opengl(self, fov=60.0):
         glClearColor(135 / 255, 206 / 255, 235 / 255, 1.0)
