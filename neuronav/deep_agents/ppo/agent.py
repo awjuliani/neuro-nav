@@ -22,6 +22,7 @@ class PPOAgent(BaseAgent):
         self.ent_coef = agent_params["ent_coef"]
         self.num_passes = agent_params["num_passes"]
         self.clip_param = agent_params["clip_param"]
+        self.grad_clip = agent_params["grad_clip"]
         self.reset_buffer()
 
     def sample_action(self, obs):
@@ -117,6 +118,10 @@ class PPOAgent(BaseAgent):
         total_v_error = []
         total_e_loss = []
         total_grad_norm = []
+
+        # Normalize advantages once outside the loop
+        buffer_advantages = (buffer_advantages - buffer_advantages.mean()) / (buffer_advantages.std() + EPSILON)
+
         for _ in range(self.num_passes):
             # Shuffle the data and iterate over minibatches
             minibatch = torch.randperm(len(buffer_obs))
@@ -128,7 +133,6 @@ class PPOAgent(BaseAgent):
                 batch_actions = buffer_actions[batch]
                 batch_value_target = value_targets[batch]
                 batch_adv = buffer_advantages[batch]
-                batch_adv = (batch_adv - batch_adv.mean()) / (batch_adv.std() + EPSILON)
                 batch_old_log_probs = old_log_probs[batch]
                 batch_logits, batch_values = self.model(batch_obs.to(self.device))
                 batch_new_log_probs = F.log_softmax(batch_logits, dim=-1)
@@ -149,11 +153,11 @@ class PPOAgent(BaseAgent):
                 with torch.no_grad():
                     value_error = (batch_value_target - batch_values).mean()
 
-                loss = policy_loss + 0.5 * value_loss + self.ent_coef * -batch_entropy
+                loss = policy_loss + 0.5 * value_loss - self.ent_coef * batch_entropy  # Simplified entropy term
                 self.model.optimizer.zero_grad()
                 loss.backward()
                 # clip the gradient norm
-                grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.5)
+                grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)  # Use grad_clip
                 self.model.optimizer.step()
                 total_pg_loss.append(policy_loss.item())
                 total_v_loss.append(value_loss.item())

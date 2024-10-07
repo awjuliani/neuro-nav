@@ -16,26 +16,19 @@ class TestGrid3DRenderer(unittest.TestCase):
 
         # No assertions here, just testing if the method runs without errors
 
-    def test_render_walls(self):
+    def test_render_frame(self):
         self.mock_env.blocks = [(1, 1), (2, 2)]
         self.mock_env.agent_pos = (0, 0)
         self.mock_env.looking = 1
-
-        self.renderer.render_walls(
-            self.mock_env.blocks, self.mock_env.agent_pos, self.mock_env.looking
-        )
-
-        # No assertions here, just testing if the method runs without errors
-
-    def test_render_objects(self):
         self.mock_env.objects = {
             "rewards": {(1, 1): 5, (2, 2): -5},
             "doors": [(3, 3)],
             "keys": [(4, 4)],
             "warps": [(5, 5)],
         }
+        self.mock_env.grid_size = 10
 
-        self.renderer.render_objects(self.mock_env)
+        image = self.renderer.render_frame(self.mock_env)
 
         # No assertions here, just testing if the method runs without errors
 
