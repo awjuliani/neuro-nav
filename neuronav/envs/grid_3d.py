@@ -10,7 +10,6 @@ from neuronav.envs.gl_utils import (
     render_sphere,
 )
 
-
 class Grid3DRenderer:
     def __init__(self, resolution=128):
         self.resolution = resolution
@@ -136,5 +135,5 @@ class Grid3DRenderer:
             glDeleteLists(list_id, 1)
         glfw.destroy_window(self.window)
         glfw.terminate()
-        if self.virtual_display:
+        if hasattr(self, 'virtual_display') and self.virtual_display:
             self.virtual_display.stop()
