@@ -3,6 +3,7 @@ import pytest
 from neuronav.envs.grid_env import GridEnv, GridSize, GridObservation
 from neuronav.envs.grid_templates import GridTemplate
 
+
 def test_env_speed():
     env = GridEnv(
         template=GridTemplate.four_rooms_split,

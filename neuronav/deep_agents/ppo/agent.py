@@ -120,7 +120,9 @@ class PPOAgent(BaseAgent):
         total_grad_norm = []
 
         # Normalize advantages once outside the loop
-        buffer_advantages = (buffer_advantages - buffer_advantages.mean()) / (buffer_advantages.std() + EPSILON)
+        buffer_advantages = (buffer_advantages - buffer_advantages.mean()) / (
+            buffer_advantages.std() + EPSILON
+        )
 
         for _ in range(self.num_passes):
             # Shuffle the data and iterate over minibatches
@@ -153,11 +155,15 @@ class PPOAgent(BaseAgent):
                 with torch.no_grad():
                     value_error = (batch_value_target - batch_values).mean()
 
-                loss = policy_loss + 0.5 * value_loss - self.ent_coef * batch_entropy  # Simplified entropy term
+                loss = (
+                    policy_loss + 0.5 * value_loss - self.ent_coef * batch_entropy
+                )  # Simplified entropy term
                 self.model.optimizer.zero_grad()
                 loss.backward()
                 # clip the gradient norm
-                grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)  # Use grad_clip
+                grad_norm = torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), self.grad_clip
+                )  # Use grad_clip
                 self.model.optimizer.step()
                 total_pg_loss.append(policy_loss.item())
                 total_v_loss.append(value_loss.item())

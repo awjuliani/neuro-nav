@@ -10,12 +10,19 @@ from neuronav.envs.gl_utils import (
     render_sphere,
 )
 
+
 class Grid3DRenderer:
     def __init__(self, resolution=128):
         self.resolution = resolution
-        self.virtual_display = None
+        self.last_blocks = None
+        self.last_objects = None
+        self.texture_cache = {}  # Add texture cache as an instance variable
+
         self.initialize_glfw()
         self.configure_opengl()
+
+        # Make the OpenGL context current before loading textures
+        glfw.make_context_current(self.window)
         self.load_textures()
         self.display_lists = {}
 
@@ -28,7 +35,6 @@ class Grid3DRenderer:
             self.resolution, self.resolution, "Offscreen", None, None
         )
         if not self.window:
-            glfw.terminate()
             raise RuntimeError("Failed to create GLFW window")
 
         glfw.make_context_current(self.window)
@@ -44,9 +50,11 @@ class Grid3DRenderer:
         glMatrixMode(GL_MODELVIEW)
 
     def load_textures(self):
+        glfw.make_context_current(self.window)  # Ensure context is current
+
         self.tex_folder = os.path.join(os.path.dirname(__file__), "textures/")
         self.textures = {
-            name: load_texture(f"{self.tex_folder}{file}")
+            name: load_texture(f"{self.tex_folder}{file}", self.texture_cache)
             for name, file in {
                 "floor": "floor.png",
                 "wall": "wall.png",
@@ -94,6 +102,7 @@ class Grid3DRenderer:
         return list_id
 
     def render_frame(self, env):
+        glfw.make_context_current(self.window)  # Make context current
         glViewport(0, 0, self.width, self.height)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.set_camera(env.agent_pos, env.looking)
@@ -131,9 +140,10 @@ class Grid3DRenderer:
         return np.flip(image, axis=0)  # Only flip vertically
 
     def close(self):
+        glfw.make_context_current(self.window)  # Make context current
         for list_id in self.display_lists.values():
             glDeleteLists(list_id, 1)
         glfw.destroy_window(self.window)
+
+        # Properly terminate GLFW
         glfw.terminate()
-        if hasattr(self, 'virtual_display') and self.virtual_display:
-            self.virtual_display.stop()

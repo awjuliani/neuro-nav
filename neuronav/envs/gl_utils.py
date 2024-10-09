@@ -3,11 +3,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from PIL import Image
 
-# Cache for loaded textures
-texture_cache = {}
 
-
-def load_texture(filename):
+def load_texture(filename, texture_cache):
     if filename in texture_cache:
         return texture_cache[filename]
 
