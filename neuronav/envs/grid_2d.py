@@ -23,10 +23,10 @@ class Grid2DRenderer:
     AGENT_COLOR = (0, 0, 0)
     TEMPLATE_COLOR = (150, 150, 150)
 
-    def __init__(self, grid_size: int, block_size: int = 20):
+    def __init__(self, grid_size: int, block_size: int = 32, block_border: int = 3):
         self.grid_size = grid_size
         self.block_size = block_size
-        self.block_border = block_size // 10
+        self.block_border = block_border
         self.cached_image = None
         self.cached_objects = None
         self.cached_visible_walls = None
@@ -35,8 +35,8 @@ class Grid2DRenderer:
     def get_square_edges(
         self, y: int, x: int
     ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
-        true_start = self.block_size - (self.block_size - 2) + 1
-        block_end = (self.block_size - 2) - self.block_border * 2 + 1
+        true_start = self.block_border + 1
+        block_end = self.block_size - self.block_border - 1
 
         x_unit = x * self.block_size
         y_unit = y * self.block_size
