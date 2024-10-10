@@ -5,6 +5,24 @@ from typing import Tuple, List, Dict, Any
 
 
 class Grid2DRenderer:
+    # Color constants
+    BACKGROUND_COLOR = (235, 235, 235)
+    GRID_LINE_COLOR = (210, 210, 210)
+    WALL_COLOR_INNER = (165, 165, 165)
+    WALL_COLOR_OUTER = (125, 125, 125)
+    POSITIVE_REWARD_FILL = (100, 100, 255)
+    POSITIVE_REWARD_BORDER = (50, 50, 200)
+    NEGATIVE_REWARD_FILL = (255, 100, 100)
+    NEGATIVE_REWARD_BORDER = (200, 50, 50)
+    KEY_FILL = (255, 215, 0)
+    KEY_BORDER = (200, 160, 0)
+    DOOR_FILL = (0, 150, 0)
+    DOOR_BORDER = (0, 100, 0)
+    WARP_FILL = (130, 0, 250)
+    WARP_BORDER = (80, 0, 200)
+    AGENT_COLOR = (0, 0, 0)
+    TEMPLATE_COLOR = (150, 150, 150)
+
     def __init__(self, grid_size: int, block_size: int = 20):
         self.grid_size = grid_size
         self.block_size = block_size
@@ -31,18 +49,44 @@ class Grid2DRenderer:
     def make_base_image(
         self, blocks: List[Tuple[int, int]], visible_walls: bool
     ) -> np.ndarray:
-        img = np.ones((self.img_size, self.img_size, 3), np.uint8) * 225
+        img = np.ones((self.img_size, self.img_size, 3), np.uint8)
+        img[:] = self.BACKGROUND_COLOR
 
+        self.render_gridlines(img)
+        if visible_walls:
+            self.render_walls(img, blocks)
+        return img
+
+    def render_gridlines(self, img: np.ndarray) -> np.ndarray:
         # Draw grid lines
         for i in range(0, self.img_size + 1, self.block_size):
-            cv.line(img, (0, i), (self.img_size, i), (210, 210, 210), 1)
-            cv.line(img, (i, 0), (i, self.img_size), (210, 210, 210), 1)
+            cv.line(img, (0, i), (self.img_size, i), self.GRID_LINE_COLOR, 1)
+            cv.line(img, (i, 0), (i, self.img_size), self.GRID_LINE_COLOR, 1)
 
-        if visible_walls:
-            for y, x in blocks:
-                start, end = self.get_square_edges(x, y)
-                cv.rectangle(img, start, end, (175, 175, 175), -1)
-                cv.rectangle(img, start, end, (125, 125, 125), self.block_border - 1)
+        # Draw final lines at rightmost and bottommost parts
+        cv.line(
+            img,
+            (self.img_size - 1, 0),
+            (self.img_size - 1, self.img_size - 1),
+            self.GRID_LINE_COLOR,
+            1,
+        )
+        cv.line(
+            img,
+            (0, self.img_size - 1),
+            (self.img_size - 1, self.img_size - 1),
+            self.GRID_LINE_COLOR,
+            1,
+        )
+        return img
+
+    def render_walls(
+        self, img: np.ndarray, blocks: List[Tuple[int, int]]
+    ) -> np.ndarray:
+        for y, x in blocks:
+            start, end = self.get_square_edges(x, y)
+            cv.rectangle(img, start, end, self.WALL_COLOR_INNER, -1)
+            cv.rectangle(img, start, end, self.WALL_COLOR_OUTER, self.block_border - 1)
         return img
 
     def render_rewards(
@@ -56,19 +100,20 @@ class Grid2DRenderer:
                 reward, terminate_on_reward
             )
             if draw:
-                fill_color, border_color = self._get_reward_colors(reward_value)
-                start, end = self.get_square_edges(pos[1], pos[0])
-                size_reduction = int(2 * factor)
-                adjusted_start = (start[0] + size_reduction, start[1] + size_reduction)
-                adjusted_end = (end[0] - size_reduction, end[1] - size_reduction)
-                cv.rectangle(img, adjusted_start, adjusted_end, fill_color, -1)
-                cv.rectangle(
-                    img,
-                    adjusted_start,
-                    adjusted_end,
-                    border_color,
-                    self.block_border - 1,
-                )
+                self._draw_reward(img, pos, factor, reward_value)
+
+    def _draw_reward(
+        self, img: np.ndarray, pos: Tuple[int, int], factor: float, reward_value: float
+    ) -> None:
+        fill_color, border_color = self._get_reward_colors(reward_value)
+        start, end = self.get_square_edges(pos[1], pos[0])
+        size_reduction = int(2 * factor)
+        adjusted_start = (start[0] + size_reduction, start[1] + size_reduction)
+        adjusted_end = (end[0] - size_reduction, end[1] - size_reduction)
+        cv.rectangle(img, adjusted_start, adjusted_end, fill_color, -1)
+        cv.rectangle(
+            img, adjusted_start, adjusted_end, border_color, self.block_border - 1
+        )
 
     def _process_reward(
         self, reward: Any, terminate_on_reward: bool
@@ -87,9 +132,9 @@ class Grid2DRenderer:
         self, reward: float
     ) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
         return (
-            ((100, 100, 255), (50, 50, 200))
+            (self.POSITIVE_REWARD_FILL, self.POSITIVE_REWARD_BORDER)
             if reward > 0
-            else ((255, 100, 100), (200, 50, 50))
+            else (self.NEGATIVE_REWARD_FILL, self.NEGATIVE_REWARD_BORDER)
         )
 
     def render_markers(
@@ -117,8 +162,8 @@ class Grid2DRenderer:
                 ],
                 np.int32,
             )
-            cv.fillPoly(img, [pts], (255, 215, 0))
-            cv.polylines(img, [pts], True, (200, 160, 0), 1)
+            cv.fillPoly(img, [pts], self.KEY_FILL)
+            cv.polylines(img, [pts], True, self.KEY_BORDER, 1)
 
     def render_doors(self, img: np.ndarray, doors: Dict[Tuple[int, int], str]) -> None:
         for pos, dir in doors.items():
@@ -131,22 +176,20 @@ class Grid2DRenderer:
                 end = (end[0] - 5, end[1] + 2)
             else:
                 raise ValueError("Invalid door direction")
-            cv.rectangle(img, start, end, (0, 150, 0), -1)
-            cv.rectangle(img, start, end, (0, 100, 0), self.block_border - 1)
+            cv.rectangle(img, start, end, self.DOOR_FILL, -1)
+            cv.rectangle(img, start, end, self.DOOR_BORDER, self.block_border - 1)
 
     def render_warps(self, img: np.ndarray, warps: Dict[Tuple[int, int], Any]) -> None:
         for pos in warps.keys():
             start, _ = self.get_square_edges(pos[1], pos[0])
             center = (start[0] + 7, start[1] + 7)
-            cv.circle(img, center, 8, (130, 0, 250), -1)
-            cv.circle(img, center, 8, (80, 0, 200), self.block_border - 1)
+            cv.circle(img, center, 8, self.WARP_FILL, -1)
+            cv.circle(img, center, 8, self.WARP_BORDER, self.block_border - 1)
 
     def render_agent(
         self, img: np.ndarray, agent_pos: Tuple[int, int], agent_dir: int
     ) -> None:
-        # check if agent_dir is valid (it may be a tensor, and we need an int)
-        if not isinstance(agent_dir, int):
-            agent_dir = agent_dir.item()
+        agent_dir = agent_dir if isinstance(agent_dir, int) else agent_dir.item()
         agent_size = self.block_size // 2
         agent_offset = self.block_size // 4
         x_offset = agent_pos[1] * self.block_size + agent_offset
@@ -167,24 +210,12 @@ class Grid2DRenderer:
             dtype=np.int32,
         )
 
-        cv.fillConvexPoly(img, pts, (0, 0, 0))
+        cv.fillConvexPoly(img, pts, self.AGENT_COLOR)
 
     def render_frame(self, env: Any) -> np.ndarray:
-        objects_changed = self.cached_objects != env.objects
-        blocks_changed = (
-            self.cached_objects is None or env.blocks != self.cached_objects[1]
-        )
-        visible_walls_changed = self.cached_visible_walls != env.visible_walls
-
-        if objects_changed or blocks_changed or visible_walls_changed:
-            self.cached_objects = [env.objects.copy(), env.blocks.copy()]
-            self.cached_visible_walls = env.visible_walls
-            img = self.make_base_image(env.blocks, env.visible_walls)
-            self.render_rewards(img, env.objects["rewards"], env.terminate_on_reward)
-            self.render_markers(img, env.objects["markers"])
-            self.render_keys(img, env.objects["keys"])
-            self.render_doors(img, env.objects["doors"])
-            self.render_warps(img, env.objects["warps"])
+        if self._should_update_cache(env):
+            self._update_cache(env)
+            img = self._create_new_frame(env)
             self.cached_image = img.copy()
         else:
             img = self.cached_image.copy()
@@ -192,12 +223,36 @@ class Grid2DRenderer:
         self.render_agent(img, env.agent_pos, env.looking)
         return img
 
+    def _should_update_cache(self, env: Any) -> bool:
+        objects_changed = self.cached_objects != env.objects
+        blocks_changed = (
+            self.cached_objects is None or env.blocks != self.cached_objects[1]
+        )
+        visible_walls_changed = self.cached_visible_walls != env.visible_walls
+        return objects_changed or blocks_changed or visible_walls_changed
+
+    def _update_cache(self, env: Any) -> None:
+        self.cached_objects = [env.objects.copy(), env.blocks.copy()]
+        self.cached_visible_walls = env.visible_walls
+
+    def _create_new_frame(self, env: Any) -> np.ndarray:
+        img = self.make_base_image(env.blocks, env.visible_walls)
+        self.render_rewards(img, env.objects["rewards"], env.terminate_on_reward)
+        self.render_markers(img, env.objects["markers"])
+        self.render_keys(img, env.objects["keys"])
+        self.render_doors(img, env.objects["doors"])
+        self.render_warps(img, env.objects["warps"])
+        return img
+
     def render_window(
         self, env: Any, w_size: int = 2, resize: bool = True
     ) -> np.ndarray:
         base_image = self.render_frame(env)
         template_size = self.block_size * (self.grid_size + 2)
-        template = np.ones((template_size, template_size, 3), dtype=np.uint8) * 150
+        template = (
+            np.ones((template_size, template_size, 3), dtype=np.uint8)
+            * self.TEMPLATE_COLOR
+        )
         template[
             self.block_size : -self.block_size, self.block_size : -self.block_size
         ] = base_image

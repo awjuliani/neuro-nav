@@ -25,6 +25,7 @@ agent_params_ppo = {
     "num_passes": 2,
     "clip_param": 0.2,
     "batch_size": 32,
+    "grad_clip": 0.5,
 }
 
 

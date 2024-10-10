@@ -341,38 +341,6 @@ class GridEnv(Env):
         if provide:
             return image
 
-    def get_square_edges(self, y, x, unit_size, block_size):
-        block_border = block_size // 10
-        true_start = unit_size - block_size + 1
-        block_end = block_size - block_border * 2 + 1
-
-        x_unit = x * unit_size
-        y_unit = y * unit_size
-
-        return (
-            (y_unit + true_start, x_unit + true_start),
-            (y_unit + block_end, x_unit + block_end),
-        )
-
-    def make_base_image(self, block_size, block_border):
-        # draw thin lines to separate each position
-        img_size = block_size * self.grid_size
-        img = np.ones((img_size, img_size, 3), np.uint8) * 225
-        for i in range(self.grid_size + 1):
-            cv.line(
-                img, (0, i * block_size), (img_size, i * block_size), (210, 210, 210), 1
-            )
-            cv.line(
-                img, (i * block_size, 0), (i * block_size, img_size), (210, 210, 210), 1
-            )
-        if self.visible_walls:
-            # draw the blocks
-            for y, x in self.blocks:
-                start, end = self.get_square_edges(x, y, block_size, block_size - 2)
-                cv.rectangle(img, start, end, (175, 175, 175), -1)
-                cv.rectangle(img, start, end, (125, 125, 125), block_border - 1)
-        return img
-
     def make_visual_obs(self, resize=False):
         img = self.renderer_2d.render_frame(self)
         if resize:
