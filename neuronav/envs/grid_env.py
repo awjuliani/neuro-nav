@@ -73,8 +73,10 @@ class GridEnv(Env):
         use_noop: bool = False,
         torch_obs: bool = False,
         manual_collect: bool = False,
+        resolution: int = 256,
     ):
         self.rng = np.random.RandomState(seed)
+        self.resolution = resolution
         self.use_noop = use_noop
         self.manual_collect = manual_collect
         self.blocks, self.agent_start_pos, self.template_objects = generate_layout(
@@ -120,7 +122,7 @@ class GridEnv(Env):
             if self.torch_obs:
                 self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
             else:
-                self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
+                self.obs_space = spaces.Box(0, 1, shape=(self.resolution, self.resolution, 3))
         elif obs_type == GridObservation.onehot:
             self.obs_space = spaces.Box(
                 0, 1, shape=(self.state_size * self.orient_size,), dtype=np.int32
@@ -170,10 +172,10 @@ class GridEnv(Env):
             if self.torch_obs:
                 self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
             else:
-                self.obs_space = spaces.Box(0, 1, shape=(128, 128, 3))
+                self.obs_space = spaces.Box(0, 1, shape=(self.resolution, self.resolution, 3))
             from neuronav.envs.grid_3d import Grid3DRenderer
 
-            self.renderer_3d = Grid3DRenderer(128)
+            self.renderer_3d = Grid3DRenderer(self.resolution)
         else:
             raise Exception("No valid ObservationType provided.")
 
@@ -331,7 +333,7 @@ class GridEnv(Env):
         image = self.renderer_2d.render_frame(self)
         if self.obs_mode == GridObservation.rendered_3d:
             img_3d = self.renderer_3d.render_frame(self)
-            img_2d_resized = cv.resize(image, (128, 128))
+            img_2d_resized = cv.resize(image, (self.resolution, self.resolution), interpolation=cv.INTER_NEAREST)
             image = np.concatenate((img_3d, img_2d_resized), axis=1)
 
         if mode == "human":
@@ -344,7 +346,7 @@ class GridEnv(Env):
     def make_visual_obs(self, resize=False):
         img = self.renderer_2d.render_frame(self)
         if resize:
-            img = cv.resize(img, (128, 128), interpolation=cv.INTER_NEAREST)
+            img = cv.resize(img, (self.resolution, self.resolution), interpolation=cv.INTER_NEAREST)
         return img
 
     def make_window(self, w_size=2, block_size=20, resize=True):
