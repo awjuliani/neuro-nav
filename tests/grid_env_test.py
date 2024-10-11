@@ -31,7 +31,7 @@ def test_grid_orient():
         env = GridEnv(orientation_type=GridOrientation.variable, obs_type=obs_type)
         obs = env.reset()
         env.step(env.action_space.sample())
-        if obs_type != GridObservation.index:
+        if obs_type != GridObservation.index and obs_type != GridObservation.ascii:
             assert obs.shape == env.obs_space.shape
 
 
@@ -42,7 +42,7 @@ def test_grid_obs():
         # check that obs is not none. Output the obs_type if it is
         assert obs is not None, obs_type
         env.step(env.action_space.sample())
-        if obs_type != GridObservation.index:
+        if obs_type != GridObservation.index and obs_type != GridObservation.ascii:
             assert obs.shape == env.obs_space.shape
 
 

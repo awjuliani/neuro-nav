@@ -244,9 +244,7 @@ class Grid2DRenderer:
         self.render_warps(img, env.objects["warps"])
         return img
 
-    def render_window(
-        self, env: Any, w_size: int = 2, resize: bool = True
-    ) -> np.ndarray:
+    def render_window(self, env: Any, w_size: int = 2) -> np.ndarray:
         base_image = self.render_frame(env)
         template_size = self.block_size * (self.grid_size + 2)
         template = (
@@ -262,12 +260,7 @@ class Grid2DRenderer:
             self.block_size * (x - w_size + 1) : self.block_size * (x + w_size + 2),
             self.block_size * (y - w_size + 1) : self.block_size * (y + w_size + 2),
         ]
-
-        return (
-            cv.resize(window, (64, 64), interpolation=cv.INTER_NEAREST)
-            if resize
-            else window
-        )
+        return window
 
     def render(self, env: Any, mode: str = "human") -> np.ndarray:
         img = self.render_frame(env)

@@ -30,6 +30,7 @@ class GridObservation(enum.Enum):
     window_tight = "window_tight"
     symbolic_window_tight = "symbolic_window_tight"
     rendered_3d = "rendered_3d"
+    ascii = "ascii"
 
 
 class GridOrientation(enum.Enum):
@@ -122,7 +123,9 @@ class GridEnv(Env):
             if self.torch_obs:
                 self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
             else:
-                self.obs_space = spaces.Box(0, 1, shape=(self.resolution, self.resolution, 3))
+                self.obs_space = spaces.Box(
+                    0, 1, shape=(self.resolution, self.resolution, 3)
+                )
         elif obs_type == GridObservation.onehot:
             self.obs_space = spaces.Box(
                 0, 1, shape=(self.state_size * self.orient_size,), dtype=np.int32
@@ -159,9 +162,19 @@ class GridEnv(Env):
             self.obs_space = spaces.Box(0, 1, shape=(32, 32, 3))
             self.images = utils.cifar10()[0]
         elif obs_type == GridObservation.window:
-            self.obs_space = spaces.Box(0, 1, shape=(64, 64, 3))
+            if self.torch_obs:
+                self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
+            else:
+                self.obs_space = spaces.Box(
+                    0, 1, shape=(self.resolution, self.resolution, 3)
+                )
         elif obs_type == GridObservation.window_tight:
-            self.obs_space = spaces.Box(0, 1, shape=(64, 64, 3))
+            if self.torch_obs:
+                self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
+            else:
+                self.obs_space = spaces.Box(
+                    0, 1, shape=(self.resolution, self.resolution, 3)
+                )
         elif obs_type == GridObservation.symbolic:
             self.obs_space = spaces.Box(0, 1, shape=(self.grid_size, self.grid_size, 6))
         elif obs_type == GridObservation.symbolic_window:
@@ -172,10 +185,14 @@ class GridEnv(Env):
             if self.torch_obs:
                 self.obs_space = spaces.Box(0, 1, shape=(3, 64, 64))
             else:
-                self.obs_space = spaces.Box(0, 1, shape=(self.resolution, self.resolution, 3))
+                self.obs_space = spaces.Box(
+                    0, 1, shape=(self.resolution, self.resolution, 3)
+                )
             from neuronav.envs.grid_3d import Grid3DRenderer
 
             self.renderer_3d = Grid3DRenderer(self.resolution)
+        elif obs_type == GridObservation.ascii:
+            self.obs_space = spaces.Box(0, 1, shape=(self.grid_size, self.grid_size))
         else:
             raise Exception("No valid ObservationType provided.")
 
@@ -246,7 +263,7 @@ class GridEnv(Env):
             if [i, j] not in self.blocks
         ]
 
-    def symbolic_obs(self):
+    def make_symbolic_obs(self):
         """
         Returns a symbolic representation of the environment in a numpy tensor.
         Tensor shape is (grid_size, grid_size, 6)
@@ -305,11 +322,11 @@ class GridEnv(Env):
             grid[block[0], block[1]] = 1
         return grid
 
-    def symbolic_window_obs(self, size: int = 5):
+    def make_symbolic_window_obs(self, size: int = 5):
         if size not in [3, 5]:
             raise ValueError("Window size must be 3 or 5")
 
-        obs = self.symbolic_obs()
+        obs = self.make_symbolic_obs()
         pad_size = (size - 1) // 2
         full_window = np.pad(
             obs,
@@ -333,7 +350,11 @@ class GridEnv(Env):
         image = self.renderer_2d.render_frame(self)
         if self.obs_mode == GridObservation.rendered_3d:
             img_3d = self.renderer_3d.render_frame(self)
-            img_2d_resized = cv.resize(image, (self.resolution, self.resolution), interpolation=cv.INTER_NEAREST)
+            img_2d_resized = cv.resize(
+                image,
+                (self.resolution, self.resolution),
+                interpolation=cv.INTER_NEAREST,
+            )
             image = np.concatenate((img_3d, img_2d_resized), axis=1)
 
         if mode == "human":
@@ -343,14 +364,27 @@ class GridEnv(Env):
         if provide:
             return image
 
-    def make_visual_obs(self, resize=False):
+    def make_visual_obs(self):
         img = self.renderer_2d.render_frame(self)
-        if resize:
-            img = cv.resize(img, (self.resolution, self.resolution), interpolation=cv.INTER_NEAREST)
-        return img
+        return self.resize_obs(img)
 
-    def make_window(self, w_size=2, block_size=20, resize=True):
-        return self.renderer_2d.render_window(self, w_size, resize)
+    def make_window_obs(self, w_size=2):
+        img = self.renderer_2d.render_window(self, w_size)
+        return self.resize_obs(img)
+
+    def make_3d_obs(self):
+        img = self.renderer_3d.render_frame(self)
+        return self.resize_obs(img)
+
+    def resize_obs(self, img):
+        if self.torch_obs:
+            img = cv.resize(img, (64, 64), interpolation=cv.INTER_NEAREST)
+            img = np.moveaxis(img, 2, 0) / 255.0
+        else:
+            img = cv.resize(
+                img, (self.resolution, self.resolution), interpolation=cv.INTER_NEAREST
+            )
+        return img
 
     def move_agent(self, direction: np.array):
         """
@@ -390,74 +424,114 @@ class GridEnv(Env):
         Returns an observation corresponding to the provided coordinates.
         """
         if self.obs_mode == GridObservation.onehot:
-            # one-hot encoding of the perspective
-            one_hot = utils.onehot(
-                self.orientation * self.grid_size * self.grid_size
-                + perspective[0] * self.grid_size
-                + perspective[1],
-                self.state_size * self.orient_size,
-            )
-            return one_hot
+            return self.make_onehot_obs(perspective)
         elif self.obs_mode == GridObservation.twohot:
-            two_hot = utils.twohot(perspective, self.grid_size)
-            if self.orientation_type == GridOrientation.variable:
-                two_hot = np.concatenate(
-                    [two_hot, utils.onehot(self.orientation, self.orient_size)]
-                )
-            return two_hot
+            return self.make_twohot_obs(perspective)
         elif self.obs_mode == GridObservation.geometric:
-            geo = np.array(perspective) / (self.grid_size - 1.0)
-            if self.orientation_type == GridOrientation.variable:
-                geo = np.concatenate(
-                    [geo, utils.onehot(self.orientation, self.orient_size)]
-                )
-            return geo
+            return self.make_geometric_obs(perspective)
         elif self.obs_mode == GridObservation.visual:
-            return self.make_visual_obs(True)
+            return self.make_visual_obs()
         elif self.obs_mode == GridObservation.index:
-            idx = (
-                self.orientation * self.grid_size * self.grid_size
-                + perspective[0] * self.grid_size
-                + perspective[1]
-            )
-            return idx
+            return self.make_index_obs(perspective)
         elif self.obs_mode == GridObservation.boundary:
-            bounds = self.get_boundaries(
-                perspective, False, self.num_rays, self.ray_length
-            )
-            if self.orientation_type == GridOrientation.variable:
-                bounds = np.concatenate(
-                    [bounds, utils.onehot(self.orientation, self.orient_size)]
-                )
-            return bounds
+            return self.make_boundary_obs(perspective)
         elif self.obs_mode == GridObservation.images:
-            idx = (
-                self.orientation * self.state_size
-                + perspective[0] * self.grid_size
-                + perspective[1]
-            )
-            return np.rot90(self.images[idx], k=3)
+            return self.make_image_obs(perspective)
         elif self.obs_mode == GridObservation.window:
-            return self.make_window()
+            return self.make_window_obs()
         elif self.obs_mode == GridObservation.symbolic:
-            return self.symbolic_obs()
+            return self.make_symbolic_obs()
         elif self.obs_mode == GridObservation.symbolic_window:
-            return self.symbolic_window_obs()
+            return self.make_symbolic_window_obs()
         elif self.obs_mode == GridObservation.window_tight:
-            return self.make_window(w_size=1)
+            return self.make_window_obs(w_size=1)
         elif self.obs_mode == GridObservation.symbolic_window_tight:
-            return self.symbolic_window_obs(size=3)
+            return self.make_symbolic_window_obs(size=3)
         elif self.obs_mode == GridObservation.rendered_3d:
-            return self.renderer_3d.render_frame(self)
+            return self.make_3d_obs()
+        elif self.obs_mode == GridObservation.ascii:
+            return self.make_ascii_obs()
         else:
             raise ValueError("Invalid observation mode.")
+
+    def make_onehot_obs(self, perspective: list):
+        # one-hot encoding of the perspective
+        one_hot = utils.onehot(
+            self.orientation * self.grid_size * self.grid_size
+            + perspective[0] * self.grid_size
+            + perspective[1],
+            self.state_size * self.orient_size,
+        )
+        return one_hot
+
+    def make_twohot_obs(self, perspective: list):
+        two_hot = utils.twohot(perspective, self.grid_size)
+        if self.orientation_type == GridOrientation.variable:
+            two_hot = np.concatenate(
+                [two_hot, utils.onehot(self.orientation, self.orient_size)]
+            )
+        return two_hot
+
+    def make_geometric_obs(self, perspective: list):
+        geo = np.array(perspective) / (self.grid_size - 1.0)
+        if self.orientation_type == GridOrientation.variable:
+            geo = np.concatenate([geo, utils.onehot(self.orientation, self.orient_size)])
+        return geo
+
+    def make_index_obs(self, perspective: list):
+        idx = (
+            self.orientation * self.grid_size * self.grid_size
+            + perspective[0] * self.grid_size
+            + perspective[1]
+        )
+        return idx
+
+    def make_boundary_obs(self, perspective: list):
+        bounds = self.get_boundaries(
+            perspective, False, self.num_rays, self.ray_length
+        )
+        if self.orientation_type == GridOrientation.variable:
+            bounds = np.concatenate(
+                [bounds, utils.onehot(self.orientation, self.orient_size)]
+            )
+        return bounds
+
+    def make_image_obs(self, perspective: list):
+        idx = (
+            self.orientation * self.state_size
+            + perspective[0] * self.grid_size
+            + perspective[1]
+        )
+        return np.rot90(self.images[idx], k=3)
+
+    def make_ascii_obs(self):
+        grid = np.zeros((self.grid_size, self.grid_size))
+        grid[self.agent_pos[0], self.agent_pos[1]] = 1
+        for block in self.blocks:
+            grid[block[0], block[1]] = 2
+        for reward_pos, reward_val in self.objects["rewards"].items():
+            if reward_val > 0:
+                grid[reward_pos[0], reward_pos[1]] = 3
+            else:
+                grid[reward_pos[0], reward_pos[1]] = 4
+        for key_pos in self.objects["keys"]:
+            grid[key_pos[0], key_pos[1]] = 5
+        for door_pos in self.objects["doors"]:
+            grid[door_pos[0], door_pos[1]] = 6
+        for warp_pos in self.objects["warps"]:
+            grid[warp_pos[0], warp_pos[1]] = 7
+        # _ = empty, A = agent, B = block, R = reward, L = lava, K = key, D = door, W = warp
+        ascii_map = {0: " ", 1: "A", 2: "B", 3: "R", 4: "L", 5: "K", 6: "D", 7: "W"}
+        ascii_grid = np.vectorize(ascii_map.get)(grid)
+        # join with newlines
+        ascii_str = "\n".join(["".join(row) for row in ascii_grid])
+        return ascii_str
 
     @property
     def observation(self):
         if self.torch_obs:
-            return self.prepare_obs_torch(self.get_observation(self.agent_pos))
-        else:
-            return self.get_observation(self.agent_pos)
+            return torch.Tensor(self.get_observation(self.agent_pos).copy())
+        return self.get_observation(self.agent_pos)
 
     def get_boundaries(
         self,
@@ -511,26 +585,6 @@ class GridEnv(Env):
         Rotates the agent orientation in the given direction.
         """
         self.orientation = (self.orientation + direction) % (self.max_orient + 1)
-
-    def prepare_obs_torch(self, obs):
-        if (
-            self.obs_mode == GridObservation.window
-            or self.obs_mode == GridObservation.window_tight
-        ):
-            # swap axes to get channels first
-            obs = np.moveaxis(obs, 2, 0) / 255.0
-        elif self.obs_mode == GridObservation.index:
-            obs = np.array([obs])
-        elif (
-            self.obs_mode == GridObservation.visual
-            or self.obs_mode == GridObservation.rendered_3d
-        ):
-            # downsample obs to 64x64 using cv2
-            obs = cv.resize(obs, (64, 64), interpolation=cv.INTER_AREA)
-            obs = np.moveaxis(obs, 2, 0) / 255.0
-        elif self.obs_mode == GridObservation.images:
-            obs = np.moveaxis(obs, 2, 0)
-        return torch.Tensor(obs.copy())
 
     def step(self, action: int):
         """
