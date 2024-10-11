@@ -33,6 +33,7 @@ To add your own, edit [grid_env.py](./grid_env.py).
 | window_tight | Function-Approx | `[64, 64, 3]` | `[64, 64, 3]` | A 3D tensor corresponding to the 3x3 local window around the agent. |
 | symbolic_window_tight | Function-Approx | `[3, 3, 6]` | `[3, 3, 6]` | A 3D tensor corresponding to a symbolic representation of the 3x3 environment state around the agent. |
 | renderer_3d | Function-Approx | `[128, 128, 3]` | `[128, 128, 3]` | A 3D tensor corresponding to a 3D rendering of the environment from the agent's perspective. |
+| ascii | Tabular | `[n * n]` | `[n * n]` | A 2D array of characters corresponding to a top-down ASCII rendering of the environment. |
 
 * Where `n` is the length of the grid.
 
