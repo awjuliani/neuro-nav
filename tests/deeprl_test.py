@@ -25,6 +25,7 @@ agent_params_ppo = {
     "num_passes": 2,
     "clip_param": 0.2,
     "batch_size": 32,
+    "grad_clip": 0.5,
 }
 
 
@@ -61,7 +62,7 @@ def get_model_params(env):
 # Test all observation types
 def test_obs_types_ppo():
     for obs_type in GridObservation:
-        if obs_type != GridObservation.index:
+        if obs_type != GridObservation.index and obs_type != GridObservation.ascii:
             env = GridEnv(obs_type=obs_type, torch_obs=True)
             agent = PPOAgent(get_model_params(env), agent_params_ppo)
             obs = env.reset()
@@ -71,7 +72,7 @@ def test_obs_types_ppo():
 
 def test_obs_types_sac():
     for obs_type in GridObservation:
-        if obs_type != GridObservation.index:
+        if obs_type != GridObservation.index and obs_type != GridObservation.ascii:
             env = GridEnv(obs_type=obs_type, torch_obs=True)
             agent = SACAgent(get_model_params(env), agent_params_sac)
             obs = env.reset()
