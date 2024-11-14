@@ -242,6 +242,7 @@ class Grid2DRenderer:
         self.render_keys(img, env.objects["keys"])
         self.render_doors(img, env.objects["doors"])
         self.render_warps(img, env.objects["warps"])
+        self.render_other(img, env.objects["other"])
         return img
 
     def render_window(self, env: Any, w_size: int = 2) -> np.ndarray:
@@ -269,3 +270,30 @@ class Grid2DRenderer:
             plt.axis("off")
             plt.show()
         return img
+
+    def render_other(self, img: np.ndarray, others: Dict[Tuple[int, int], str]) -> None:
+        for pos, name in others.items():
+            # Get the center of the grid cell
+            center = (
+                pos[1] * self.block_size + self.block_size // 2,
+                pos[0] * self.block_size + self.block_size // 2,
+            )
+
+            # Get the first letter of the object name
+            letter = name[0].upper()
+
+            # Set text parameters
+            font = cv.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.75
+            thickness = 2
+
+            # Get text size to center it
+            (text_width, text_height), _ = cv.getTextSize(
+                letter, font, font_scale, thickness
+            )
+            text_pos = (center[0] - text_width // 2, center[1] + text_height // 2)
+
+            # Draw the letter
+            cv.putText(
+                img, letter, text_pos, font, font_scale, self.AGENT_COLOR, thickness
+            )

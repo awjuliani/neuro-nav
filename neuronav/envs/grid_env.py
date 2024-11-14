@@ -10,6 +10,7 @@ from neuronav.envs.grid_templates import (
     GridSize,
 )
 from neuronav.envs.grid_2d import Grid2DRenderer
+from neuronav.envs.grid_lang import GridLangRenderer
 import matplotlib.pyplot as plt
 import cv2 as cv
 import copy
@@ -31,6 +32,7 @@ class GridObservation(enum.Enum):
     symbolic_window_tight = "symbolic_window_tight"
     rendered_3d = "rendered_3d"
     ascii = "ascii"
+    language = "language"
 
 
 class GridOrientation(enum.Enum):
@@ -97,6 +99,7 @@ class GridEnv(Env):
             "keys": [],
             "doors": {},
             "warps": {},
+            "other": {},
         }
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
         self.done = False
@@ -192,6 +195,9 @@ class GridEnv(Env):
 
             self.renderer_3d = Grid3DRenderer(self.resolution)
         elif obs_type == GridObservation.ascii:
+            self.obs_space = spaces.Box(0, 1, shape=(self.grid_size, self.grid_size))
+        elif obs_type == GridObservation.language:
+            self.lang_renderer = GridLangRenderer(self.grid_size)
             self.obs_space = spaces.Box(0, 1, shape=(self.grid_size, self.grid_size))
         else:
             raise Exception("No valid ObservationType provided.")
@@ -451,6 +457,10 @@ class GridEnv(Env):
             return self.make_3d_obs()
         elif self.obs_mode == GridObservation.ascii:
             return self.make_ascii_obs()
+        elif self.obs_mode == GridObservation.language:
+            return self.lang_renderer.make_language_obs(
+                self.agent_pos, self.blocks, self.objects
+            )
         else:
             raise ValueError("Invalid observation mode.")
 
@@ -475,7 +485,9 @@ class GridEnv(Env):
     def make_geometric_obs(self, perspective: list):
         geo = np.array(perspective) / (self.grid_size - 1.0)
         if self.orientation_type == GridOrientation.variable:
-            geo = np.concatenate([geo, utils.onehot(self.orientation, self.orient_size)])
+            geo = np.concatenate(
+                [geo, utils.onehot(self.orientation, self.orient_size)]
+            )
         return geo
 
     def make_index_obs(self, perspective: list):
@@ -487,9 +499,7 @@ class GridEnv(Env):
         return idx
 
     def make_boundary_obs(self, perspective: list):
-        bounds = self.get_boundaries(
-            perspective, False, self.num_rays, self.ray_length
-        )
+        bounds = self.get_boundaries(perspective, False, self.num_rays, self.ray_length)
         if self.orientation_type == GridOrientation.variable:
             bounds = np.concatenate(
                 [bounds, utils.onehot(self.orientation, self.orient_size)]
@@ -520,8 +530,20 @@ class GridEnv(Env):
             grid[door_pos[0], door_pos[1]] = 6
         for warp_pos in self.objects["warps"]:
             grid[warp_pos[0], warp_pos[1]] = 7
-        # _ = empty, A = agent, B = block, R = reward, L = lava, K = key, D = door, W = warp
-        ascii_map = {0: " ", 1: "A", 2: "B", 3: "R", 4: "L", 5: "K", 6: "D", 7: "W"}
+        for other_pos, other_name in self.objects["other"].items():
+            grid[other_pos[0], other_pos[1]] = 8
+        # _ = empty, A = agent, B = block, R = reward, L = lava, K = key, D = door, W = warp, O = other
+        ascii_map = {
+            0: " ",
+            1: "A",
+            2: "B",
+            3: "R",
+            4: "L",
+            5: "K",
+            6: "D",
+            7: "W",
+            8: "O",
+        }
         ascii_grid = np.vectorize(ascii_map.get)(grid)
         # join with newlines
         ascii_str = "\n".join(["".join(row) for row in ascii_grid])
