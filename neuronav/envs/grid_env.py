@@ -1,4 +1,4 @@
-from ast import Dict
+from typing import Dict
 from gym import Env, spaces
 import numpy as np
 import neuronav.utils as utils
@@ -8,6 +8,7 @@ from neuronav.envs.grid_templates import (
     generate_layout,
     GridTemplate,
     GridSize,
+    add_outer,
 )
 from neuronav.envs.grid_2d import Grid2DRenderer
 from neuronav.envs.grid_lang import GridLangRenderer
@@ -77,14 +78,18 @@ class GridEnv(Env):
         torch_obs: bool = False,
         manual_collect: bool = False,
         resolution: int = 256,
+        add_outer_walls: bool = True,
     ):
         self.rng = np.random.RandomState(seed)
         self.resolution = resolution
         self.use_noop = use_noop
         self.manual_collect = manual_collect
-        self.blocks, self.agent_start_pos, self.template_objects = generate_layout(
+        self.add_outer_walls = add_outer_walls
+        walls, self.agent_start_pos, self.template_objects = generate_layout(
             template, size
         )
+        if add_outer_walls:
+            walls = add_outer(walls, size.value)
         self.grid_size = size.value
         self.renderer_2d = Grid2DRenderer(self.grid_size)
         self.state_size = self.grid_size * self.grid_size
@@ -100,11 +105,9 @@ class GridEnv(Env):
             "doors": {},
             "warps": {},
             "other": {},
+            "walls": walls,
         }
         self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
-        self.done = False
-        self.keys = 0
-        self.free_spots = self.make_free_spots()
         self.set_obs_space(obs_type)
 
     def set_action_space(self):
@@ -215,19 +218,35 @@ class GridEnv(Env):
     ):
         """
         Resets the environment to its initial configuration.
-        Args:
-            objects: A dictionary of objects to be placed in the environment.
-            agent_pos: The optional starting position of the agent.
-            episode_length: The maximum number of steps in an episode.
-            random_start: Whether to start the agent at a random position.
-            terminate_on_reward: Whether to terminate the episode when the agent
-                receives a reward.
-            time_penalty: The reward penalty for each step taken in the environment.
-            stochasticity: The probability of the agent taking a random action.
-            visible_walls: Whether the agent can see the walls of the environment.
-        Returns:
-            The initial observation of the environment.
         """
+        # Reset basic state variables
+        self._reset_state(
+            episode_length,
+            terminate_on_reward,
+            time_penalty,
+            stochasticity,
+            visible_walls,
+        )
+
+        # Handle objects setup
+        self.objects = self._setup_objects(objects)
+
+        self.free_spots = self.make_free_spots(self.base_objects["walls"])
+
+        # Set agent position
+        self.agent_pos = self._setup_agent(agent_pos, random_start)
+
+        return self.observation
+
+    def _reset_state(
+        self,
+        episode_length,
+        terminate_on_reward,
+        time_penalty,
+        stochasticity,
+        visible_walls,
+    ):
+        """Helper method to reset all state variables."""
         self.done = False
         self.episode_time = 0
         self.orientation = 0
@@ -240,33 +259,35 @@ class GridEnv(Env):
         self.visible_walls = visible_walls
         self.cached_objects = None
 
-        if agent_pos is not None:
-            self.agent_pos = agent_pos
-        elif random_start:
-            self.agent_pos = self.get_free_spot()
-        else:
-            self.agent_pos = self.agent_start_pos
-
+    def _setup_objects(self, objects: Dict = None) -> Dict:
+        """Helper method to set up environment objects."""
         base_object = copy.deepcopy(self.base_objects)
-        if objects is not None:
-            use_objects = copy.deepcopy(objects)
-        else:
-            use_objects = copy.deepcopy(self.template_objects)
-        for key in use_objects.keys():
-            if key in base_object.keys():
+        use_objects = copy.deepcopy(
+            objects if objects is not None else self.template_objects
+        )
+
+        for key in use_objects:
+            if key in base_object:
                 base_object[key] = use_objects[key]
-        self.objects = base_object
-        return self.observation
+        if self.add_outer_walls:
+            base_object["walls"] = add_outer(base_object["walls"], self.grid_size)
+        return base_object
+
+    def _setup_agent(self, agent_pos: list = None, random_start: bool = False) -> list:
+        """Helper method to determine the agent's starting position."""
+        if random_start:
+            return self.get_free_spot()
+        return agent_pos if agent_pos is not None else self.agent_start_pos
 
     def get_free_spot(self):
         return random.choice(self.free_spots)
 
-    def make_free_spots(self):
+    def make_free_spots(self, walls: list):
         return [
             [i, j]
             for i in range(self.grid_size)
             for j in range(self.grid_size)
-            if [i, j] not in self.blocks
+            if [i, j] not in walls
         ]
 
     def make_symbolic_obs(self):
@@ -324,7 +345,7 @@ class GridEnv(Env):
         Returns a numpy array of the walls in the environment.
         """
         grid = np.zeros([self.grid_size, self.grid_size])
-        for block in self.blocks:
+        for block in self.objects["walls"]:
             grid[block[0], block[1]] = 1
         return grid
 
@@ -413,7 +434,7 @@ class GridEnv(Env):
         if not (x_check and y_check):
             return False
 
-        if target_list in self.blocks:
+        if target_list in self.objects["walls"]:
             return False
 
         if target_tuple in self.objects["doors"]:
@@ -458,9 +479,7 @@ class GridEnv(Env):
         elif self.obs_mode == GridObservation.ascii:
             return self.make_ascii_obs()
         elif self.obs_mode == GridObservation.language:
-            return self.lang_renderer.make_language_obs(
-                self.agent_pos, self.blocks, self.objects
-            )
+            return self.lang_renderer.make_language_obs(self.agent_pos, self.objects)
         else:
             raise ValueError("Invalid observation mode.")
 
@@ -517,7 +536,7 @@ class GridEnv(Env):
     def make_ascii_obs(self):
         grid = np.zeros((self.grid_size, self.grid_size))
         grid[self.agent_pos[0], self.agent_pos[1]] = 1
-        for block in self.blocks:
+        for block in self.objects["walls"]:
             grid[block[0], block[1]] = 2
         for reward_pos, reward_val in self.objects["rewards"].items():
             if reward_val > 0:

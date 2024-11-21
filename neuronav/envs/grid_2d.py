@@ -47,14 +47,14 @@ class Grid2DRenderer:
         )
 
     def make_base_image(
-        self, blocks: List[Tuple[int, int]], visible_walls: bool
+        self, objects: Dict[str, Any], visible_walls: bool
     ) -> np.ndarray:
         img = np.ones((self.img_size, self.img_size, 3), np.uint8)
         img[:] = self.BACKGROUND_COLOR
 
         self.render_gridlines(img)
         if visible_walls:
-            self.render_walls(img, blocks)
+            self.render_walls(img, objects["walls"])
         return img
 
     def render_gridlines(self, img: np.ndarray) -> np.ndarray:
@@ -80,10 +80,8 @@ class Grid2DRenderer:
         )
         return img
 
-    def render_walls(
-        self, img: np.ndarray, blocks: List[Tuple[int, int]]
-    ) -> np.ndarray:
-        for y, x in blocks:
+    def render_walls(self, img: np.ndarray, walls: List[Tuple[int, int]]) -> np.ndarray:
+        for y, x in walls:
             start, end = self.get_square_edges(x, y)
             cv.rectangle(img, start, end, self.WALL_COLOR_INNER, -1)
             cv.rectangle(img, start, end, self.WALL_COLOR_OUTER, self.block_border - 1)
@@ -225,18 +223,15 @@ class Grid2DRenderer:
 
     def _should_update_cache(self, env: Any) -> bool:
         objects_changed = self.cached_objects != env.objects
-        blocks_changed = (
-            self.cached_objects is None or env.blocks != self.cached_objects[1]
-        )
         visible_walls_changed = self.cached_visible_walls != env.visible_walls
-        return objects_changed or blocks_changed or visible_walls_changed
+        return objects_changed or visible_walls_changed
 
     def _update_cache(self, env: Any) -> None:
-        self.cached_objects = [env.objects.copy(), env.blocks.copy()]
+        self.cached_objects = env.objects.copy()
         self.cached_visible_walls = env.visible_walls
 
     def _create_new_frame(self, env: Any) -> np.ndarray:
-        img = self.make_base_image(env.blocks, env.visible_walls)
+        img = self.make_base_image(env.objects, env.visible_walls)
         self.render_rewards(img, env.objects["rewards"], env.terminate_on_reward)
         self.render_markers(img, env.objects["markers"])
         self.render_keys(img, env.objects["keys"])

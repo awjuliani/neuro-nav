@@ -14,7 +14,6 @@ from neuronav.envs.gl_utils import (
 class Grid3DRenderer:
     def __init__(self, resolution=128):
         self.resolution = resolution
-        self.last_blocks = None
         self.last_objects = None
         self.texture_cache = {}  # Add texture cache as an instance variable
 
@@ -75,11 +74,11 @@ class Grid3DRenderer:
         glLoadIdentity()
         gluLookAt(*pos, *target, *up)
 
-    def create_walls_display_list(self, blocks):
+    def create_walls_display_list(self, walls):
         list_id = glGenLists(1)
         glNewList(list_id, GL_COMPILE)
-        for block in blocks:
-            render_cube(block[0], 0.0, block[1], self.textures["wall"])
+        for wall in walls:
+            render_cube(wall[0], 0.0, wall[1], self.textures["wall"])
         glEndList()
         return list_id
 
@@ -108,11 +107,13 @@ class Grid3DRenderer:
         self.set_camera(env.agent_pos, env.looking)
 
         # Render walls
-        if "walls" not in self.display_lists or env.blocks != self.last_blocks:
+        if "walls" not in self.display_lists or env.objects != self.last_objects:
             if "walls" in self.display_lists:
                 glDeleteLists(self.display_lists["walls"], 1)
-            self.display_lists["walls"] = self.create_walls_display_list(env.blocks)
-            self.last_blocks = env.blocks.copy()
+            self.display_lists["walls"] = self.create_walls_display_list(
+                env.objects["walls"]
+            )
+            self.last_objects = env.objects.copy()
         glCallList(self.display_lists["walls"])
 
         # Render objects

@@ -70,7 +70,7 @@ class GridLangRenderer:
 
         return direction, round(distance, 2)
 
-    def make_language_obs(self, agent_pos: list, blocks: list, objects: dict):
+    def make_language_obs(self, agent_pos: list, objects: dict):
         agent_pos = np.array(agent_pos)
         descriptions = [
             f"You are in the {self._get_region(agent_pos)} region of a {self.grid_size}x{self.grid_size} meter maze."
@@ -80,11 +80,11 @@ class GridLangRenderer:
         # Describe walls
         wall_positions = [
             (i, j)
-            for i in range(1, self.grid_size - 1)
-            for j in range(1, self.grid_size - 1)
-            if [i, j] in blocks
+            for i in range(0, self.grid_size)
+            for j in range(0, self.grid_size)
+            if [i, j] in objects["walls"]
         ]
-        wall_descs = self._get_object_descriptions(wall_positions, "block", agent_pos)
+        wall_descs = self._get_object_descriptions(wall_positions, "wall", agent_pos)
         if wall_descs:
             object_descriptions.append("\n".join(wall_descs))
 

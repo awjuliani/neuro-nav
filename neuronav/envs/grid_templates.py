@@ -3,6 +3,7 @@ import enum
 
 
 class GridSize(enum.Enum):
+    five = 5
     micro = 7
     small = 11
     large = 17
@@ -385,11 +386,10 @@ def generate_layout(
     if type(template) == str:
         template = GridTemplate(template)
     blocks, agent_start, objects = template_map[template](grid_size)
-    blocks = add_outer_blocks(blocks, grid_size)
     return blocks, agent_start, objects
 
 
-def add_outer_blocks(blocks: list, grid_size: int):
+def add_outer(blocks: list, grid_size: int):
     outer_blocks = [
         [i, j]
         for i in range(grid_size)
