@@ -179,10 +179,14 @@ class Grid2DRenderer:
 
     def render_warps(self, img: np.ndarray, warps: Dict[Tuple[int, int], Any]) -> None:
         for pos in warps.keys():
-            start, _ = self.get_square_edges(pos[1], pos[0])
-            center = (start[0] + 7, start[1] + 7)
-            cv.circle(img, center, 8, self.WARP_FILL, -1)
-            cv.circle(img, center, 8, self.WARP_BORDER, self.block_border - 1)
+            # Calculate center of the grid cell
+            center = (
+                pos[1] * self.block_size + self.block_size // 2,
+                pos[0] * self.block_size + self.block_size // 2,
+            )
+            radius = self.block_size // 4  # Adjust size as needed
+            cv.circle(img, center, radius, self.WARP_FILL, -1)
+            cv.circle(img, center, radius, self.WARP_BORDER, self.block_border - 1)
 
     def render_agent(
         self, img: np.ndarray, agent_pos: Tuple[int, int], agent_dir: int
