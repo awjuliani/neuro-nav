@@ -479,7 +479,9 @@ class GridEnv(Env):
         elif self.obs_mode == GridObservation.ascii:
             return self.make_ascii_obs()
         elif self.obs_mode == GridObservation.language:
-            return self.lang_renderer.make_language_obs(self.agent_pos, self.objects)
+            return self.lang_renderer.make_language_obs(
+                self.agent_pos, self.objects, self.keys
+            )
         else:
             raise ValueError("Invalid observation mode.")
 

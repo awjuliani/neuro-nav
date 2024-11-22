@@ -226,12 +226,17 @@ class Grid2DRenderer:
         return img
 
     def _should_update_cache(self, env: Any) -> bool:
+        # Deep copy comparison for objects to catch changes in nested structures
         objects_changed = self.cached_objects != env.objects
         visible_walls_changed = self.cached_visible_walls != env.visible_walls
-        return objects_changed or visible_walls_changed
+        return objects_changed or visible_walls_changed or self.cached_image is None
 
     def _update_cache(self, env: Any) -> None:
-        self.cached_objects = env.objects.copy()
+        # Create a deep copy to ensure nested structures are properly cached
+        self.cached_objects = {
+            key: value.copy() if hasattr(value, "copy") else value
+            for key, value in env.objects.items()
+        }
         self.cached_visible_walls = env.visible_walls
 
     def _create_new_frame(self, env: Any) -> np.ndarray:

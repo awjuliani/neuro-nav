@@ -70,10 +70,11 @@ class GridLangRenderer:
 
         return direction, round(distance, 2)
 
-    def make_language_obs(self, agent_pos: list, objects: dict):
+    def make_language_obs(self, agent_pos: list, objects: dict, keys: int):
         agent_pos = np.array(agent_pos)
         descriptions = [
-            f"You are in the {self._get_region(agent_pos)} region of a {self.grid_size}x{self.grid_size} meter maze."
+            f"You are in the {self._get_region(agent_pos)} region of a {self.grid_size}x{self.grid_size} meter maze. "
+            f"You have {keys} {'key' if keys == 1 else 'keys'}."
         ]
         object_descriptions = []
 
