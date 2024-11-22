@@ -97,9 +97,14 @@ class GridLangRenderer:
             object_descriptions.append("\n".join(reward_descs))
 
         # Describe other objects
+        obj_name_mapping = {
+            "keys": "door key",
+            "doors": "locked door",
+            "warps": "warp pad",
+        }
         for obj_type in ["keys", "doors", "warps"]:
             obj_descs = self._get_object_descriptions(
-                objects[obj_type], obj_type[:-1], agent_pos
+                objects[obj_type], obj_name_mapping[obj_type], agent_pos
             )
             if obj_descs:
                 object_descriptions.append("\n".join(obj_descs))

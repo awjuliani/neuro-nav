@@ -718,3 +718,86 @@ class GridEnv(Env):
         if self.obs_mode == GridObservation.rendered_3d:
             self.renderer_3d.close()
         return super().close()
+
+    def get_transition_matrix(self):
+        """
+        Constructs the transition matrix T(s, a, s') for the environment with fixed orientation.
+        Only works when orientation_type is GridOrientation.fixed.
+
+        Returns:
+            numpy.ndarray: Transition matrix of shape (n_states, n_actions, n_states)
+                         where T[s, a, s'] represents the probability of transitioning
+                         from state s to state s' when taking action a.
+        """
+        if self.orientation_type != GridOrientation.fixed:
+            raise ValueError("This transition matrix only works with fixed orientation")
+
+        n_states = self.grid_size * self.grid_size
+        n_actions = self.action_space.n
+        T = np.zeros((n_states, n_actions, n_states))
+
+        # Helper to convert (x, y) to state index
+        def state_to_idx(x, y):
+            return x * self.grid_size + y
+
+        # Helper to convert position tuple/list to state index
+        def pos_to_idx(pos):
+            return state_to_idx(pos[0], pos[1])
+
+        # Helper to check if a position is valid (similar to check_target but without modifying state)
+        def is_valid_target(target):
+            target_tuple = tuple(target)
+            x_check = -1 < target[0] < self.grid_size
+            y_check = -1 < target[1] < self.grid_size
+
+            if not (x_check and y_check):
+                return False
+
+            if target in self.objects["walls"]:
+                return False
+
+            # Check for doors - only passable if we have keys
+            if target_tuple in self.objects["doors"]:
+                if self.keys > 0:
+                    return True
+                else:
+                    return False
+
+            return True
+
+        # Iterate through all possible states
+        for x in range(self.grid_size):
+            for y in range(self.grid_size):
+                if [x, y] in self.objects["walls"]:
+                    continue
+
+                curr_state = state_to_idx(x, y)
+
+                # Handle the four movement actions (N, E, S, W)
+                for action in range(4):
+                    move = self.direction_map[action]
+                    next_x, next_y = x + move[0], y + move[1]
+                    next_pos = [next_x, next_y]
+
+                    if is_valid_target(next_pos):
+                        # Check if the next position is a warp
+                        next_pos_tuple = tuple(next_pos)
+                        if next_pos_tuple in self.objects["warps"]:
+                            # If it's a warp, transition to the warp target
+                            warp_target = self.objects["warps"][next_pos_tuple]
+                            next_state = pos_to_idx(warp_target)
+                        else:
+                            # Normal movement
+                            next_state = state_to_idx(next_x, next_y)
+                        T[curr_state, action, next_state] = 1.0
+                    else:
+                        # If movement is blocked, stay in current state
+                        T[curr_state, action, curr_state] = 1.0
+
+                # Handle no-op/collect actions
+                if self.use_noop or self.manual_collect:
+                    T[curr_state, 4, curr_state] = 1.0
+                if self.manual_collect and self.use_noop:
+                    T[curr_state, 5, curr_state] = 1.0
+
+        return T
