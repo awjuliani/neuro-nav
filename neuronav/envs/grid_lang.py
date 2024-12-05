@@ -2,20 +2,13 @@ import numpy as np
 
 
 class GridLangRenderer:
-    def __init__(self, grid_size: int, first_person: bool = True):
+    def __init__(self, grid_size: int):
         self.grid_size = grid_size
-        self.first_person = first_person
         self.reward_types = {True: "gem", False: "lava"}
         self.obj_name_mapping = {
             "keys": "door key",
             "doors": "locked door",
             "warps": "warp pad",
-        }
-        # Add pronouns based on perspective
-        self.pronouns = {
-            "subject": "you" if first_person else "the agent",
-            "possessive": "your" if first_person else "the agent's",
-            "be": "are" if first_person else "is",
         }
 
     def _get_region(self, pos):
@@ -49,7 +42,7 @@ class GridLangRenderer:
         else:
             return f"{v_region}-{h_region}"
 
-    def _get_object_descriptions(self, positions, obj_type, agent_pos, reward_val=None):
+    def _get_object_descriptions(self, positions, obj_type, agent_pos, reward_val=None, pronouns=None):
         """Unified helper method to generate descriptions for any type of object."""
         descriptions = []
         pos_type_pairs = []
@@ -75,9 +68,9 @@ class GridLangRenderer:
         for pos, item_type in pos_type_pairs:
             direction, distance = self._get_direction_and_distance(pos, agent_pos)
             descriptions.append(
-                f"There is a {item_type} at {self.pronouns['possessive']} position."
+                f"There is a {item_type} at {pronouns['possessive']} position."
                 if direction == "same position"
-                else f"There is a {item_type} {direction} of {self.pronouns['subject']}, {distance} meters away."
+                else f"There is a {item_type} {direction} of {pronouns['subject']}, {distance} meters away."
             )
 
         return descriptions
@@ -97,51 +90,58 @@ class GridLangRenderer:
 
         return direction, round(distance, 2)
 
-    def _get_boundary_descriptions(self, agent_pos):
+    def _get_boundary_descriptions(self, agent_pos, pronouns):
         """Helper method to describe adjacent outer walls."""
         descriptions = []
 
         # Check each boundary
         if agent_pos[0] == 0:  # North wall
             descriptions.append(
-                f"{self.pronouns['subject'].capitalize()} {self.pronouns['be']} against the north wall of the maze."
+                f"{pronouns['subject'].capitalize()} {pronouns['be']} against the north wall of the maze."
             )
         elif agent_pos[0] == self.grid_size - 1:  # South wall
             descriptions.append(
-                f"{self.pronouns['subject'].capitalize()} {self.pronouns['be']} against the south wall of the maze."
+                f"{pronouns['subject'].capitalize()} {pronouns['be']} against the south wall of the maze."
             )
 
         if agent_pos[1] == 0:  # West wall
             descriptions.append(
-                f"{self.pronouns['subject'].capitalize()} {self.pronouns['be']} against the west wall of the maze."
+                f"{pronouns['subject'].capitalize()} {pronouns['be']} against the west wall of the maze."
             )
         elif agent_pos[1] == self.grid_size - 1:  # East wall
             descriptions.append(
-                f"{self.pronouns['subject'].capitalize()} {self.pronouns['be']} against the east wall of the maze."
+                f"{pronouns['subject'].capitalize()} {pronouns['be']} against the east wall of the maze."
             )
 
         return descriptions
 
-    def make_language_obs(self, agent_pos: list, objects: dict, keys: int):
+    def make_language_obs(self, agent_pos: list, objects: dict, keys: int, first_person: bool = True):
+        # Create pronouns dictionary locally based on first_person parameter
+        pronouns = {
+            "subject": "you" if first_person else "the agent",
+            "possessive": "your" if first_person else "the agent's",
+            "be": "are" if first_person else "is",
+        }
+        
         agent_pos = np.array(agent_pos)
         base_description = (
-            f"{self.pronouns['subject'].capitalize()} {self.pronouns['be']} in the {self._get_region(agent_pos)} region of a {self.grid_size}x{self.grid_size} meter maze. "
-            f"{self.pronouns['subject'].capitalize()} {self.pronouns['be']} carrying {keys} {'key' if keys == 1 else 'keys'}."
+            f"{pronouns['subject'].capitalize()} {pronouns['be']} in the {self._get_region(agent_pos)} region of a {self.grid_size}x{self.grid_size} meter maze. "
+            f"{pronouns['subject'].capitalize()} {pronouns['be']} carrying {keys} {'key' if keys == 1 else 'keys'}."
         )
 
         # Get boundary descriptions
-        all_descriptions = self._get_boundary_descriptions(agent_pos)
+        all_descriptions = self._get_boundary_descriptions(agent_pos, pronouns)
 
         # Process all object types
         all_descriptions.extend(
-            self._get_object_descriptions(objects["walls"], "wall", agent_pos)
+            self._get_object_descriptions(objects["walls"], "wall", agent_pos, pronouns=pronouns)
         )
 
         # Handle rewards
         if objects["rewards"]:
             all_descriptions.extend(
                 self._get_object_descriptions(
-                    objects["rewards"], None, agent_pos, reward_val=True
+                    objects["rewards"], None, agent_pos, reward_val=True, pronouns=pronouns
                 )
             )
 
@@ -150,14 +150,14 @@ class GridLangRenderer:
             if objects[obj_type]:
                 all_descriptions.extend(
                     self._get_object_descriptions(
-                        objects[obj_type], display_name, agent_pos
+                        objects[obj_type], display_name, agent_pos, pronouns=pronouns
                     )
                 )
 
         # Handle other objects
         if "other" in objects and objects["other"]:
             all_descriptions.extend(
-                self._get_object_descriptions(objects["other"], "other", agent_pos)
+                self._get_object_descriptions(objects["other"], "other", agent_pos, pronouns=pronouns)
             )
 
         return (
