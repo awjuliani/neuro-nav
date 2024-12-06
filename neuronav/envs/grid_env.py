@@ -79,6 +79,7 @@ class GridEnv(Env):
         manual_collect: bool = False,
         resolution: int = 256,
         add_outer_walls: bool = True,
+        vision_range: float = None,
     ):
         self.rng = np.random.RandomState(seed)
         self.resolution = resolution
@@ -91,6 +92,7 @@ class GridEnv(Env):
         if add_outer_walls:
             walls = add_outer(walls, size.value)
         self.grid_size = size.value
+        self.vision_range = vision_range
         self.renderer_2d = Grid2DRenderer(self.grid_size)
         self.state_size = self.grid_size * self.grid_size
         self.orientation_type = orientation_type
@@ -107,7 +109,9 @@ class GridEnv(Env):
             "other": {},
             "walls": walls,
         }
-        self.direction_map = np.array([[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0]])
+        self.direction_map = np.array(
+            [[-1, 0], [0, 1], [1, 0], [0, -1], [0, 0], [0, 0]]
+        )
         self.set_obs_space(obs_type)
 
     def set_action_space(self):
@@ -480,7 +484,11 @@ class GridEnv(Env):
             return self.make_ascii_obs()
         elif self.obs_mode == GridObservation.language:
             return self.lang_renderer.make_language_obs(
-                self.agent_pos, self.objects, self.keys
+                self.agent_pos,
+                self.objects,
+                self.keys,
+                first_person=True,
+                vision_range=self.vision_range,
             )
         else:
             raise ValueError("Invalid observation mode.")
@@ -704,6 +712,9 @@ class GridEnv(Env):
             if terminate:
                 self.done = True
             self.objects["rewards"].pop(eval_pos)
+
+        if (eval_pos in self.objects["other"]) & can_collect:
+            self.objects["other"].pop(eval_pos)
 
         if eval_pos in self.objects["keys"]:
             self.keys += 1

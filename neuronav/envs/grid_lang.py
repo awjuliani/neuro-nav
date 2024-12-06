@@ -42,7 +42,15 @@ class GridLangRenderer:
         else:
             return f"{v_region}-{h_region}"
 
-    def _get_object_descriptions(self, positions, obj_type, agent_pos, reward_val=None, pronouns=None):
+    def _get_object_descriptions(
+        self,
+        positions,
+        obj_type,
+        agent_pos,
+        reward_val=None,
+        pronouns=None,
+        vision_range=None,
+    ):
         """Unified helper method to generate descriptions for any type of object."""
         descriptions = []
         pos_type_pairs = []
@@ -67,6 +75,9 @@ class GridLangRenderer:
 
         for pos, item_type in pos_type_pairs:
             direction, distance = self._get_direction_and_distance(pos, agent_pos)
+            # Skip objects beyond vision range if specified
+            if vision_range is not None and distance > vision_range:
+                continue
             descriptions.append(
                 f"There is a {item_type} at {pronouns['possessive']} position."
                 if direction == "same position"
@@ -115,14 +126,21 @@ class GridLangRenderer:
 
         return descriptions
 
-    def make_language_obs(self, agent_pos: list, objects: dict, keys: int, first_person: bool = True):
+    def make_language_obs(
+        self,
+        agent_pos: list,
+        objects: dict,
+        keys: int,
+        first_person: bool = True,
+        vision_range: float = None,
+    ):
         # Create pronouns dictionary locally based on first_person parameter
         pronouns = {
             "subject": "you" if first_person else "the agent",
             "possessive": "your" if first_person else "the agent's",
             "be": "are" if first_person else "is",
         }
-        
+
         agent_pos = np.array(agent_pos)
         base_description = (
             f"{pronouns['subject'].capitalize()} {pronouns['be']} in the {self._get_region(agent_pos)} region of a {self.grid_size}x{self.grid_size} meter maze. "
@@ -134,14 +152,25 @@ class GridLangRenderer:
 
         # Process all object types
         all_descriptions.extend(
-            self._get_object_descriptions(objects["walls"], "wall", agent_pos, pronouns=pronouns)
+            self._get_object_descriptions(
+                objects["walls"],
+                "wall",
+                agent_pos,
+                pronouns=pronouns,
+                vision_range=vision_range,
+            )
         )
 
         # Handle rewards
         if objects["rewards"]:
             all_descriptions.extend(
                 self._get_object_descriptions(
-                    objects["rewards"], None, agent_pos, reward_val=True, pronouns=pronouns
+                    objects["rewards"],
+                    None,
+                    agent_pos,
+                    reward_val=True,
+                    pronouns=pronouns,
+                    vision_range=vision_range,
                 )
             )
 
@@ -150,14 +179,24 @@ class GridLangRenderer:
             if objects[obj_type]:
                 all_descriptions.extend(
                     self._get_object_descriptions(
-                        objects[obj_type], display_name, agent_pos, pronouns=pronouns
+                        objects[obj_type],
+                        display_name,
+                        agent_pos,
+                        pronouns=pronouns,
+                        vision_range=vision_range,
                     )
                 )
 
         # Handle other objects
         if "other" in objects and objects["other"]:
             all_descriptions.extend(
-                self._get_object_descriptions(objects["other"], "other", agent_pos, pronouns=pronouns)
+                self._get_object_descriptions(
+                    objects["other"],
+                    "other",
+                    agent_pos,
+                    pronouns=pronouns,
+                    vision_range=vision_range,
+                )
             )
 
         return (
