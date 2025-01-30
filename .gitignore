@@ -7,3 +7,7 @@
 .ipynb_checkpoints
 /out
 ./out
+
+.env
+logs/
+__pycache__/
